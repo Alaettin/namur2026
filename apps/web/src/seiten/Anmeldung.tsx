@@ -48,12 +48,22 @@ export function Anmeldung({ aufAngemeldet }: { aufAngemeldet: () => void }) {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-grund px-4 py-12">
-      {/* Statisch, nicht bewegt: ausdrueckliche Vorgabe der Uebergabe. */}
+      {/*
+        Statisch, nicht bewegt: ausdrueckliche Vorgabe der Uebergabe.
+
+        **`object-cover` statt einer festen Breite.** Bis zum 08.10.2026 stand hier
+        `w-[1700px]`, und genau bis 1700 px sah das richtig aus. Darueber hinaus blieb das
+        Bild stehen und liess links und rechts graue Flaechen; auf einem 3440 px breiten
+        Schirm je rund 870 px. Die Datei ist mit 8716 x 2827 px gross genug, sie wurde nur
+        klein gehalten. `inset-0` plus `size-full` spannt sie auf, `object-cover` behaelt
+        das Seitenverhaeltnis und schneidet den Ueberschuss ab; der Kasten darum traegt
+        bereits `overflow-hidden`.
+      */}
       <img
         src={keyvisual}
         alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/2 w-[1700px] max-w-none -translate-x-1/2 -translate-y-1/2"
+        className="pointer-events-none absolute inset-0 size-full object-cover"
       />
       <main className="relative flex w-full max-w-[420px] flex-col gap-7 bg-flaeche p-6 shadow-[0_18px_48px_rgba(27,29,38,0.13)] sm:p-10">
         <div className="flex flex-col gap-5">
@@ -97,10 +107,6 @@ export function Anmeldung({ aufAngemeldet }: { aufAngemeldet: () => void }) {
             {laeuft ? "Wird geprüft …" : "Anmelden"}
           </Knopf>
         </form>
-
-        <p className="text-[13px] leading-relaxed text-text-hinweis">
-          Zugänge vergibt die Konferenz-Orga.
-        </p>
       </main>
     </div>
   );
