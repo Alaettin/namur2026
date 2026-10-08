@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { pruefeLogoreihe } from "./logos.js";
 
 /**
  * Die Anmeldung selbst, **ohne** abgelegte Sitzung.
@@ -91,4 +92,11 @@ test("die Anmeldemaske nennt die Konferenz-Orga nicht mehr", async ({ page }) =>
   await page.goto("/anmeldung");
   await expect(page.getByRole("button", { name: "Anmelden" })).toBeVisible();
   await expect(page.getByText("Konferenz-Orga")).toHaveCount(0);
+});
+
+/** Die drei Logos auf der Anmeldekarte, siehe `logos.ts` zur Begründung des Helfers. */
+test("die Anmeldung zeigt alle drei Logos in der richtigen Folge", async ({ page }) => {
+  await page.goto("/anmeldung");
+  await expect(page.getByRole("button", { name: "Anmelden" })).toBeVisible();
+  await pruefeLogoreihe(page, "der Anmeldung");
 });

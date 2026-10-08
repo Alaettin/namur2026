@@ -2,8 +2,8 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { DropdownMenu } from "radix-ui";
 import { api } from "../lib/api.js";
 import { Knopf, cn } from "../bausteine/basis.js";
+import { AxonLogo, Logoreihe, NamurLogo, PepperlLogo } from "../bausteine/logos.js";
 import type { Ich } from "../lib/ich.js";
-import logo from "../assets/axon-logo.svg";
 
 /**
  * Kopfzeile und Inhaltsspalte.
@@ -50,11 +50,26 @@ export function Rahmen({ ich, aufAbmelden }: { ich: Ich; aufAbmelden: () => void
   return (
     <div className="min-h-screen bg-grund text-text">
       <header className="bg-flaeche">
-        <div className="flex min-h-14 items-center gap-3 border-b border-linie px-4 sm:gap-4 sm:px-6">
-          <NavLink to="/" aria-label="Startseite" className="flex shrink-0">
-            <img src={logo} alt="Neoception AXON" className="-my-1.5 block h-auto w-[86px]" />
+        {/*
+          **Zwei Fassungen derselben Logoreihe, umgeschaltet bei `lg` und nicht bei `sm`.**
+          Pepperl+Fuchs ist 8,9:1 breit; zwischen 640 und 1024 px liefe das mittig gesetzte
+          NAMUR in die rechte Gruppe aus Name und "Abmelden". Unterhalb bekommen die Logos
+          deshalb eine eigene Zeile, oberhalb bleibt die Kopfzeile so, wie sie war, und die
+          beiden Logos kommen nur dazu.
+
+          Die Kopfzeile klebt nicht, die Logozeile wandert beim Scrollen also weg und kostet
+          nur oben Platz. Das ist auf einem Telefon der Unterschied zwischen laestig und egal.
+        */}
+        <div className="border-b border-linie px-4 py-2.5 lg:hidden">
+          <Logoreihe art="kopf" />
+        </div>
+
+        <div className="relative flex min-h-14 items-center gap-3 border-b border-linie px-4 sm:gap-4 sm:px-6">
+          {/* Ab `lg` steht AXON wieder hier; darunter deckt es die Logozeile ab. */}
+          <NavLink to="/" aria-label="Startseite" className="hidden shrink-0 lg:flex">
+            <AxonLogo art="kopf" className="-my-1.5" />
           </NavLink>
-          <span aria-hidden="true" className="h-7 w-px shrink-0 bg-linie" />
+          <span aria-hidden="true" className="hidden h-7 w-px shrink-0 bg-linie lg:block" />
           {/*
             Nur **einmal** der Name, gruen und gesperrt. Der Entwurf zeigt daneben noch
             "Event Manager"; das ist bei Neoception ein anderes Produkt, und seit der Name
@@ -64,8 +79,19 @@ export function Rahmen({ ich, aufAbmelden }: { ich: Ich; aufAbmelden: () => void
             {ich.appName === "" ? "NAMUR HV 2026" : ich.appName}
           </span>
 
+          {/*
+            NAMUR in der **echten** Mitte der Zeile, nicht zwischen den Nachbarn: so bleibt es
+            mittig, egal wie lang der Name des Angemeldeten ist. `pointer-events-none`, damit
+            das schwebende Bild nichts abfaengt.
+          */}
+          <span className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 lg:block">
+            <NamurLogo art="kopf" />
+          </span>
+
           {/* Ab `sm`: Name und Abmelden stehen offen in der Kopfzeile. */}
-          <span className="ml-auto hidden min-w-0 items-center gap-3 sm:flex">
+          <span className="ml-auto hidden min-w-0 items-center gap-3 sm:flex sm:gap-4">
+            <PepperlLogo art="kopf" className="hidden lg:block" />
+            <span aria-hidden="true" className="hidden h-7 w-px shrink-0 bg-linie lg:block" />
             <span className="min-w-0 truncate text-sm font-medium">{ich.name}</span>
             <Knopf art="rand" className="h-[34px] px-3.5 text-[13px]" onClick={abmelden}>
               Abmelden

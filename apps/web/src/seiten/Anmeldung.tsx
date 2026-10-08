@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { ApiFehler, api } from "../lib/api.js";
 import { Feld, Fehlerhinweis, Knopf } from "../bausteine/basis.js";
-import logo from "../assets/axon-logo.svg";
+import { Logoreihe } from "../bausteine/logos.js";
 import keyvisual from "../assets/keyvisual.png";
 
 /**
@@ -67,7 +67,11 @@ export function Anmeldung({ aufAngemeldet }: { aufAngemeldet: () => void }) {
       />
       <main className="relative flex w-full max-w-[420px] flex-col gap-7 bg-flaeche p-6 shadow-[0_18px_48px_rgba(27,29,38,0.13)] sm:p-10">
         <div className="flex flex-col gap-5">
-          <img src={logo} alt="Neoception AXON" className="-mx-5 -my-3 block h-auto w-[132px]" />
+          {/*
+            Die drei Logos statt nur AXON. Die Karte ist bei 390 px innen rund 310 px breit,
+            und Pepperl+Fuchs ist 8,9:1; die Hoehen im Baustein sind darauf abgestimmt.
+          */}
+          <Logoreihe art="anmeldung" />
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold tracking-[0.14em] text-primaer-dunkel uppercase">
               NAMUR HV 2026
