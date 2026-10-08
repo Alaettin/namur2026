@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kopfzeile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 100%; background: #FFFFFF; color: #1B1D26; font-family: Raleway, 'Helvetica Neue', sans-serif">
+  <div style="min-height: 56px; padding: 0 24px; box-sizing: border-box; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #E3E4E7">
+    <a href="{{home}}" aria-label="Startseite" style="display: flex; flex: none"><img src="../assets/axon-logo.svg" alt="Neoception AXON" style="width: 86px; height: auto; display: block; margin: -6px 0"></a>
+    <span aria-hidden="true" style="width: 1px; height: 28px; flex: none; background: #E3E4E7"></span>
+    <span style="min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 16px; row-gap: 0">
+      <span style="font-size: 15px; font-weight: 500; white-space: nowrap">Event Manager</span>
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.14em; color: #00846D; white-space: nowrap">NAMUR HV 2026</span>
+    </span>
+    <span style="margin-left: auto; min-width: 0; display: flex; align-items: center; gap: 12px">
+      <span style="min-width: 0; font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{user}}</span>
+      <a href="Login.dc.html" style="height: 34px; padding: 0 14px; flex: none; display: flex; align-items: center; border: 1px solid #1B1D26; border-radius: 999px; color: #1B1D26; text-decoration: none; font-size: 13px; font-weight: 600">Abmelden</a>
+    </span>
+  </div>
+  <nav aria-label="Hauptnavigation" style="border-bottom: 1px solid #E3E4E7">
+    <div style="max-width: 992px; margin: 0 auto; padding: 0 16px; box-sizing: border-box; display: flex; gap: 4px; overflow-x: auto">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+        <a href="{{t.href}}" aria-current="{{t.current}}" style="{{t.style}}">{{t.label}}</a>
+      </sc-for>
+    </div>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"enum","options":["dashboard","visitors","exhibits","users","api"],"default":"dashboard"},"admin":{"editor":"boolean","default":true},"user":{"editor":"text","default":"K. Hollmann"},"$preview":{"width":1440,"height":104}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const active = this.props.active ?? 'dashboard';
+    const admin = this.props.admin ?? true;
+    const all = admin ? [
+      { id: 'dashboard', label: 'Dashboard', href: 'Main.dc.html' },
+      { id: 'visitors', label: 'Besucher', href: 'Visitors.dc.html' },
+      { id: 'exhibits', label: 'Exponate', href: 'Exhibits.dc.html' },
+      { id: 'users', label: 'Nutzer', href: 'Users.dc.html' },
+      { id: 'api', label: 'API', href: 'Api.dc.html' }
+    ] : [
+      { id: 'exhibits', label: 'Exponate', href: 'ScanPick.dc.html' }
+    ];
+    const base = 'height: 46px; padding: 0 16px; flex: none; display: flex; align-items: center; text-decoration: none; font-size: 14px; ';
+    return {
+      user: this.props.user ?? 'K. Hollmann',
+      home: admin ? 'Main.dc.html' : 'ScanPick.dc.html',
+      tabs: all.map((t) => {
+        const on = t.id === active;
+        return { ...t, current: on ? 'page' : 'false', style: base + (on ? 'color: #1B1D26; font-weight: 600; box-shadow: inset 0 -2px 0 #00A587' : 'color: #5E606C; font-weight: 500') };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

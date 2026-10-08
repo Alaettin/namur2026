@@ -1,0 +1,22 @@
+node_modules/
+dist/
+coverage/
+test-results/
+playwright-report/
+
+# Laufzeitdaten: SQLite-Datei und hochgeladene Dateien.
+data/
+
+# Beiseitegelegte Bestaende. `data/` greift hier NICHT: das Muster trifft nur Ordner, die
+# genau so heissen, und `data.verwaist-20261008` heisst eben anders. Ohne diese Zeile waere
+# am 08.10.2026 eine 4,8-MB-Datenbank mit 700 Besucherzeilen und zwei Passwort-Hashes
+# mitgegangen.
+data.verwaist-*/
+
+# Zugangsdaten. .env.example ist die eingecheckte Vorlage.
+.env
+.env.*
+!.env.example
+
+# Playwright
+e2e/.sitzung.json

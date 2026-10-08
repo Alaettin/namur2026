@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@import "@fontsource/raleway/400.css";
+@import "@fontsource/raleway/500.css";
+@import "@fontsource/raleway/600.css";
+@import "@fontsource/raleway/700.css";
+@import "@fontsource/raleway/800.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+
+/*
+ * Die Werte aus dem Design-Paket, als Tokens an einer Stelle.
+ *
+ * Helle Erscheinung, angelehnt an den PCN Event Manager. Das ist eine bewusste Abweichung
+ * vom urspruenglichen Briefing (dunkle AXON-Erscheinung), siehe die Uebergabe,
+ * "Korrekturen am Design", Punkt 4.
+ */
+@theme {
+  --color-grund: #efefef;
+  --color-flaeche: #ffffff;
+
+  --color-text: #1b1d26;
+  --color-text-zweit: #43454f;
+  --color-text-hinweis: #5e606c;
+
+  --color-linie: #e3e4e7;
+  --color-linie-feld: #cbccd2;
+
+  /*
+   * PF Green. **Weiss darauf liegt bei Knopfschrift unter WCAG AA.**
+   *
+   * Gebaut wird wie entworfen, der Wert steht aber nur hier: der Wechsel auf
+   * `--color-primaer-dunkel` als Knopfflaeche ist damit eine Zeile. Offener Punkt 3 der
+   * Projektakte.
+   */
+  --color-primaer: #00a587;
+  --color-primaer-dunkel: #00846d;
+
+  --color-fehler: #c24e1e;
+  --color-fehler-grund: #fde4d8;
+
+  --color-kamera-dunkel: #101219;
+  --color-kamera-hell: #43454f;
+  --color-erfolg: #006353;
+
+  /* Fokus sichtbar, Core Blue. */
+  --color-fokus: #1c5db3;
+
+  --font-sans: "Raleway", "Helvetica Neue", system-ui, sans-serif;
+  /* GUIDs, Kennungen, Pfade, Uhrzeiten. */
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Inhaltsspalte, zentriert, 16 px Rand. */
+  --spacing-spalte: 992px;
+
+  --shadow-flaeche: 0 2px 6px rgb(27 29 38 / 0.07);
+}
+
+/*
+ * Flaechen, Tabellen und Eingabefelder haben 0 px Radius; rund sind nur Knoepfe,
+ * Segment-Umschalter und die Seitenumschaltung, und die tragen `rounded-full`.
+ */
+@layer base {
+  body {
+    background: var(--color-grund);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    margin: 0;
+  }
+
+  /* Fokus bleibt sichtbar. Kein `outline: none` irgendwo. */
+  :focus-visible {
+    outline: 2px solid var(--color-fokus);
+    outline-offset: 2px;
+  }
+}

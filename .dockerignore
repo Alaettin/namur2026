@@ -1,0 +1,28 @@
+# Ohne diese Datei zieht `COPY . .` die node_modules des Hosts herein und ueberschreibt
+# die im Container installierten. Auf Windows sind das Binaerdateien fuer die falsche
+# Plattform, und der Bau bricht mit MODULE_NOT_FOUND ab.
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+**/coverage
+test-results
+playwright-report
+data
+.git
+.github
+.vscode
+
+# Geheimnisse duerfen nicht in die Bauschicht. `COPY . .` zieht sonst alles herein, auch
+# was spaeter nicht ins Abbild kopiert wird: die Schicht bleibt trotzdem im Verlauf.
+.env
+.env.*
+!.env.example
+*.pem
+*key*.txt
+
+# Vorlage und Nachschlagewerk, kein Quelltext. Zusammen rund 1,4 MB, die in jeder
+# Bauschicht mitreisen wuerden.
+design
+Connector Guide

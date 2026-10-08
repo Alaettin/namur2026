@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Treffer: Inhalte zuordnen</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 100%; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: #EFEFEF; color: #1B1D26; font-family: Raleway, 'Helvetica Neue', sans-serif">
+  <header style="flex: none; min-height: 60px; padding: 6px 16px 6px 8px; display: flex; align-items: center; gap: 10px; background: #FFFFFF; border-bottom: 1px solid #E3E4E7">
+    <a href="ScanCamera.dc.html" aria-label="Abbrechen und weiter scannen" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: #1B1D26">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
+    </a>
+    <span style="flex: 1; font-size: 16px; font-weight: 700">Pass erkannt</span>
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">E03</span>
+  </header>
+  <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 16px">
+    <div style="flex: 1 1 300px; max-width: 100%; display: flex; flex-direction: column; gap: 12px">
+      <section aria-label="Besucher" style="padding: 18px; display: flex; gap: 16px; align-items: center; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+        <span style="width: 64px; height: 64px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #1B1D26; color: #FFFFFF; font-size: 20px; font-weight: 700">MO</span>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <span style="font-size: 21px; font-weight: 700; line-height: 1.15">Miriam Osterkamp</span>
+          <span style="font-size: 15px; font-weight: 600">Novaplast AG</span>
+          <span style="font-size: 14px; color: #43454F">Betriebsingenieurin</span>
+        </div>
+      </section>
+      <div style="min-height: 60px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+        <span id="lbl-all" style="font-size: 16px; font-weight: 700">Alles zuordnen</span>
+        <button type="button" role="switch" aria-checked="{{allStr}}" aria-labelledby="lbl-all" onClick="{{toggleAll}}" style="{{switchStyle}}"><span style="{{knobStyle}}"></span></button>
+      </div>
+    </div>
+    <div style="flex: 999 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+        <section style="display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0 2px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5E606C">{{g.title}}</h2>
+          <div style="display: flex; flex-direction: column; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+            <sc-for list="{{g.items}}" as="it" hint-placeholder-count="2">
+              <label style="min-height: 60px; padding: 8px 16px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid #E3E4E7; cursor: pointer">
+                <input type="checkbox" checked="{{it.on}}" disabled="{{it.done}}" onChange="{{it.toggle}}" style="width: 24px; height: 24px; flex: none; margin: 0; accent-color: #00A587">
+                <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+                  <span style="font-size: 15px; font-weight: 600; line-height: 1.3">{{it.title}}</span>
+                  <span style="font-size: 13px; color: #43454F">{{it.meta}}</span>
+                </span>
+                <sc-if value="{{it.done}}" hint-placeholder-val="{{false}}">
+                  <span style="flex: none; height: 22px; padding: 0 8px; display: flex; align-items: center; background: #82848F; color: #FFFFFF; font-size: 10px; font-weight: 700; letter-spacing: 0.06em">● BEREITS ZUGEORDNET</span>
+                </sc-if>
+              </label>
+            </sc-for>
+          </div>
+        </section>
+      </sc-for>
+    </div>
+  </div>
+  <div style="flex: none; padding: 14px 16px 22px; display: flex; justify-content: flex-end; background: #FFFFFF; border-top: 1px solid #E3E4E7">
+    <sc-if value="{{canAssign}}" hint-placeholder-val="{{true}}">
+      <a href="ScanSuccess.dc.html" style="width: 100%; max-width: 420px; height: 64px; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 999px; background: #00A587; color: #FFFFFF; text-decoration: none; font-size: 19px; font-weight: 700">Zuordnen ({{count}})</a>
+    </sc-if>
+    <sc-if value="{{noAssign}}" hint-placeholder-val="{{false}}">
+      <button type="button" disabled style="width: 100%; max-width: 420px; height: 64px; border: 0; border-radius: 999px; background: #CBCCD2; color: #43454F; font: inherit; font-size: 19px; font-weight: 700">Zuordnen (0)</button>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { off: {} };
+  }
+  renderVals() {
+    const data = [
+      { title: 'Dokumente', items: [
+        { id: 'd1', title: 'Datenblatt APL-Feldswitch FS-240', meta: 'PDF · 1,2 MB' },
+        { id: 'd2', title: 'Whitepaper Ethernet-APL in Ex-Zone 1', meta: 'PDF · 3,4 MB', done: true },
+        { id: 'd3', title: 'Produktbild Druckmessumformer PT-80', meta: 'JPG · 860 KB' },
+        { id: 'd4', title: '3D-Modell PT-80', meta: 'STEP · 5,1 MB' }
+      ] },
+      { title: 'Links', items: [
+        { id: 'l1', title: 'Projektierungsleitfaden Ethernet-APL', meta: 'feldwerk-systems.de/apl-leitfaden' },
+        { id: 'l2', title: 'Webinar: APL in der Bestandsanlage', meta: 'feldwerk-systems.de/webinar-apl' }
+      ] },
+      { title: 'Ansprechpartner', items: [
+        { id: 'c1', title: 'Dr. Ines Marquardt', meta: 'Produktmanagerin Feldgeräte' },
+        { id: 'c2', title: 'Philipp Sanders', meta: 'Vertrieb Prozessindustrie' }
+      ] }
+    ];
+    const off = this.state.off;
+    const selectable = [];
+    data.forEach((g) => g.items.forEach((it) => { if (!it.done) selectable.push(it.id); }));
+    const count = selectable.filter((id) => !off[id]).length;
+    const all = count === selectable.length;
+    const groups = data.map((g) => ({
+      title: g.title,
+      items: g.items.map((it) => ({
+        ...it,
+        done: !!it.done,
+        on: it.done ? true : !off[it.id],
+        toggle: () => this.setState({ off: { ...this.state.off, [it.id]: !this.state.off[it.id] } })
+      }))
+    }));
+    const toggleAll = () => {
+      if (all) {
+        const o = {}; selectable.forEach((id) => { o[id] = true; });
+        this.setState({ off: o });
+      } else {
+        this.setState({ off: {} });
+      }
+    };
+    return {
+      groups, count, toggleAll,
+      allStr: all ? 'true' : 'false',
+      canAssign: count > 0, noAssign: count === 0,
+      switchStyle: 'position: relative; width: 56px; height: 32px; flex: none; border: 0; border-radius: 999px; cursor: pointer; padding: 0; background: ' + (all ? '#1B1D26' : '#AAACB5'),
+      knobStyle: 'position: absolute; top: 4px; width: 24px; height: 24px; border-radius: 50%; background: #FFFFFF; transition: left 150ms cubic-bezier(.2,0,0,1); left: ' + (all ? '28px' : '4px')
+    };
+  }
+}
+</script>
+</body>
+</html>

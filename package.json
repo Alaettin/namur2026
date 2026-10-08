@@ -1,0 +1,37 @@
+{
+  "name": "namur-hv-2026",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.30.3",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @namur-hv/web dev",
+    "dev:server": "pnpm --filter @namur-hv/server dev",
+    "migrationen": "pnpm --filter @namur-hv/server migrationen"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.8.0",
+    "prettier": "^3.9.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.65.0"
+  },
+  "pnpm": {
+    "//onlyBuiltDependencies": "Ohne diese Liste laesst pnpm die Bauskripte aus, und better-sqlite3 wird nie kompiliert. Uebernommen aus dem AXON Connector.",
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "better-sqlite3"
+    ]
+  }
+}

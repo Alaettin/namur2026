@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Nutzerverwaltung</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EFEFEF; color: #1B1D26; font-family: Raleway, 'Helvetica Neue', sans-serif">
+  <dc-import name="AppHeader" active="users" admin="{{yes}}" user="K. Hollmann" hint-size="100%,104px"></dc-import>
+  <main style="max-width: 992px; margin: 0 auto; padding: 40px 16px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+      <h1 style="margin: 0; font-weight: 700; font-size: 36px; letter-spacing: -0.02em; line-height: 1.1">Nutzer</h1>
+      <a href="#neu" style="height: 44px; padding: 0 22px; display: flex; align-items: center; border-radius: 999px; background: #00A587; color: #FFFFFF; text-decoration: none; font-size: 15px; font-weight: 600">Nutzer anlegen</a>
+    </div>
+    <div style="overflow-x: auto; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <table style="width: 100%; min-width: 820px; border-collapse: collapse; font-size: 14px">
+        <thead>
+          <tr style="text-align: left; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #5E606C">
+            <th style="padding: 14px 16px; font-weight: 600">Name</th>
+            <th style="padding: 14px 16px; font-weight: 600">Rolle</th>
+            <th style="padding: 14px 16px; font-weight: 600">Exponate</th>
+            <th style="padding: 14px 16px; font-weight: 600; text-align: right">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <sc-for list="{{users}}" as="u" hint-placeholder-count="8">
+            <tr style="{{u.rowStyle}}">
+              <td style="padding: 12px 16px; border-top: 1px solid #E3E4E7"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">{{u.name}}</span><span style="font-size: 12px; color: #5E606C">{{u.mail}}</span></span></td>
+              <td style="padding: 12px 16px; border-top: 1px solid #E3E4E7"><span style="{{u.badge}}">● {{u.role}}</span></td>
+              <td style="padding: 12px 16px; border-top: 1px solid #E3E4E7; font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{u.ex}}</td>
+              <td style="padding: 8px 16px; border-top: 1px solid #E3E4E7">
+                <span style="display: flex; justify-content: flex-end; gap: 4px">
+                  <button type="button" style="height: 34px; padding: 0 10px; border: 0; background: transparent; color: #00846D; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Passwort zurücksetzen</button>
+                  <button type="button" style="height: 34px; padding: 0 10px; border: 0; background: transparent; color: #00846D; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">{{u.toggle}}</button>
+                </span>
+              </td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+    <section id="neu" aria-labelledby="h-new" style="padding: 24px; display: flex; flex-direction: column; gap: 18px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <h2 id="h-new" style="margin: 0; font-weight: 700; font-size: 18px">Nutzer anlegen</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 16px 20px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="n-name" style="font-size: 12px; font-weight: 600; color: #43454F">Name</label>
+          <input id="n-name" type="text" value="Nele Brinkmann" style="height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font: inherit; font-size: 15px">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="n-mail" style="font-size: 12px; font-weight: 600; color: #43454F">E-Mail</label>
+          <input id="n-mail" type="email" value="n.brinkmann@ventiltechnik-ost.de" style="height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font: inherit; font-size: 15px">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="n-pw" style="font-size: 12px; font-weight: 600; color: #43454F">Startpasswort</label>
+          <div style="display: flex; gap: 8px">
+            <input id="n-pw" type="text" value="Ventil-Rose-48" style="flex: 1; min-width: 0; height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font-family: 'IBM Plex Mono', monospace; font-size: 13px">
+            <button type="button" style="height: 44px; padding: 0 14px; border: 1px solid #1B1D26; border-radius: 999px; background: transparent; color: #1B1D26; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Erzeugen</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span id="l-role" style="font-size: 12px; font-weight: 600; color: #43454F">Rolle</span>
+          <div role="radiogroup" aria-labelledby="l-role" style="align-self: flex-start; display: flex; border: 1px solid #1B1D26; border-radius: 999px; overflow: hidden">
+            <button type="button" role="radio" aria-checked="false" style="height: 42px; padding: 0 20px; border: 0; background: transparent; color: #1B1D26; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Admin</button>
+            <button type="button" role="radio" aria-checked="true" style="height: 42px; padding: 0 20px; border: 0; background: #1B1D26; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Betreuer</button>
+          </div>
+        </div>
+      </div>
+      <fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 4px">
+        <legend style="padding: 0; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: #43454F">Darf scannen an</legend>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 0 20px">
+          <sc-for list="{{exhibits}}" as="e" hint-placeholder-count="6">
+            <label style="min-height: 40px; display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer"><input type="checkbox" checked="{{e.on}}" style="width: 18px; height: 18px; margin: 0; accent-color: #1B1D26"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{e.id}}</span><span style="font-weight: 500">{{e.name}}</span></label>
+          </sc-for>
+        </div>
+      </fieldset>
+      <button type="button" style="align-self: flex-start; height: 44px; padding: 0 24px; border: 0; border-radius: 999px; background: #00A587; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer">Nutzer anlegen</button>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const badge = (bg) => 'height: 22px; padding: 0 8px; display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; color: #FFFFFF; background: ' + bg;
+    const users = [
+      ['Kerstin Hollmann', 'k.hollmann@namur-hv-orga.de', 'Admin', 'alle', true],
+      ['Daniel Afolabi', 'd.afolabi@namur-hv-orga.de', 'Admin', 'alle', true],
+      ['Markus Ebeling', 'm.ebeling@modulbau-systeme.de', 'Betreuer', 'E01', true],
+      ['Sophie Brandt', 's.brandt@noa-connect.de', 'Betreuer', 'E02', true],
+      ['Jana Lindqvist', 'j.lindqvist@feldwerk-systems.de', 'Betreuer', 'E03, E04', true],
+      ['Okan Demir', 'o.demir@feldwerk-systems.de', 'Betreuer', 'E03', true],
+      ['Tobias Reichert', 't.reichert@aas-engineering.de', 'Betreuer', 'E05, E06', true],
+      ['Felix Hagedorn', 'f.hagedorn@feldwerk-systems.de', 'Deaktiviert', 'keine', false]
+    ].map((u) => ({
+      name: u[0], mail: u[1], role: u[2], ex: u[3],
+      toggle: u[4] ? 'Deaktivieren' : 'Aktivieren',
+      rowStyle: u[4] ? '' : 'color: #5E606C',
+      badge: badge(u[2] === 'Admin' ? '#1B1D26' : u[2] === 'Betreuer' ? '#00A587' : '#82848F')
+    }));
+    const exhibits = [
+      ['E01', 'Modulare Anlage mit MTP'], ['E02', 'NOA Monitoring'], ['E03', 'Ethernet-APL Feldgeräte'],
+      ['E04', 'Ventilinsel mit Diagnose', true], ['E05', 'Verwaltungsschale im Engineering'], ['E06', 'Alarmmanagement nach NA 102']
+    ].map((e) => ({ id: e[0], name: e[1], on: !!e[2] }));
+    return { yes: true, users, exhibits };
+  }
+}
+</script>
+</body>
+</html>

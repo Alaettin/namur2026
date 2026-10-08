@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>API</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EFEFEF; color: #1B1D26; font-family: Raleway, 'Helvetica Neue', sans-serif">
+  <dc-import name="AppHeader" active="api" admin="{{yes}}" user="K. Hollmann" hint-size="100%,104px"></dc-import>
+  <main style="max-width: 992px; margin: 0 auto; padding: 40px 16px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h1 style="margin: 0; font-weight: 700; font-size: 36px; letter-spacing: -0.02em; line-height: 1.1">API</h1>
+      </div>
+    </div>
+    <section aria-labelledby="h-conn" style="padding: 20px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <h2 id="h-conn" style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5E606C">Basis-URL</h2>
+      <span style="display: flex; align-items: center; gap: 2px"><code style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; overflow-wrap: anywhere">https://[HOST]/api/connector</code><button type="button" aria-label="Basis-URL kopieren" style="width: 36px; height: 36px; flex: none; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #5E606C; cursor: pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></span>
+    </section>
+    <section aria-labelledby="h-calls" style="display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px">
+        <h2 id="h-calls" style="margin: 0; font-weight: 700; font-size: 18px">Connector-Aufrufe</h2>
+        <span style="font-size: 13px; color: #5E606C">7 Aufrufe, Tag „Data“</span>
+      </div>
+      <div style="overflow-x: auto; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+        <table style="width: 100%; min-width: 860px; border-collapse: collapse; font-size: 14px">
+          <thead>
+            <tr style="text-align: left; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #5E606C">
+              <th style="padding: 14px 16px; font-weight: 600">Methode</th>
+              <th style="padding: 14px 16px; font-weight: 600">Pfad</th>
+              <th style="padding: 14px 16px; font-weight: 600">Liefert</th>
+              <th style="padding: 14px 16px; font-weight: 600">Parameter</th>
+              <th style="padding: 14px 16px; font-weight: 600; text-align: right">Heute</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{calls}}" as="c" hint-placeholder-count="7">
+              <tr>
+                <td style="padding: 14px 16px; border-top: 1px solid #E3E4E7"><span style="{{c.badge}}">{{c.m}}</span></td>
+                <td style="padding: 14px 16px; border-top: 1px solid #E3E4E7; font-family: 'IBM Plex Mono', monospace; font-size: 12px; white-space: nowrap">{{c.path}}</td>
+                <td style="padding: 14px 16px; border-top: 1px solid #E3E4E7; line-height: 1.45">{{c.what}}</td>
+                <td style="padding: 14px 16px; border-top: 1px solid #E3E4E7; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #43454F">{{c.params}}</td>
+                <td style="padding: 14px 16px; border-top: 1px solid #E3E4E7; text-align: right; font-weight: 700">{{c.n}}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="h-ex" style="padding: 24px; display: flex; flex-direction: column; gap: 14px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+        <span style="height: 22px; padding: 0 8px; display: inline-flex; align-items: center; background: #00A587; color: #FFFFFF; font-size: 11px; font-weight: 700; letter-spacing: 0.06em">POST</span>
+        <h2 id="h-ex" style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 14px">/api/connector/properties?itemId=3d18f6b2-0c7e-4a95-b2d1-8e4a6f13c057</h2>
+      </div>
+      <p style="margin: 0; font-size: 14px; line-height: 1.55; color: #43454F">Beispielaufruf: Axon Core fragt die Eigenschaften von Dr. Henrik Faller ab. Der Request-Body folgt dem Schema PropertyValuesRequest.</p>
+      <pre style="margin: 0; padding: 16px; overflow-x: auto; background: #1B1D26; color: #E3E4E7; font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.6">{{bodyText}}</pre>
+      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #5E606C">Antwortschema: in der Swagger v3 ohne Schema, nur „200 OK“.</p>
+    </section>
+    <section aria-labelledby="h-log" style="display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px">
+        <h2 id="h-log" style="margin: 0; font-weight: 700; font-size: 18px">Letzte Aufrufe</h2>
+        <span style="font-size: 13px; color: #5E606C">1.284 heute</span>
+      </div>
+      <div style="overflow-x: auto; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+        <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 13px">
+          <thead>
+            <tr style="text-align: left; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #5E606C">
+              <th style="padding: 14px 16px; font-weight: 600">Zeit</th>
+              <th style="padding: 14px 16px; font-weight: 600">Aufruf</th>
+              <th style="padding: 14px 16px; font-weight: 600">itemId</th>
+              <th style="padding: 14px 16px; font-weight: 600">Status</th>
+              <th style="padding: 14px 16px; font-weight: 600; text-align: right">Dauer</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{log}}" as="l" hint-placeholder-count="8">
+              <tr>
+                <td style="padding: 11px 16px; border-top: 1px solid #E3E4E7; font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{l.t}}</td>
+                <td style="padding: 11px 16px; border-top: 1px solid #E3E4E7; font-family: 'IBM Plex Mono', monospace; font-size: 12px; white-space: nowrap"><strong style="font-weight: 600">{{l.m}}</strong> {{l.path}}</td>
+                <td style="padding: 11px 16px; border-top: 1px solid #E3E4E7; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #43454F">{{l.id}}</td>
+                <td style="padding: 11px 16px; border-top: 1px solid #E3E4E7"><span style="{{l.badge}}">● {{l.s}}</span></td>
+                <td style="padding: 11px 16px; border-top: 1px solid #E3E4E7; text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{l.ms}}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const badge = (bg) => 'height: 22px; padding: 0 8px; display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; white-space: nowrap; color: #FFFFFF; background: ' + bg;
+    const calls = [
+      { m: 'GET', path: '/api/connector/model', what: 'Datenmodell: welche Besucher- und Inhaltseigenschaften es gibt', params: '', n: 3 },
+      { m: 'GET', path: '/api/connector/hierarchy', what: 'Hierarchie der Items', params: '', n: 3 },
+      { m: 'GET', path: '/api/connector/hierarchy/levels', what: 'Ebenen der Hierarchie', params: '', n: 3 },
+      { m: 'GET', path: '/api/connector/ids', what: 'Alle Item-IDs, also die GUIDs aller Besucher', params: '', n: 12 },
+      { m: 'GET', path: '/api/connector/identification', what: 'Identifikation eines Besuchers', params: 'itemId', n: 418 },
+      { m: 'POST', path: '/api/connector/properties', what: 'Eigenschaftswerte eines Besuchers: Name, Firma, Position, Kontaktdaten, Avatar', params: 'itemId, Body', n: 431 },
+      { m: 'POST', path: '/api/connector/documents', what: 'Zugeordnete Dokumente, Links und Ansprechpartner eines Besuchers', params: 'itemId, Body', n: 414 }
+    ].map((c) => ({ ...c, params: c.params || 'keine', badge: badge(c.m === 'GET' ? '#1B1D26' : '#00A587') }));
+    const bodyText = JSON.stringify({
+      propertiesWithLanguage: { languages: ['de'], propertyIds: ['position'] },
+      propertiesWithoutLanguage: { propertyIds: ['firstName', 'lastName', 'company', 'email', 'avatar'] }
+    }, null, 2);
+    const log = [
+      { t: '14:32:08', m: 'POST', path: '/documents', id: '3d18f6b2…c057', s: '200', ms: '84 ms' },
+      { t: '14:32:08', m: 'POST', path: '/properties', id: '3d18f6b2…c057', s: '200', ms: '61 ms' },
+      { t: '14:32:07', m: 'GET', path: '/identification', id: '3d18f6b2…c057', s: '200', ms: '22 ms' },
+      { t: '14:31:55', m: 'GET', path: '/identification', id: 'c41e9b07…5c62', s: '404', ms: '18 ms' },
+      { t: '14:29:41', m: 'POST', path: '/documents', id: 'a9d03e5c…71f2', s: '200', ms: '79 ms' },
+      { t: '14:29:41', m: 'POST', path: '/properties', id: 'a9d03e5c…71f2', s: '200', ms: '58 ms' },
+      { t: '14:29:40', m: 'GET', path: '/identification', id: 'a9d03e5c…71f2', s: '200', ms: '20 ms' },
+      { t: '14:15:00', m: 'GET', path: '/ids', id: '', s: '200', ms: '140 ms' }
+    ].map((l) => ({ ...l, id: l.id || 'keine', badge: badge(l.s === '200' ? '#00A587' : '#C24E1E') }));
+    return { yes: true, calls, bodyText, log };
+  }
+}
+</script>
+</body>
+</html>

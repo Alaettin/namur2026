@@ -1,0 +1,1241 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Connector 1.0.0",
+    "version": "1.0.0",
+    "description": "This Open API specification describes connectors used by the Neoception DTI. A connector reads data from customer systems and exposes it in the normalized format required for on-demand Asset Administration Shell (AAS) generation.\n## General notes\nThe `itemId` identifies the entity for which data is requested. It should uniquely identify a single entity, stay within 1 to 2048 characters, use XML Schema 1.0 compatible characters and be URL-encodable.\nThe `Result` schema used for error bodies is optional, but providing meaningful messages and codes is recommended for diagnostics and traceability.\n## Authentication\nAuthentication from the connector to customer systems is connector-specific and should be abstracted away from the DTI. \nCurrently, the following authentication approaches are supported for DTI to connector communications:\n- OAuth2 via client credentials \n- Basic authentication\n"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "Checks whether the connector is operational and currently able to reach the required customer systems. Anonymous access is recommended. Return `200 OK` when healthy and a `5XX` status when the connector or an upstream dependency is unavailable.",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok"
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/versions": {
+      "get": {
+        "description": "Returns the supported connector specification version and, optionally, the deployed connector application version. Both values should follow Semantic Versioning 2.0.0.",
+        "tags": [
+          "Version"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionsResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionsResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/product/ids": {
+      "get": {
+        "description": "Optional endpoint that returns all known `itemId` values exposed by the connector.",
+        "tags": [
+          "Product"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Customer-defined item identifier. It must uniquely identify one entity and should be URL-encodable."
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Customer-defined item identifier. It must uniquely identify one entity and should be URL-encodable."
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Customer-defined item identifier. It must uniquely identify one entity and should be URL-encodable."
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad or malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wrong or missing authorization credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization has been refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Operation request is not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/product/hierarchies": {
+      "get": {
+        "description": "Returns the full product hierarchy tree exposed by the connector. This endpoint is not currently used by the DTI core, so it may either return the complete tree or a placeholder `[]` response while remaining available for future use.",
+        "tags": [
+          "Product"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "default": [],
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductHierarchyNode"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "default": [],
+                  "items": {
+                    "$ref": "#/components/schemas/ProductHierarchyNode"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "default": [],
+                  "items": {
+                    "$ref": "#/components/schemas/ProductHierarchyNode"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad or malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wrong or missing authorization credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization has been refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Operation request is not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/product/hierarchy/levels": {
+      "get": {
+        "description": "Describes the general classification structure by listing the available hierarchy levels in top-down order. The returned names are intended to help content admins understand and use hierarchy-based rules.",
+        "tags": [
+          "Product"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductHierarchyLevel"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductHierarchyLevel"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductHierarchyLevel"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad or malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wrong or missing authorization credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization has been refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Operation request is not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/product/{itemId}/hierarchy": {
+      "description": "Returns the path of the requested product or asset within the connector hierarchy. The result is used by the DTI when evaluating hierarchy-based mapping rules.",
+      "get": {
+        "description": "Looks up the hierarchy path for a single `itemId`. Return `404 Not Found` when the item does not exist.",
+        "tags": [
+          "Product"
+        ],
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "description": "Customer-defined identifier of the requested entity. It must uniquely identify a single entity and be be URL-encodable.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductHierarchyLevel"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductHierarchyLevel"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductHierarchyLevel"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad or malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wrong or missing authorization credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization has been refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Operation request is not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/product/{itemId}/values": {
+      "post": {
+        "description": "Returns the requested scalar and document values for a single `itemId`. The caller sends a selected subset of property IDs and, for language-dependent content, an ordered list of preferred languages. \n\nFor returned documents, `value` may either be a ticket used on the `/product/{itemId}/documents` endpoint, the URL to the location the data may be accessed, or the Base64 encoded string of the contents of the file. If the file is an image, `value` must be the Base64 encoded string of the image. ",
+        "tags": [
+          "Product"
+        ],
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "description": "Customer-defined identifier of the requested entity. It must uniquely identify a single entity, be URL-encodable and remain within 1 to 2048 characters.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Requested property IDs split into language-dependent and language-independent groups. When `languages` is `null` or empty, the connector should return all available language variants.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropertyValuesRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropertyValuesRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropertyValuesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductProperty"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductProperty"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductProperty"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad or malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wrong or missing authorization credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization has been refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Operation request is not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/product/{itemId}/documents": {
+      "post": {
+        "description": "Resolves document tickets previously returned by `POST /product/{itemId}/values` when `needsResolve` is `true`. This endpoint is used for the deferred document retrieval flow.",
+        "tags": [
+          "Product"
+        ],
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "description": "Customer-defined identifier of the requested entity. It must uniquely identify a single entity, be URL-encodable and remain within 1 to 2048 characters.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Document ticket identifiers together with an optional ordered language preference. The `propertyIds` values are the ticket values previously returned in `ProductProperty.value`.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropertiesWithLanguage"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropertiesWithLanguage"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropertiesWithLanguage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductProperty"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductProperty"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductProperty"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad or malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wrong or missing authorization credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization has been refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Operation request is not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/model": {
+      "get": {
+        "description": "Enumerates the source-system properties that content admins can map into generated AAS content. Each property provides a unique machine-oriented ID and may also include a readable name, description, filters and semantic IDs.",
+        "tags": [
+          "Model"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DataModelProperty"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DataModelProperty"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DataModelProperty"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad or malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wrong or missing authorization credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization has been refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Operation request is not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DataModelProperty": {
+        "type": "object",
+        "description": "Metadata describing one source-system property that can later be requested through the product value endpoints.",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/PropertyId"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional human-readable name shown to content admins in the back office UI."
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional human-readable explanation of the property and its meaning in the source system."
+          },
+          "type": {
+            "$ref": "#/components/schemas/PropertyType"
+          },
+          "filters": {
+            "type": "object",
+            "nullable": true,
+            "description": "Optional dictionary where each key maps to an array of string values. Can be used for filtering and as custom rule-context values in the DTI.\nFor example, if a property may contain images of type PNG or JPG, it could have the filter \"imageType\" with the values \"PNG\" nad \"JPG\".",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "semanticIds": {
+            "type": "array",
+            "nullable": true,
+            "description": "Optional semantic IDs associated with the property. They are intended for semantic matching and future automated mapping scenarios.",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "example": "0173-1#02-BAA120#008",
+              "pattern": "^([\\x09\\x0a\\x0d\\x20-\\ud7ff\\ue000-\\ufffd]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductHierarchyLevel": {
+        "type": "object",
+        "description": "One level in a classification hierarchy, consisting of its numeric position and display name.",
+        "properties": {
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32766,
+            "description": "1-based position of the level inside the hierarchy, counted from top to bottom."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 450,
+            "description": "Human-readable level name shown to content admins."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductHierarchyNode": {
+        "type": "object",
+        "description": "A hierarchy node with its level metadata and optional child nodes.",
+        "properties": {
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32766,
+            "description": "1-based position of the node inside the hierarchy, counted from top to bottom."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 450,
+            "description": "Human-readable name of the current node."
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductHierarchyNode"
+            },
+            "nullable": true,
+            "description": "Child nodes that continue the hierarchy below the current node."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductProperty": {
+        "type": "object",
+        "description": "Resolved value of a requested property. The same `propertyId` may appear multiple times when several language variants are returned.",
+        "properties": {
+          "propertyId": {
+            "$ref": "#/components/schemas/PropertyId"
+          },
+          "value": {
+            "type": "string",
+            "nullable": true,
+            "description": "String representation of the property value. For documents, this may be a public URL, base64 content, or a ticket that can later be redeemed through `/Product/{itemId}/documents`.\n\nIf the property represents an image, `value` must be the Base64 encoded string of the image. "
+          },
+          "valueLanguage": {
+            "$ref": "#/components/schemas/Locale"
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional MIME type of the document content. Omit or use `null` for non-document properties.",
+            "example": "image/png",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "filename": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^[A-Za-z0-9_-]+\\.?[A-Za-z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 2048,
+            "example": "file.txt",
+            "description": "Optional preferred file name for document downloads. For broad compatibility, use only letters, digits, hyphen, underscore and at most one period."
+          },
+          "size": {
+            "type": "integer",
+            "nullable": true,
+            "default": 0,
+            "description": "Optional document size in bytes. Use `0` when the size is unknown or when the property is not a document."
+          },
+          "languages": {
+            "type": "array",
+            "minItems": 0,
+            "items": {
+              "$ref": "#/components/schemas/Locale"
+            },
+            "nullable": true,
+            "description": "Optional list of all languages for which the document is available, including the language identified by `valueLanguage`."
+          },
+          "needsResolve": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "For document properties, `true` means that `value` is only a ticket and the actual content must be fetched later via `/Product/{itemId}/documents`. Use `false` or omit it for direct URLs or embedded content."
+          }
+        }
+      },
+      "PropertiesWithLanguage": {
+        "type": "object",
+        "description": "Requested property IDs whose values may depend on language, plus the preferred language order to use for lookup.",
+        "properties": {
+          "languages": {
+            "type": "array",
+            "minItems": 0,
+            "nullable": true,
+            "description": "Ordered language preference for value lookup. The connector should try the first language, then fall back to the next ones until a value is found. `null` or `[]` means that all available language variants should be returned.",
+            "items": {
+              "$ref": "#/components/schemas/Locale"
+            }
+          },
+          "propertyIds": {
+            "type": "array",
+            "description": "Language-dependent property IDs and document property IDs whose values should be gathered.",
+            "items": {
+              "$ref": "#/components/schemas/PropertyId"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PropertiesWithoutLanguage": {
+        "type": "object",
+        "description": "Requested property IDs whose values do not depend on language.",
+        "properties": {
+          "propertyIds": {
+            "type": "array",
+            "description": "Property IDs whose values should be gathered without language selection.",
+            "items": {
+              "$ref": "#/components/schemas/PropertyId"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "PropertyType": {
+        "type": "string",
+        "description": "Indicates whether a data model property yields a regular value or a document.",
+        "enum": [
+          "Property",
+          "Document"
+        ]
+      },
+      "PropertyValuesRequest": {
+        "type": "object",
+        "description": "Request payload for `/Product/{itemId}/values`, split into language-dependent and language-independent property lists.",
+        "properties": {
+          "propertiesWithLanguage": {
+            "$ref": "#/components/schemas/PropertiesWithLanguage"
+          },
+          "propertiesWithoutLanguage": {
+            "$ref": "#/components/schemas/PropertiesWithoutLanguage"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VersionsResponse": {
+        "type": "object",
+        "description": "Version information reported by the connector.",
+        "required": [
+          "spec"
+        ],
+        "properties": {
+          "spec": {
+            "$ref": "#/components/schemas/ServiceVersion"
+          },
+          "application": {
+            "$ref": "#/components/schemas/ServiceVersion"
+          }
+        },
+        "additionalProperties": false,
+        "example": {
+          "spec": {
+            "version": "1.0.0"
+          },
+          "application": {
+            "version": "2.3.4"
+          }
+        }
+      },
+      "ServiceVersion": {
+        "type": "object",
+        "description": "Single semantic version value.",
+        "required": [
+          "version"
+        ],
+        "properties": {
+          "version": {
+            "$ref": "#/components/schemas/SemanticVersion"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SemanticVersion": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "description": "Semantic Versioning 2.0.0 identifier",
+        "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$",
+        "example": "1.0.0"
+      },
+      "PropertyId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000,
+        "description": "Unique, case-sensitive identifier for a source-system property or document."
+      },
+      "Locale": {
+        "type": "string",
+        "pattern": "^[a-zA-z]{2}(-[a-zA-z]{2})?$",
+        "example": "en-US",
+        "description": "Language tag composed of either a 2-letter language code such as `en` or a language-region pair such as `en-US`."
+      },
+      "Result": {
+        "type": "object",
+        "description": "Optional error payload used to provide diagnostics for failed requests.",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "default": [],
+            "nullable": true,
+            "description": "Collection of diagnostic messages associated with the request."
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "description": "Single diagnostic message included in a `Result` payload.",
+        "properties": {
+          "messageType": {
+            "$ref": "#/components/schemas/MessageTypeEnum"
+          },
+          "text": {
+            "type": "string",
+            "description": "Human-readable message text."
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "nullable": true,
+            "description": "Optional machine-readable error or message code."
+          },
+          "correlationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "nullable": true,
+            "description": "Optional correlation identifier for tracing the request across systems."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2026-04-02T12:00:00Z",
+            "description": "Optional timestamp indicating when the message was created."
+          }
+        }
+      },
+      "MessageTypeEnum": {
+        "type": "string",
+        "description": "Supported severity levels for diagnostic messages.",
+        "enum": [
+          "Info",
+          "Warning",
+          "Error",
+          "Exception"
+        ]
+      }
+    }
+  }
+}

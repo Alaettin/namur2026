@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Anmeldung</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="min-height: 100vh; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 48px 16px; box-sizing: border-box; background: #EFEFEF; color: #1B1D26; font-family: Raleway, 'Helvetica Neue', sans-serif">
+  <img src="../assets/keyvisual.png" alt="" style="position: absolute; left: 50%; top: 50%; width: 1700px; max-width: none; transform: translate(-50%, -50%); pointer-events: none">
+  <main style="position: relative; width: 100%; max-width: 420px; padding: 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px; background: #FFFFFF; box-shadow: 0 18px 48px rgba(27,29,38,0.13)">
+    <div style="display: flex; flex-direction: column; gap: 20px">
+      <img src="../assets/axon-logo.svg" alt="Neoception AXON" style="width: 132px; height: auto; display: block; margin: -12px 0 -12px -20px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.14em; color: #00846D">EVENT MANAGER · NAMUR HV 2026</span>
+        <h1 style="margin: 0; font-weight: 700; font-size: 32px; letter-spacing: -0.02em; line-height: 1.1">Anmelden</h1>
+      </div>
+    </div>
+    <sc-if value="{{error}}" hint-placeholder-val="{{false}}">
+      <div role="alert" style="padding: 12px 14px; display: flex; gap: 10px; align-items: center; background: #FDE4D8; color: #1B1D26; font-size: 14px; font-weight: 500">
+        <span style="width: 8px; height: 8px; flex: none; border-radius: 50%; background: #C24E1E"></span>
+        E-Mail oder Passwort ist nicht korrekt.
+      </div>
+    </sc-if>
+    <form style="display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <label for="mail" style="font-size: 13px; font-weight: 600">E-Mail</label>
+        <input id="mail" type="email" autocomplete="username" value="j.lindqvist@feldwerk-systems.de" style="height: 46px; padding: 0 12px; box-sizing: border-box; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font: inherit; font-size: 15px">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <label for="pw" style="font-size: 13px; font-weight: 600">Passwort</label>
+        <input id="pw" type="password" autocomplete="current-password" value="geheimnis" style="{{pwStyle}}">
+      </div>
+      <a href="Main.dc.html" style="margin-top: 6px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 999px; background: #00A587; color: #FFFFFF; text-decoration: none; font-size: 16px; font-weight: 600">Anmelden</a>
+    </form>
+    <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #5E606C">Zugänge vergibt die Konferenz-Orga.</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"error":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const error = this.props.error ?? false;
+    return { error, pwStyle: 'height: 46px; padding: 0 12px; box-sizing: border-box; border-radius: 0; background: #FFFFFF; color: #1B1D26; font: inherit; font-size: 15px; border: ' + (error ? '2px solid #C24E1E' : '1px solid #CBCCD2') };
+  }
+}
+</script>
+</body>
+</html>

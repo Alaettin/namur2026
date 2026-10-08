@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Besucher: leer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EFEFEF; color: #1B1D26; font-family: Raleway, 'Helvetica Neue', sans-serif">
+  <dc-import name="AppHeader" active="visitors" admin="{{yes}}" user="K. Hollmann" hint-size="100%,104px"></dc-import>
+  <main style="max-width: 992px; margin: 0 auto; padding: 40px 16px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <h1 style="margin: 0; font-weight: 700; font-size: 36px; letter-spacing: -0.02em; line-height: 1.1">Besucher</h1>
+    <section style="padding: 56px 32px; display: flex; flex-direction: column; align-items: center; gap: 28px; text-align: center; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 520px">
+        <h2 style="margin: 0; font-weight: 700; font-size: 26px; line-height: 1.2">Noch keine Besucher angelegt</h2>
+        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #43454F">Jeder Besucher braucht die GUID seines Passes. Erst dann können Betreuer am Exponat scannen und Inhalte zuordnen.</p>
+      </div>
+      <div style="width: 100%; max-width: 680px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 16px; text-align: left">
+        <a href="CsvImport.dc.html" style="padding: 24px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #CBCCD2; color: #1B1D26; text-decoration: none">
+          <span style="font-size: 17px; font-weight: 700">CSV importieren</span>
+          <span style="font-size: 14px; line-height: 1.55; color: #43454F">Für die Teilnehmerliste der Orga. Trennzeichen Semikolon oder Komma.</span>
+          <span style="margin-top: 4px; font-size: 13px; font-weight: 600; color: #00846D">Datei wählen →</span>
+        </a>
+        <a href="VisitorDetail.dc.html" style="padding: 24px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #CBCCD2; color: #1B1D26; text-decoration: none">
+          <span style="font-size: 17px; font-weight: 700">Besucher anlegen</span>
+          <span style="font-size: 14px; line-height: 1.55; color: #43454F">Für Nachmeldungen am Empfang. GUID vom Pass eintragen oder erzeugen.</span>
+          <span style="margin-top: 4px; font-size: 13px; font-weight: 600; color: #00846D">Formular öffnen →</span>
+        </a>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return { yes: true }; }
+}
+</script>
+</body>
+</html>

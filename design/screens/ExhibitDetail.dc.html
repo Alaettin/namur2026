@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Exponat E03</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EFEFEF; color: #1B1D26; font-family: Raleway, 'Helvetica Neue', sans-serif">
+  <dc-import name="AppHeader" active="exhibits" admin="{{yes}}" user="K. Hollmann" hint-size="100%,104px"></dc-import>
+  <main style="max-width: 992px; margin: 0 auto; padding: 32px 16px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <a href="Exhibits.dc.html" style="align-self: flex-start; height: 32px; display: flex; align-items: center; color: #43454F; text-decoration: none; font-size: 14px; font-weight: 500">← Exponate</a>
+    <section style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 20px">
+      <div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 10px">
+        <span style="display: flex; align-items: center; gap: 12px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">E03</span><span style="font-size: 13px; color: #43454F"><strong style="color: #1B1D26">81</strong> Besucher zugeordnet</span></span>
+        <h1 style="margin: 0; font-weight: 700; font-size: 36px; letter-spacing: -0.02em; line-height: 1.1">Ethernet-APL Feldgeräte</h1>
+      </div>
+      <div style="display: flex; gap: 10px">
+        <button type="button" style="height: 44px; padding: 0 22px; border: 1px solid #1B1D26; border-radius: 999px; background: transparent; color: #1B1D26; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer">Speichern</button>
+        <a href="ScanReady.dc.html" style="height: 44px; padding: 0 22px; display: flex; align-items: center; border-radius: 999px; background: #00A587; color: #FFFFFF; text-decoration: none; font-size: 15px; font-weight: 600">Scannen</a>
+      </div>
+    </section>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="desc" style="font-size: 12px; font-weight: 600; color: #43454F">Beschreibung</label>
+      <textarea id="desc" rows="3" style="padding: 12px; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font: inherit; font-size: 15px; line-height: 1.55; resize: vertical">Zweidraht-Ethernet bis ins Feld: Druck- und Temperaturmessumformer am APL-Feldswitch, eigensicher in Zone 1, mit durchgängiger Diagnose bis ins Leitsystem.</textarea>
+    </div>
+    <section aria-labelledby="h-docs" style="padding: 24px; display: flex; flex-direction: column; gap: 14px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <div style="display: flex; align-items: baseline; gap: 10px"><h2 id="h-docs" style="margin: 0; font-weight: 700; font-size: 18px">Dokumente</h2><span style="font-size: 13px; color: #5E606C">4</span></div>
+      <label for="drop" style="padding: 22px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed #82848F; background: #FAFAFA; font-size: 14px; font-weight: 500; cursor: pointer">
+        Dateien hierher ziehen oder <span style="color: #00846D; font-weight: 600; text-decoration: underline; text-underline-offset: 3px">auswählen</span>
+        <input id="drop" type="file" multiple style="position: absolute; width: 1px; height: 1px; opacity: 0">
+      </label>
+      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #43454F">Ersetzen Sie eine Datei, sehen alle bisher zugeordneten Besucher sofort die neue Fassung. Ein neues Dokument erhalten nur Besucher, die ab jetzt gescannt werden.</p>
+      <sc-for list="{{docs}}" as="d" hint-placeholder-count="4">
+        <div style="padding-top: 14px; display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; border-top: 1px solid #E3E4E7">
+          <span style="{{d.thumb}}">{{d.type}}</span>
+          <div style="flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+            <input aria-label="Titel" type="text" value="{{d.title}}" style="height: 38px; padding: 0 10px; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font: inherit; font-size: 14px; font-weight: 600">
+            <input aria-label="Beschreibung" type="text" value="{{d.desc}}" placeholder="Beschreibung" style="height: 36px; padding: 0 10px; border: 1px solid #E3E4E7; border-radius: 0; background: #FFFFFF; color: #43454F; font: inherit; font-size: 13px">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5E606C">{{d.meta}}</span>
+          </div>
+          <div style="display: flex; gap: 4px">
+            <button type="button" style="height: 34px; padding: 0 12px; border: 1px solid #1B1D26; border-radius: 999px; background: transparent; color: #1B1D26; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Ersetzen</button>
+            <button type="button" aria-label="{{d.del}}" style="height: 34px; padding: 0 10px; border: 0; background: transparent; color: #43454F; font: inherit; font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer">Entfernen</button>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+    <section aria-labelledby="h-links" style="padding: 24px; display: flex; flex-direction: column; gap: 12px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <div style="display: flex; align-items: baseline; gap: 10px"><h2 id="h-links" style="margin: 0; font-weight: 700; font-size: 18px">Links</h2><span style="font-size: 13px; color: #5E606C">2</span></div>
+      <sc-for list="{{links}}" as="l" hint-placeholder-count="2">
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+          <input aria-label="Titel" type="text" value="{{l.title}}" style="flex: 1 1 240px; min-width: 0; height: 40px; padding: 0 10px; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font: inherit; font-size: 14px; font-weight: 600">
+          <input aria-label="URL" type="url" value="{{l.url}}" style="flex: 1 1 260px; min-width: 0; height: 40px; padding: 0 10px; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font-family: 'IBM Plex Mono', monospace; font-size: 12px">
+          <button type="button" style="height: 34px; padding: 0 10px; border: 0; background: transparent; color: #43454F; font: inherit; font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer">Entfernen</button>
+        </div>
+      </sc-for>
+      <button type="button" style="align-self: flex-start; height: 36px; padding: 0 16px; border: 1px solid #1B1D26; border-radius: 999px; background: transparent; color: #1B1D26; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">+ Link hinzufügen</button>
+    </section>
+    <section aria-labelledby="h-contact" style="padding: 24px; display: flex; flex-direction: column; gap: 14px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <div style="display: flex; align-items: baseline; gap: 10px"><h2 id="h-contact" style="margin: 0; font-weight: 700; font-size: 18px">Ansprechpartner</h2><span style="font-size: 13px; color: #5E606C">2</span></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 12px">
+        <sc-for list="{{contacts}}" as="c" hint-placeholder-count="2">
+          <article style="padding: 18px; display: flex; flex-direction: column; gap: 14px; border: 1px solid #E3E4E7">
+            <div style="display: flex; gap: 14px; align-items: center">
+              <span style="width: 56px; height: 70px; flex: none; display: flex; align-items: center; justify-content: center; background: #1B1D26; color: #FFFFFF; font-size: 18px; font-weight: 700">{{c.ini}}</span>
+              <div style="display: flex; flex-direction: column; gap: 2px">
+                <strong style="font-size: 15px; font-weight: 700">{{c.name}}</strong>
+                <span style="font-size: 13px; color: #43454F">{{c.pos}}</span>
+                <span style="font-size: 13px; color: #43454F">{{c.firm}}</span>
+              </div>
+            </div>
+            <dl style="margin: 0; display: grid; grid-template-columns: 64px 1fr; gap: 6px 10px; font-size: 13px">
+              <dt style="color: #5E606C">E-Mail</dt><dd style="margin: 0; overflow-wrap: anywhere">{{c.mail}}</dd>
+              <dt style="color: #5E606C">Website</dt><dd style="margin: 0">{{c.web}}</dd>
+              <dt style="color: #5E606C">Adresse</dt><dd style="margin: 0">{{c.addr}}</dd>
+            </dl>
+            <div style="display: flex; gap: 4px">
+              <button type="button" style="height: 34px; padding: 0 12px; border: 1px solid #1B1D26; border-radius: 999px; background: transparent; color: #1B1D26; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Bearbeiten</button>
+              <button type="button" aria-label="{{c.del}}" style="height: 34px; padding: 0 10px; border: 0; background: transparent; color: #43454F; font: inherit; font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer">Entfernen</button>
+            </div>
+          </article>
+        </sc-for>
+      </div>
+      <button type="button" style="align-self: flex-start; height: 36px; padding: 0 16px; border: 1px solid #1B1D26; border-radius: 999px; background: transparent; color: #1B1D26; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">+ Ansprechpartner hinzufügen</button>
+    </section>
+    <section aria-labelledby="h-staff" style="padding: 24px; display: flex; flex-direction: column; gap: 12px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <h2 id="h-staff" style="margin: 0; font-weight: 700; font-size: 18px">Betreuer</h2>
+      <sc-for list="{{staff}}" as="s" hint-placeholder-count="2">
+        <div style="min-height: 48px; display: flex; align-items: center; gap: 12px; border-top: 1px solid #E3E4E7">
+          <span style="flex: 1; min-width: 0; display: flex; flex-wrap: wrap; column-gap: 12px"><span style="font-size: 14px; font-weight: 600">{{s.name}}</span><span style="font-size: 13px; color: #5E606C">{{s.mail}}</span></span>
+          <button type="button" aria-label="{{s.del}}" style="height: 34px; padding: 0 10px; border: 0; background: transparent; color: #43454F; font: inherit; font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer">Entfernen</button>
+        </div>
+      </sc-for>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <span style="position: relative; flex: 0 1 320px; min-width: 0; display: block">
+          <select aria-label="App-Nutzer wählen" style="appearance: none; width: 100%; height: 40px; padding: 0 28px 0 10px; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #43454F; font: inherit; font-size: 14px"><option>App-Nutzer wählen</option></select>
+          <span aria-hidden="true" style="position: absolute; right: 10px; top: 13px; font-size: 9px; color: #43454F; pointer-events: none">▼</span>
+        </span>
+        <button type="button" style="height: 40px; padding: 0 16px; border: 1px solid #1B1D26; border-radius: 999px; background: transparent; color: #1B1D26; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Hinzufügen</button>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const th = (bg, fg, bd) => 'width: 56px; height: 70px; flex: none; display: flex; align-items: flex-end; padding: 6px; box-sizing: border-box; font-family: \'IBM Plex Mono\', monospace; font-size: 11px; font-weight: 600; background: ' + bg + '; color: ' + fg + '; border: 1px solid ' + bd;
+    const docs = [
+      { type: 'PDF', title: 'Datenblatt APL-Feldswitch FS-240', desc: 'Technische Daten, Ex-Kennzeichnung, Maße', meta: 'PDF · 1,2 MB · 6 Seiten · Fassung 2', thumb: th('#FFFFFF', '#C24E1E', '#CBCCD2') },
+      { type: 'PDF', title: 'Whitepaper Ethernet-APL in Ex-Zone 1', desc: 'Architektur, Eigensicherheit, Erfahrungen aus zwei Pilotanlagen', meta: 'PDF · 3,4 MB · 18 Seiten', thumb: th('#FFFFFF', '#C24E1E', '#CBCCD2') },
+      { type: 'JPG', title: 'Produktbild Druckmessumformer PT-80', desc: '', meta: 'JPG · 860 KB · 2400 × 1600 px', thumb: th('#E3E4E7', '#1B1D26', '#E3E4E7') },
+      { type: 'STEP', title: '3D-Modell PT-80', desc: 'Für die Einbauplanung', meta: 'STEP · 5,1 MB · keine Vorschau', thumb: th('#1B1D26', '#FFFFFF', '#1B1D26') }
+    ].map((d) => ({ ...d, del: d.title + ' entfernen' }));
+    const links = [
+      { title: 'Projektierungsleitfaden Ethernet-APL', url: 'https://www.feldwerk-systems.de/apl-leitfaden' },
+      { title: 'Webinar: APL in der Bestandsanlage', url: 'https://www.feldwerk-systems.de/webinar-apl' }
+    ];
+    const contacts = [
+      { ini: 'IM', name: 'Dr. Ines Marquardt', pos: 'Produktmanagerin Feldgeräte', firm: 'Feldwerk Systems GmbH', mail: 'i.marquardt@feldwerk-systems.de', web: 'www.feldwerk-systems.de', addr: 'Am Messweg 12, 76131 Karlsruhe, Deutschland' },
+      { ini: 'PS', name: 'Philipp Sanders', pos: 'Vertrieb Prozessindustrie', firm: 'Feldwerk Systems GmbH', mail: 'p.sanders@feldwerk-systems.de', web: 'www.feldwerk-systems.de', addr: 'Am Messweg 12, 76131 Karlsruhe, Deutschland' }
+    ].map((c) => ({ ...c, del: c.name + ' entfernen' }));
+    const staff = [
+      { name: 'Jana Lindqvist', mail: 'j.lindqvist@feldwerk-systems.de' },
+      { name: 'Okan Demir', mail: 'o.demir@feldwerk-systems.de' }
+    ].map((s) => ({ ...s, del: s.name + ' als Betreuer entfernen' }));
+    return { yes: true, docs, links, contacts, staff };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Besucher</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EFEFEF; color: #1B1D26; font-family: Raleway, 'Helvetica Neue', sans-serif">
+  <dc-import name="AppHeader" active="visitors" admin="{{yes}}" user="K. Hollmann" hint-size="100%,104px"></dc-import>
+  <main style="max-width: 992px; margin: 0 auto; padding: 40px 16px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+      <h1 style="margin: 0; font-weight: 700; font-size: 36px; letter-spacing: -0.02em; line-height: 1.1">Besucher</h1>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px">
+        <a href="CsvImport.dc.html" style="height: 44px; padding: 0 22px; display: flex; align-items: center; border: 1px solid #1B1D26; border-radius: 999px; color: #1B1D26; text-decoration: none; font-size: 15px; font-weight: 600">CSV importieren</a>
+        <a href="VisitorDetail.dc.html" style="height: 44px; padding: 0 22px; display: flex; align-items: center; border-radius: 999px; background: #00A587; color: #FFFFFF; text-decoration: none; font-size: 15px; font-weight: 600">Besucher anlegen</a>
+      </div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+      <label for="q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Suchen</label>
+      <input id="q" type="search" placeholder="Nach Name, Firma, E-Mail oder GUID" style="flex: 0 1 320px; min-width: 0; height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font: inherit; font-size: 15px">
+      <span style="font-size: 13px; color: #5E606C">412 Besucher</span>
+    </div>
+    <div style="overflow-x: auto; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <table style="width: 100%; min-width: 900px; border-collapse: collapse; font-size: 14px">
+        <thead>
+          <tr style="text-align: left; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #5E606C">
+            <th style="padding: 14px 16px; font-weight: 600">Name</th>
+            <th style="padding: 14px 16px; font-weight: 600">Firma und Position</th>
+            <th style="padding: 14px 16px; font-weight: 600">E-Mail</th>
+            <th style="padding: 14px 16px; font-weight: 600">GUID</th>
+            <th style="padding: 14px 16px; font-weight: 600">Exponate</th>
+            <th style="padding: 14px 16px"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Aktion</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+            <tr>
+              <td style="padding: 12px 16px; border-top: 1px solid #E3E4E7">
+                <span style="display: flex; align-items: center; gap: 12px"><span style="{{r.av}}">{{r.ini}}</span><span style="font-weight: 600">{{r.name}}</span></span>
+              </td>
+              <td style="padding: 12px 16px; border-top: 1px solid #E3E4E7"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 500">{{r.firm}}</span><span style="font-size: 12px; color: #5E606C">{{r.pos}}</span></span></td>
+              <td style="padding: 12px 16px; border-top: 1px solid #E3E4E7; color: #43454F">{{r.mail}}</td>
+              <td style="padding: 6px 16px; border-top: 1px solid #E3E4E7">
+                <span style="display: flex; align-items: center; gap: 2px">
+                  <code title="{{r.guid}}" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{r.short}}</code>
+                  <button type="button" aria-label="GUID kopieren" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #5E606C; cursor: pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                </span>
+              </td>
+              <td style="padding: 12px 16px; border-top: 1px solid #E3E4E7; font-weight: 600">{{r.n}}</td>
+              <td style="padding: 12px 16px; border-top: 1px solid #E3E4E7; text-align: right"><a href="VisitorDetail.dc.html" style="color: #00846D; text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap">Ansehen →</a></td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+      <span style="font-size: 13px; color: #5E606C">Zeige 1 bis 25 von 412</span>
+      <nav aria-label="Seiten" style="display: flex; gap: 8px">
+        <button type="button" aria-label="Vorherige Seite" disabled style="width: 44px; height: 36px; border: 1px solid #CBCCD2; border-radius: 999px; background: transparent; color: #82848F; font: inherit">←</button>
+        <button type="button" aria-current="page" style="width: 36px; height: 36px; border: 0; border-radius: 50%; background: #1B1D26; color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 700">1</button>
+        <button type="button" style="width: 36px; height: 36px; border: 1px solid #CBCCD2; border-radius: 50%; background: transparent; color: #1B1D26; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">2</button>
+        <button type="button" style="width: 36px; height: 36px; border: 1px solid #CBCCD2; border-radius: 50%; background: transparent; color: #1B1D26; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">3</button>
+        <span style="align-self: center; color: #5E606C">…</span>
+        <button type="button" style="width: 36px; height: 36px; border: 1px solid #CBCCD2; border-radius: 50%; background: transparent; color: #1B1D26; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">17</button>
+        <button type="button" aria-label="Nächste Seite" style="width: 44px; height: 36px; border: 1px solid #1B1D26; border-radius: 999px; background: transparent; color: #1B1D26; font: inherit; cursor: pointer">→</button>
+      </nav>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1120}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const data = [
+      ['Bernd Achterberg', 'Saale Spezialgase GmbH', 'Leiter Automatisierung', 'b.achterberg@saale-gase.de', '0a4d7e12-93bc-4f60-a1d8-2e5b7c90f314', 3],
+      ['Yasemin Çelik', 'Rheinchem Werke GmbH', 'Betriebsingenieurin', 'y.celik@rheinchem.de', '1b72c0e4-5a1f-4d9b-8c33-6f0e2a71b8d5', 0],
+      ['Frederik Dahl', 'Novaplast AG', 'Head of Digitalization', 'frederik.dahl@novaplast.ag', '2c90e5a7-4b3d-4e12-9f6a-71d84c0b2e96', 2],
+      ['Dr. Henrik Faller', 'Rheinchem Werke GmbH', 'Leiter Automatisierung', 'h.faller@rheinchem.de', '3d18f6b2-0c7e-4a95-b2d1-8e4a6f13c057', 4],
+      ['Gesa Hinrichs', 'Hanseatic Agro Chemie GmbH', 'Prozessleittechnik', 'gesa.hinrichs@hac-chemie.de', '4e27a9c5-6d81-4b0f-a3e7-9c52b1d06f48', 0],
+      ['Aylin Kaya', 'Westfalen Polymer GmbH', 'Ingenieurin Prozessleittechnik', 'a.kaya@westfalen-polymer.de', '5f36b0d8-7e92-4c1a-b4f8-0d63c2e17a59', 1],
+      ['Tim Lehmkuhl', 'Kalibra Chemie KG', 'EMSR-Planer', 't.lehmkuhl@kalibra-chemie.de', '6a45c1e9-8fa3-4d2b-85a9-1e74d3f28b60', 0],
+      ['Clara Nguyen', 'Isarwerk Specialty Chemicals', 'Digitalization Manager', 'clara.nguyen@isarwerk-sc.com', '7b54d2fa-90b4-4e3c-96ba-2f85e4a39c71', 2],
+      ['Rafael Ortmann', 'Saale Spezialgase GmbH', 'Betriebsingenieur', 'r.ortmann@saale-gase.de', '8c63e30b-a1c5-4f4d-a7cb-3096f5b4ad82', 1],
+      ['Ulrike Pfannschmidt', 'Elbtal Pharma GmbH', 'Leiterin Engineering', 'u.pfannschmidt@elbtal-pharma.de', '9d72f41c-b2d6-4a5e-b8dc-41a706c5be93', 0]
+    ];
+    const noAvatar = { 1: true, 4: true, 6: true };
+    const base = 'width: 32px; height: 32px; flex: none; box-sizing: border-box; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; ';
+    const rows = data.map((d, i) => {
+      const parts = d[0].replace('Dr. ', '').split(' ');
+      return {
+        name: d[0], firm: d[1], pos: d[2], mail: d[3], guid: d[4], n: d[5],
+        short: d[4].slice(0, 8) + '…' + d[4].slice(-4),
+        ini: parts[0][0] + parts[parts.length - 1][0],
+        av: base + (noAvatar[i] ? 'border: 1.5px dashed #82848F; color: #5E606C' : 'background: #1B1D26; color: #FFFFFF')
+      };
+    });
+    return { yes: true, rows };
+  }
+}
+</script>
+</body>
+</html>

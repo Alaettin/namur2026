@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Dashboard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EFEFEF; color: #1B1D26; font-family: Raleway, 'Helvetica Neue', sans-serif">
+  <dc-import name="AppHeader" active="dashboard" admin="{{yes}}" user="K. Hollmann" hint-size="100%,104px"></dc-import>
+  <main style="max-width: 992px; margin: 0 auto; padding: 40px 16px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <h1 style="margin: 0; font-weight: 700; font-size: 36px; letter-spacing: -0.02em; line-height: 1.1">Dashboard</h1>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 16px">
+      <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 6px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07), inset 0 2px 0 #00A587">
+          <span style="font-size: 13px; font-weight: 500; color: #43454F; min-height: 34px">{{s.label}}</span>
+          <span style="font-weight: 800; font-size: 40px; line-height: 1.05">{{s.v}}</span>
+          <span style="font-size: 13px; color: #5E606C">{{s.sub}}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px">
+      <section aria-labelledby="h-bars" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+        <h2 id="h-bars" style="margin: 0; font-weight: 700; font-size: 18px">Zugeordnete Besucher je Exponat</h2>
+        <sc-for list="{{bars}}" as="b" hint-placeholder-count="6">
+          <a href="ExhibitDetail.dc.html" style="display: flex; flex-direction: column; gap: 6px; color: #1B1D26; text-decoration: none; font-size: 14px">
+            <span style="display: flex; gap: 10px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #43454F">{{b.id}}</span><span style="flex: 1; min-width: 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{b.name}}</span><strong style="font-weight: 700">{{b.n}}</strong></span>
+            <span style="height: 8px; background: #EFEFEF; display: block"><span style="{{b.style}}"></span></span>
+          </a>
+        </sc-for>
+      </section>
+      <section aria-labelledby="h-dq" style="padding: 24px; display: flex; flex-direction: column; gap: 4px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+        <h2 id="h-dq" style="margin: 0 0 8px; font-weight: 700; font-size: 18px">Datenqualität</h2>
+        <div style="min-height: 56px; display: flex; align-items: center; gap: 12px; border-top: 1px solid #E3E4E7">
+          <span style="width: 8px; height: 8px; flex: none; border-radius: 50%; background: #C24E1E"></span>
+          <span style="flex: 1; font-size: 14px; font-weight: 500">37 Besucher ohne Avatar</span>
+          <a href="Visitors.dc.html" style="color: #00846D; text-decoration: none; font-size: 13px; font-weight: 600">Ansehen →</a>
+        </div>
+        <div style="min-height: 56px; display: flex; align-items: center; gap: 12px; border-top: 1px solid #E3E4E7">
+          <span style="width: 8px; height: 8px; flex: none; border-radius: 50%; background: #C24E1E"></span>
+          <span style="flex: 1; font-size: 14px; font-weight: 500">1 Exponat ohne Inhalte: E06</span>
+          <a href="ExhibitEmpty.dc.html" style="color: #00846D; text-decoration: none; font-size: 13px; font-weight: 600">Bearbeiten →</a>
+        </div>
+        <div style="min-height: 56px; display: flex; align-items: center; gap: 12px; border-top: 1px solid #E3E4E7">
+          <span style="width: 8px; height: 8px; flex: none; border-radius: 50%; background: #00A587"></span>
+          <span style="flex: 1; font-size: 14px; font-weight: 500">Alle Exponate haben Betreuer</span>
+        </div>
+      </section>
+    </div>
+    <section aria-labelledby="h-last" style="display: flex; flex-direction: column; gap: 12px">
+      <h2 id="h-last" style="margin: 0; font-weight: 700; font-size: 18px">Letzte Zuordnungen</h2>
+      <div style="overflow-x: auto; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+        <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px">
+          <thead>
+            <tr style="text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5E606C">
+              <th style="padding: 14px 16px; font-weight: 600">Zeit</th>
+              <th style="padding: 14px 16px; font-weight: 600">Besucher</th>
+              <th style="padding: 14px 16px; font-weight: 600">Exponat</th>
+              <th style="padding: 14px 16px; font-weight: 600">Betreuer</th>
+              <th style="padding: 14px 16px; font-weight: 600">Inhalte</th>
+              <th style="padding: 14px 16px"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Aktion</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+              <tr>
+                <td style="padding: 14px 16px; border-top: 1px solid #E3E4E7; font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{r.t}}</td>
+                <td style="padding: 14px 16px; border-top: 1px solid #E3E4E7"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">{{r.name}}</span><span style="font-size: 12px; color: #5E606C">{{r.firm}}</span></span></td>
+                <td style="padding: 14px 16px; border-top: 1px solid #E3E4E7"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{r.ex}}</span></td>
+                <td style="padding: 14px 16px; border-top: 1px solid #E3E4E7">{{r.by}}</td>
+                <td style="padding: 14px 16px; border-top: 1px solid #E3E4E7">{{r.n}}</td>
+                <td style="padding: 14px 16px; border-top: 1px solid #E3E4E7; text-align: right"><a href="VisitorDetail.dc.html" style="color: #00846D; text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap">Ansehen →</a></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1120}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const stats = [
+      { label: 'Besucher', v: '412', sub: '37 ohne Avatar' },
+      { label: 'Exponate', v: '6', sub: '1 ohne Inhalte' },
+      { label: 'Zuordnungen heute', v: '287', sub: 'letzte um 14:32' },
+      { label: 'Besucher mit mindestens einem Scan', v: '198', sub: '48 % aller Besucher' }
+    ];
+    const bars = [
+      { id: 'E01', name: 'Modulare Anlage mit MTP', n: 64 },
+      { id: 'E02', name: 'NOA Monitoring', n: 58 },
+      { id: 'E03', name: 'Ethernet-APL Feldgeräte', n: 81 },
+      { id: 'E04', name: 'Ventilinsel mit Diagnose', n: 47 },
+      { id: 'E05', name: 'Verwaltungsschale im Engineering', n: 29 },
+      { id: 'E06', name: 'Alarmmanagement nach NA 102', n: 0 }
+    ].map((b) => ({ ...b, style: 'display: block; height: 8px; background: #00A587; width: ' + Math.round(b.n / 81 * 100) + '%' }));
+    const rows = [
+      { t: '14:32', name: 'Dr. Henrik Faller', firm: 'Rheinchem Werke GmbH', ex: 'E03', by: 'Jana Lindqvist', n: '6 von 8' },
+      { t: '14:29', name: 'Miriam Osterkamp', firm: 'Novaplast AG', ex: 'E01', by: 'Markus Ebeling', n: '3 von 7' },
+      { t: '14:27', name: 'Lukas Brenner', firm: 'Elbtal Pharma GmbH', ex: 'E02', by: 'Sophie Brandt', n: '6 von 6' },
+      { t: '14:21', name: 'Aylin Kaya', firm: 'Westfalen Polymer GmbH', ex: 'E03', by: 'Jana Lindqvist', n: '2 von 8' },
+      { t: '14:18', name: 'Stefan Wiegand', firm: 'Kalibra Chemie KG', ex: 'E04', by: 'Jana Lindqvist', n: '4 von 4' },
+      { t: '14:12', name: 'Clara Nguyen', firm: 'Isarwerk Specialty Chemicals', ex: 'E05', by: 'Tobias Reichert', n: '3 von 3' }
+    ];
+    return { yes: true, stats, bars, rows };
+  }
+}
+</script>
+</body>
+</html>

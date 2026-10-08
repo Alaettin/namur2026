@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>CSV-Import: Vorschau</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EFEFEF; color: #1B1D26; font-family: Raleway, 'Helvetica Neue', sans-serif">
+  <dc-import name="AppHeader" active="visitors" admin="{{yes}}" user="K. Hollmann" hint-size="100%,104px"></dc-import>
+  <main style="max-width: 992px; margin: 0 auto; padding: 32px 16px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <a href="Visitors.dc.html" style="align-self: flex-start; height: 32px; display: flex; align-items: center; color: #43454F; text-decoration: none; font-size: 14px; font-weight: 500">← Besucher</a>
+    <h1 style="margin: 0; font-weight: 700; font-size: 36px; letter-spacing: -0.02em; line-height: 1.1">Besucher importieren</h1>
+    <ol aria-label="Schritte" style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr))">
+      <li style="padding: 12px 0; display: flex; align-items: center; gap: 12px; box-shadow: inset 0 -2px 0 #CBCCD2">
+        <span style="width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #00A587; color: #FFFFFF; font-size: 13px; font-weight: 700">✓</span>
+        <span style="display: flex; flex-direction: column"><span style="font-size: 14px; font-weight: 600">Datei wählen</span><span style="font-size: 12px; color: #5E606C">besucher_namur2026.csv</span></span>
+      </li>
+      <li aria-current="step" style="padding: 12px 0; display: flex; align-items: center; gap: 12px; box-shadow: inset 0 -2px 0 #00A587">
+        <span style="width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #1B1D26; color: #FFFFFF; font-size: 13px; font-weight: 700">2</span>
+        <span style="display: flex; flex-direction: column"><span style="font-size: 14px; font-weight: 600">Vorschau prüfen</span><span style="font-size: 12px; color: #5E606C">Semikolon erkannt · 418 Zeilen</span></span>
+      </li>
+      <li style="padding: 12px 0; display: flex; align-items: center; gap: 12px; box-shadow: inset 0 -2px 0 #CBCCD2; color: #5E606C">
+        <span style="width: 26px; height: 26px; box-sizing: border-box; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #82848F; font-size: 13px; font-weight: 700">3</span>
+        <span style="font-size: 14px; font-weight: 600">Ergebnis</span>
+      </li>
+    </ol>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); gap: 16px; align-items: start">
+      <section aria-labelledby="h-issues" style="padding: 24px; display: flex; flex-direction: column; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+        <h2 id="h-issues" style="margin: 0 0 12px; font-weight: 700; font-size: 18px">Beanstandungen</h2>
+        <sc-for list="{{issues}}" as="i" hint-placeholder-count="3">
+          <div style="padding: 14px 0; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid #E3E4E7">
+            <span style="display: flex; align-items: center; gap: 12px"><span style="flex: 1; font-size: 15px; font-weight: 600">{{i.title}}</span><span style="height: 22px; min-width: 22px; padding: 0 7px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #C24E1E; color: #FFFFFF; font-size: 12px; font-weight: 700">{{i.n}}</span></span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.6; color: #43454F">{{i.detail}}</span>
+          </div>
+        </sc-for>
+        <p style="margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: #5E606C">Zeilen mit Beanstandung werden übersprungen. Korrigieren Sie die Datei und laden Sie sie erneut, oder legen Sie die Besucher einzeln an.</p>
+      </section>
+      <section aria-labelledby="h-map" style="padding: 24px; display: flex; flex-direction: column; gap: 14px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+        <h2 id="h-map" style="margin: 0; font-weight: 700; font-size: 18px">Spaltenzuordnung</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 10px 16px">
+          <sc-for list="{{map}}" as="m" hint-placeholder-count="11">
+            <div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+              <label for="{{m.id}}" style="width: 84px; flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis">{{m.col}}</label>
+              <span style="position: relative; flex: 1; min-width: 0; display: block">
+                <select id="{{m.id}}" style="appearance: none; width: 100%; height: 36px; padding: 0 26px 0 10px; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font: inherit; font-size: 13px"><option>{{m.field}}</option></select>
+                <span aria-hidden="true" style="position: absolute; right: 9px; top: 11px; font-size: 9px; color: #43454F; pointer-events: none">▼</span>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </div>
+    <section aria-labelledby="h-prev" style="display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px">
+        <h2 id="h-prev" style="margin: 0; font-weight: 700; font-size: 18px">Vorschau</h2>
+        <span style="font-size: 13px; color: #5E606C">Beanstandete Zeilen zuerst</span>
+      </div>
+      <div style="overflow-x: auto; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+        <table style="width: 100%; min-width: 820px; border-collapse: collapse; font-size: 14px">
+          <thead>
+            <tr style="text-align: left; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #5E606C">
+              <th style="padding: 14px 16px; font-weight: 600">Zeile</th>
+              <th style="padding: 14px 16px; font-weight: 600">Status</th>
+              <th style="padding: 14px 16px; font-weight: 600">GUID</th>
+              <th style="padding: 14px 16px; font-weight: 600">Name</th>
+              <th style="padding: 14px 16px; font-weight: 600">Firma</th>
+              <th style="padding: 14px 16px; font-weight: 600">E-Mail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+              <tr>
+                <td style="padding: 12px 16px; border-top: 1px solid #E3E4E7; font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{r.line}}</td>
+                <td style="padding: 12px 16px; border-top: 1px solid #E3E4E7"><span style="{{r.badge}}">● {{r.status}}</span></td>
+                <td style="{{r.guidCell}}">{{r.guid}}</td>
+                <td style="{{r.nameCell}}">{{r.name}}</td>
+                <td style="padding: 12px 16px; border-top: 1px solid #E3E4E7">{{r.firm}}</td>
+                <td style="{{r.mailCell}}">{{r.mail}}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section aria-labelledby="h-mode" style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+      <h2 id="h-mode" style="margin: 0; font-weight: 700; font-size: 18px">Übernahme</h2>
+      <div role="radiogroup" aria-labelledby="h-mode" style="display: flex; border: 1px solid #1B1D26; border-radius: 999px; overflow: hidden">
+        <button type="button" role="radio" aria-checked="true" style="height: 36px; padding: 0 18px; border: 0; background: #1B1D26; color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Ergänzen</button>
+        <button type="button" role="radio" aria-checked="false" style="height: 36px; padding: 0 18px; border: 0; background: transparent; color: #1B1D26; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Ersetzen</button>
+      </div>
+      <span style="flex: 1 1 320px; font-size: 13px; line-height: 1.5; color: #43454F">Neue GUIDs werden angelegt, bekannte aktualisiert. Die 412 vorhandenen Besucher und ihre Zuordnungen bleiben.</span>
+    </section>
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding-top: 8px; border-top: 1px solid #CBCCD2">
+      <a href="Visitors.dc.html" style="height: 44px; padding: 0 22px; display: flex; align-items: center; border: 1px solid #1B1D26; border-radius: 999px; color: #1B1D26; text-decoration: none; font-size: 15px; font-weight: 600">Zurück</a>
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+        <span style="font-size: 13px; color: #43454F">7 Zeilen werden übersprungen</span>
+        <a href="CsvResult.dc.html" style="height: 44px; padding: 0 24px; display: flex; align-items: center; border-radius: 999px; background: #00A587; color: #FFFFFF; text-decoration: none; font-size: 15px; font-weight: 600">411 Besucher übernehmen</a>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1280}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const issues = [
+      { title: 'Doppelte GUID', n: 2, detail: 'Zeile 57 und 212: 9a1c44e0-71b2-4d8e-b5f3-0c2d9e6a7b18' },
+      { title: 'Ungültige E-Mail', n: 3, detail: 'Zeile 18: m.weber@novaplast · Zeile 96: s.kraus(at)elbtal-pharma.de · Zeile 341: t.ruge@@isarwerk-sc.com' },
+      { title: 'Fehlender Pflichtwert', n: 2, detail: 'Zeile 301: Nachname fehlt · Zeile 377: GUID fehlt' }
+    ];
+    const map = [
+      ['guid', 'GUID'], ['vorname', 'Vorname'], ['name', 'Nachname'], ['unternehmen', 'Firma'],
+      ['funktion', 'Position'], ['mail', 'E-Mail'], ['strasse', 'Straße'], ['plz', 'PLZ'],
+      ['ort', 'Ort'], ['land', 'Land'], ['web', 'Website']
+    ].map((m, i) => ({ id: 'map' + i, col: m[0], field: m[1] }));
+    const badge = (bg) => 'height: 22px; padding: 0 8px; display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; color: #FFFFFF; background: ' + bg;
+    const cell = 'padding: 12px 16px; border-top: 1px solid #E3E4E7;';
+    const mono = cell + " font-family: 'IBM Plex Mono', monospace; font-size: 12px;";
+    const hit = ' background: #FDE4D8; box-shadow: inset 0 0 0 1px #C24E1E;';
+    const rows = [
+      { line: 57, status: 'Fehler', bg: '#C24E1E', guid: '9a1c44e0…7b18', name: 'Matthias Weber', firm: 'Novaplast AG', mail: 'm.weber@novaplast.ag', e: 'guid' },
+      { line: 212, status: 'Fehler', bg: '#C24E1E', guid: '9a1c44e0…7b18', name: 'Johanna Severin', firm: 'Kalibra Chemie KG', mail: 'j.severin@kalibra-chemie.de', e: 'guid' },
+      { line: 18, status: 'Fehler', bg: '#C24E1E', guid: '0e5b2f71…c3d0', name: 'Marco Weber', firm: 'Novaplast AG', mail: 'm.weber@novaplast', e: 'mail' },
+      { line: 301, status: 'Fehler', bg: '#C24E1E', guid: '6c90ad13…f42e', name: 'Lea', firm: 'Elbtal Pharma GmbH', mail: 'lea.b@elbtal-pharma.de', e: 'name' },
+      { line: 2, status: 'Neu', bg: '#00A587', guid: '0a4d7e12…f314', name: 'Bernd Achterberg', firm: 'Saale Spezialgase GmbH', mail: 'b.achterberg@saale-gase.de', e: '' },
+      { line: 3, status: 'Update', bg: '#1B1D26', guid: '3d18f6b2…c057', name: 'Dr. Henrik Faller', firm: 'Rheinchem Werke GmbH', mail: 'h.faller@rheinchem.de', e: '' }
+    ].map((r) => ({
+      ...r,
+      badge: badge(r.bg),
+      guidCell: mono + (r.e === 'guid' ? hit : ''),
+      nameCell: cell + (r.e === 'name' ? hit : ''),
+      mailCell: cell + (r.e === 'mail' ? hit : '')
+    }));
+    return { yes: true, issues, map, rows };
+  }
+}
+</script>
+</body>
+</html>

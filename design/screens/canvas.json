@@ -1,0 +1,287 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Api.dc.html": {
+      "expand": "fill",
+      "h": 1900,
+      "title": "10 API, Connector-Aufrufe",
+      "w": 1440,
+      "x": 4560,
+      "y": 2828
+    },
+    "AppHeader.dc.html": {
+      "h": 104,
+      "title": "Baustein: Kopfzeile mit Reitern",
+      "w": 1440,
+      "x": 1520,
+      "y": 7268
+    },
+    "CsvImport.dc.html": {
+      "expand": "fill",
+      "h": 1280,
+      "title": "5 CSV-Import, Schritt 2",
+      "w": 1440,
+      "x": 1520,
+      "y": 4108
+    },
+    "CsvResult.dc.html": {
+      "h": 600,
+      "title": "5 CSV-Import, Schritt 3",
+      "w": 720,
+      "x": 3040,
+      "y": 7268
+    },
+    "ErrCamera.dc.html": {
+      "h": 844,
+      "title": "Fehler: Kamera, GUID von Hand",
+      "w": 390,
+      "x": 940,
+      "y": 1564
+    },
+    "ErrNoContent.dc.html": {
+      "h": 844,
+      "title": "Fehler: Exponat ohne Inhalte",
+      "w": 390,
+      "x": 1880,
+      "y": 1564
+    },
+    "ErrNotPass.dc.html": {
+      "h": 844,
+      "title": "Fehler: kein Konferenzpass",
+      "w": 390,
+      "x": 0,
+      "y": 1564
+    },
+    "ErrOffline.dc.html": {
+      "h": 844,
+      "title": "Fehler: keine Verbindung",
+      "w": 390,
+      "x": 1410,
+      "y": 1564
+    },
+    "ErrUnknown.dc.html": {
+      "h": 844,
+      "title": "Fehler: GUID unbekannt",
+      "w": 390,
+      "x": 470,
+      "y": 1564
+    },
+    "ExhibitDetail.dc.html": {
+      "expand": "fill",
+      "h": 1760,
+      "title": "2 Exponat-Detail",
+      "w": 1440,
+      "x": 1520,
+      "y": 5508
+    },
+    "ExhibitEmpty.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "2 Exponat leer",
+      "w": 1440,
+      "x": 3040,
+      "y": 5508
+    },
+    "Exhibits.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "7 Exponatliste",
+      "w": 1440,
+      "x": 0,
+      "y": 5508
+    },
+    "Login.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "title": "8 Anmeldung",
+      "w": 1440,
+      "x": 0,
+      "y": 2828
+    },
+    "MDashboard.dc.html": {
+      "h": 1900,
+      "title": "6 Dashboard, Handy",
+      "w": 390,
+      "x": 0,
+      "y": 8928
+    },
+    "MExhibitDetail.dc.html": {
+      "h": 2600,
+      "title": "2 Exponat-Detail, Handy",
+      "w": 390,
+      "x": 940,
+      "y": 8928
+    },
+    "MVisitors.dc.html": {
+      "h": 1300,
+      "title": "3 Besucherliste, Handy",
+      "w": 390,
+      "x": 470,
+      "y": 8928
+    },
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 1120,
+      "title": "6 Dashboard",
+      "w": 1440,
+      "x": 1520,
+      "y": 2828
+    },
+    "ScanCamera.dc.html": {
+      "h": 844,
+      "title": "1c Kamera",
+      "w": 390,
+      "x": 940,
+      "y": 300
+    },
+    "ScanMatch.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "1d Treffer",
+      "w": 390,
+      "x": 1410,
+      "y": 300
+    },
+    "ScanMatchTablet.dc.html": {
+      "h": 820,
+      "is_interactive": true,
+      "title": "1d Treffer, Tablet quer",
+      "w": 1180,
+      "x": 1410,
+      "y": 8928
+    },
+    "ScanPick.dc.html": {
+      "h": 844,
+      "title": "1a Exponat wählen",
+      "w": 390,
+      "x": 0,
+      "y": 300
+    },
+    "ScanReady.dc.html": {
+      "h": 844,
+      "title": "1b Bereit",
+      "w": 390,
+      "x": 470,
+      "y": 300
+    },
+    "ScanSuccess.dc.html": {
+      "h": 844,
+      "title": "1e Erfolg",
+      "w": 390,
+      "x": 1880,
+      "y": 300
+    },
+    "Users.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "9 Nutzerverwaltung",
+      "w": 1440,
+      "x": 0,
+      "y": 7268
+    },
+    "VisitorDetail.dc.html": {
+      "expand": "fill",
+      "h": 1360,
+      "title": "4 Besucher-Detail",
+      "w": 1440,
+      "x": 0,
+      "y": 4108
+    },
+    "Visitors.dc.html": {
+      "expand": "fill",
+      "h": 1120,
+      "title": "3 Besucherliste",
+      "w": 1440,
+      "x": 3040,
+      "y": 2828
+    },
+    "VisitorsEmpty.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "title": "3 Besucherliste leer",
+      "w": 1440,
+      "x": 3040,
+      "y": 4108
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-07T08:50:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "note-1akoyj": {
+      "text": "",
+      "w": 240,
+      "x": 5089,
+      "y": 3038
+    },
+    "t1": {
+      "kind": "title1",
+      "maxW": 2270,
+      "text": "Scan-Ablauf am Exponat (Handy)",
+      "w": 240,
+      "x": 0,
+      "y": 0
+    },
+    "t2": {
+      "kind": "title1",
+      "maxW": 2270,
+      "text": "Scan-Ablauf: Fehlerzustände",
+      "w": 240,
+      "x": 0,
+      "y": 1264
+    },
+    "t3": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Verwaltung (Desktop)",
+      "w": 240,
+      "x": 0,
+      "y": 2528
+    },
+    "t4": {
+      "kind": "title1",
+      "maxW": 2590,
+      "text": "Gleiche Inhalte auf Handy und Tablet",
+      "w": 240,
+      "x": 0,
+      "y": 8628
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "AppHeader.dc.html",
+    "ScanPick.dc.html",
+    "ScanReady.dc.html",
+    "ScanCamera.dc.html",
+    "ScanMatch.dc.html",
+    "ScanSuccess.dc.html",
+    "ErrNotPass.dc.html",
+    "ErrUnknown.dc.html",
+    "ErrCamera.dc.html",
+    "ErrOffline.dc.html",
+    "ErrNoContent.dc.html",
+    "Login.dc.html",
+    "Visitors.dc.html",
+    "VisitorDetail.dc.html",
+    "CsvImport.dc.html",
+    "CsvResult.dc.html",
+    "VisitorsEmpty.dc.html",
+    "Exhibits.dc.html",
+    "ExhibitDetail.dc.html",
+    "ExhibitEmpty.dc.html",
+    "Users.dc.html",
+    "MDashboard.dc.html",
+    "MVisitors.dc.html",
+    "MExhibitDetail.dc.html",
+    "ScanMatchTablet.dc.html",
+    "Api.dc.html"
+  ],
+  "pages": [],
+  "title": "namur-hv-2026"
+}

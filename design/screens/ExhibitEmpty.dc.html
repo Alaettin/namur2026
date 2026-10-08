@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Exponat E06, leer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EFEFEF; color: #1B1D26; font-family: Raleway, 'Helvetica Neue', sans-serif">
+  <dc-import name="AppHeader" active="exhibits" admin="{{yes}}" user="K. Hollmann" hint-size="100%,104px"></dc-import>
+  <main style="max-width: 992px; margin: 0 auto; padding: 32px 16px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <a href="Exhibits.dc.html" style="align-self: flex-start; height: 32px; display: flex; align-items: center; color: #43454F; text-decoration: none; font-size: 14px; font-weight: 500">← Exponate</a>
+    <section style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 20px">
+      <div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 10px">
+        <span style="display: flex; align-items: center; gap: 12px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">E06</span><span style="height: 20px; padding: 0 8px; display: inline-flex; align-items: center; background: #1B1D26; color: #FFFFFF; font-size: 10px; font-weight: 700; letter-spacing: 0.06em">● NEU ANGELEGT</span></span>
+        <h1 style="margin: 0; font-weight: 700; font-size: 36px; letter-spacing: -0.02em; line-height: 1.1">Alarmmanagement nach NA 102</h1>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px">
+        <button type="button" disabled aria-describedby="scan-hint" style="height: 44px; padding: 0 22px; border: 0; border-radius: 999px; background: #CBCCD2; color: #43454F; font: inherit; font-size: 15px; font-weight: 600">Scannen</button>
+        <span id="scan-hint" style="font-size: 12px; color: #5E606C">Möglich ab dem ersten Inhalt</span>
+      </div>
+    </section>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="desc" style="font-size: 12px; font-weight: 600; color: #43454F">Beschreibung</label>
+      <textarea id="desc" rows="2" placeholder="Worum geht es an diesem Exponat? Zwei, drei Sätze genügen." style="padding: 12px; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font: inherit; font-size: 15px; resize: vertical"></textarea>
+    </div>
+    <section style="padding: 32px; display: flex; flex-direction: column; gap: 22px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h2 style="margin: 0; font-weight: 700; font-size: 22px">Was sollen Besucher hier mitnehmen?</h2>
+        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #43454F">Ein Inhalt genügt, damit Betreuer scannen können. Alles Weitere lässt sich jederzeit ergänzen.</p>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 12px">
+        <label for="drop" style="padding: 22px; display: flex; flex-direction: column; gap: 8px; border: 1.5px dashed #82848F; background: #FAFAFA; cursor: pointer">
+          <span style="font-size: 16px; font-weight: 700">Dokumente</span>
+          <span style="font-size: 14px; line-height: 1.5; color: #43454F">Datenblatt, Whitepaper, Produktbild oder STEP-Datei hierher ziehen</span>
+          <span style="font-size: 13px; font-weight: 600; color: #00846D">Dateien auswählen →</span>
+          <input id="drop" type="file" multiple style="position: absolute; width: 1px; height: 1px; opacity: 0">
+        </label>
+        <button type="button" style="padding: 22px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; border: 1px solid #CBCCD2; background: #FFFFFF; color: #1B1D26; font: inherit; text-align: left; cursor: pointer">
+          <span style="font-size: 16px; font-weight: 700">Links</span>
+          <span style="font-size: 14px; line-height: 1.5; color: #43454F">Produktseite, Video oder Leitfaden mit Titel</span>
+          <span style="font-size: 13px; font-weight: 600; color: #00846D">Link hinzufügen →</span>
+        </button>
+        <button type="button" style="padding: 22px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; border: 1px solid #CBCCD2; background: #FFFFFF; color: #1B1D26; font: inherit; text-align: left; cursor: pointer">
+          <span style="font-size: 16px; font-weight: 700">Ansprechpartner</span>
+          <span style="font-size: 14px; line-height: 1.5; color: #43454F">Eine oder mehrere Personen mit Kontaktdaten und Bild</span>
+          <span style="font-size: 13px; font-weight: 600; color: #00846D">Ansprechpartner anlegen →</span>
+        </button>
+      </div>
+    </section>
+    <section aria-labelledby="h-staff" style="padding: 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <h2 id="h-staff" style="margin: 0; font-weight: 700; font-size: 18px">Betreuer</h2>
+      <span style="font-size: 14px; font-weight: 600">Tobias Reichert</span>
+      <button type="button" style="margin-left: auto; height: 36px; padding: 0 16px; border: 1px solid #1B1D26; border-radius: 999px; background: transparent; color: #1B1D26; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">+ Betreuer hinzufügen</button>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { return { yes: true }; }
+}
+</script>
+</body>
+</html>

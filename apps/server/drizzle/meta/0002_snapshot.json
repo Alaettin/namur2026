@@ -1,0 +1,903 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "9fa267b9-75f2-4c05-958d-42f3617e2d6e",
+  "prevId": "659ce888-4ccf-4338-9254-d7f00b3c5714",
+  "tables": {
+    "ansprechpartner": {
+      "name": "ansprechpartner",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "vorname": {
+          "name": "vorname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nachname": {
+          "name": "nachname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "firma": {
+          "name": "firma",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "strasse": {
+          "name": "strasse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "plz": {
+          "name": "plz",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ort": {
+          "name": "ort",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "land": {
+          "name": "land",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "website": {
+          "name": "website",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "angelegt": {
+          "name": "angelegt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        },
+        "geaendert": {
+          "name": "geaendert",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "app_nutzer": {
+      "name": "app_nutzer",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "passwort_hash": {
+          "name": "passwort_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rolle": {
+          "name": "rolle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "aktiv": {
+          "name": "aktiv",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "angelegt": {
+          "name": "angelegt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        },
+        "zuletzt_angemeldet": {
+          "name": "zuletzt_angemeldet",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "app_nutzer_email_unique": {
+          "name": "app_nutzer_email_unique",
+          "columns": [
+            "email"
+          ],
+          "isUnique": true
+        },
+        "app_nutzer_email_idx": {
+          "name": "app_nutzer_email_idx",
+          "columns": [
+            "email"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "besucher": {
+      "name": "besucher",
+      "columns": {
+        "guid": {
+          "name": "guid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "vorname": {
+          "name": "vorname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nachname": {
+          "name": "nachname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "firma": {
+          "name": "firma",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "strasse": {
+          "name": "strasse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "plz": {
+          "name": "plz",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ort": {
+          "name": "ort",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "land": {
+          "name": "land",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "website": {
+          "name": "website",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "avatar_datei_id": {
+          "name": "avatar_datei_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "angelegt": {
+          "name": "angelegt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        },
+        "geaendert": {
+          "name": "geaendert",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "besucher_avatar_datei_id_dateien_id_fk": {
+          "name": "besucher_avatar_datei_id_dateien_id_fk",
+          "tableFrom": "besucher",
+          "tableTo": "dateien",
+          "columnsFrom": [
+            "avatar_datei_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "dateien": {
+      "name": "dateien",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "pfad": {
+          "name": "pfad",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "groesse": {
+          "name": "groesse",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "original_name": {
+          "name": "original_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sha256": {
+          "name": "sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "angelegt": {
+          "name": "angelegt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "einstellungen": {
+      "name": "einstellungen",
+      "columns": {
+        "schluessel": {
+          "name": "schluessel",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "wert": {
+          "name": "wert",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "geaendert": {
+          "name": "geaendert",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "exponat_ansprechpartner": {
+      "name": "exponat_ansprechpartner",
+      "columns": {
+        "exponat_id": {
+          "name": "exponat_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ansprechpartner_id": {
+          "name": "ansprechpartner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "platz": {
+          "name": "platz",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "exponat_ansprechpartner_person_idx": {
+          "name": "exponat_ansprechpartner_person_idx",
+          "columns": [
+            "ansprechpartner_id"
+          ],
+          "isUnique": false
+        },
+        "exponat_ansprechpartner_platz": {
+          "name": "exponat_ansprechpartner_platz",
+          "columns": [
+            "exponat_id",
+            "platz"
+          ],
+          "isUnique": true
+        },
+        "exponat_ansprechpartner_paar": {
+          "name": "exponat_ansprechpartner_paar",
+          "columns": [
+            "exponat_id",
+            "ansprechpartner_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "exponat_ansprechpartner_exponat_id_exponate_id_fk": {
+          "name": "exponat_ansprechpartner_exponat_id_exponate_id_fk",
+          "tableFrom": "exponat_ansprechpartner",
+          "tableTo": "exponate",
+          "columnsFrom": [
+            "exponat_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "exponat_ansprechpartner_ansprechpartner_id_ansprechpartner_id_fk": {
+          "name": "exponat_ansprechpartner_ansprechpartner_id_ansprechpartner_id_fk",
+          "tableFrom": "exponat_ansprechpartner",
+          "tableTo": "ansprechpartner",
+          "columnsFrom": [
+            "ansprechpartner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "exponat_betreuer": {
+      "name": "exponat_betreuer",
+      "columns": {
+        "exponat_id": {
+          "name": "exponat_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "app_nutzer_id": {
+          "name": "app_nutzer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "exponat_betreuer_nutzer_idx": {
+          "name": "exponat_betreuer_nutzer_idx",
+          "columns": [
+            "app_nutzer_id"
+          ],
+          "isUnique": false
+        },
+        "exponat_betreuer_paar": {
+          "name": "exponat_betreuer_paar",
+          "columns": [
+            "exponat_id",
+            "app_nutzer_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "exponat_betreuer_exponat_id_exponate_id_fk": {
+          "name": "exponat_betreuer_exponat_id_exponate_id_fk",
+          "tableFrom": "exponat_betreuer",
+          "tableTo": "exponate",
+          "columnsFrom": [
+            "exponat_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "exponat_betreuer_app_nutzer_id_app_nutzer_id_fk": {
+          "name": "exponat_betreuer_app_nutzer_id_app_nutzer_id_fk",
+          "tableFrom": "exponat_betreuer",
+          "tableTo": "app_nutzer",
+          "columnsFrom": [
+            "app_nutzer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "exponat_dokumente": {
+      "name": "exponat_dokumente",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "exponat_id": {
+          "name": "exponat_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "platz": {
+          "name": "platz",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "datei_id": {
+          "name": "datei_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "titel": {
+          "name": "titel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "beschreibung": {
+          "name": "beschreibung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "exponat_dokumente_platz": {
+          "name": "exponat_dokumente_platz",
+          "columns": [
+            "exponat_id",
+            "platz"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "exponat_dokumente_exponat_id_exponate_id_fk": {
+          "name": "exponat_dokumente_exponat_id_exponate_id_fk",
+          "tableFrom": "exponat_dokumente",
+          "tableTo": "exponate",
+          "columnsFrom": [
+            "exponat_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "exponat_dokumente_datei_id_dateien_id_fk": {
+          "name": "exponat_dokumente_datei_id_dateien_id_fk",
+          "tableFrom": "exponat_dokumente",
+          "tableTo": "dateien",
+          "columnsFrom": [
+            "datei_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "exponat_links": {
+      "name": "exponat_links",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "exponat_id": {
+          "name": "exponat_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "platz": {
+          "name": "platz",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "titel": {
+          "name": "titel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "exponat_links_platz": {
+          "name": "exponat_links_platz",
+          "columns": [
+            "exponat_id",
+            "platz"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "exponat_links_exponat_id_exponate_id_fk": {
+          "name": "exponat_links_exponat_id_exponate_id_fk",
+          "tableFrom": "exponat_links",
+          "tableTo": "exponate",
+          "columnsFrom": [
+            "exponat_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "exponate": {
+      "name": "exponate",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kennung": {
+          "name": "kennung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "beschreibung": {
+          "name": "beschreibung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "angelegt": {
+          "name": "angelegt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {
+        "exponate_kennung_unique": {
+          "name": "exponate_kennung_unique",
+          "columns": [
+            "kennung"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "zuordnungen": {
+      "name": "zuordnungen",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "besucher_guid": {
+          "name": "besucher_guid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "exponat_id": {
+          "name": "exponat_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "art": {
+          "name": "art",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ziel_id": {
+          "name": "ziel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "app_nutzer_id": {
+          "name": "app_nutzer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "zeitpunkt": {
+          "name": "zeitpunkt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {
+        "zuordnungen_besucher_idx": {
+          "name": "zuordnungen_besucher_idx",
+          "columns": [
+            "besucher_guid"
+          ],
+          "isUnique": false
+        },
+        "zuordnungen_exponat_idx": {
+          "name": "zuordnungen_exponat_idx",
+          "columns": [
+            "exponat_id"
+          ],
+          "isUnique": false
+        },
+        "zuordnungen_eindeutig": {
+          "name": "zuordnungen_eindeutig",
+          "columns": [
+            "besucher_guid",
+            "art",
+            "ziel_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "zuordnungen_besucher_guid_besucher_guid_fk": {
+          "name": "zuordnungen_besucher_guid_besucher_guid_fk",
+          "tableFrom": "zuordnungen",
+          "tableTo": "besucher",
+          "columnsFrom": [
+            "besucher_guid"
+          ],
+          "columnsTo": [
+            "guid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "zuordnungen_exponat_id_exponate_id_fk": {
+          "name": "zuordnungen_exponat_id_exponate_id_fk",
+          "tableFrom": "zuordnungen",
+          "tableTo": "exponate",
+          "columnsFrom": [
+            "exponat_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "zuordnungen_app_nutzer_id_app_nutzer_id_fk": {
+          "name": "zuordnungen_app_nutzer_id_app_nutzer_id_fk",
+          "tableFrom": "zuordnungen",
+          "tableTo": "app_nutzer",
+          "columnsFrom": [
+            "app_nutzer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

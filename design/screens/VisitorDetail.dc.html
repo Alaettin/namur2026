@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Besucher: Dr. Henrik Faller</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EFEFEF; color: #1B1D26; font-family: Raleway, 'Helvetica Neue', sans-serif">
+  <dc-import name="AppHeader" active="visitors" admin="{{yes}}" user="K. Hollmann" hint-size="100%,104px"></dc-import>
+  <main style="max-width: 992px; margin: 0 auto; padding: 32px 16px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <a href="Visitors.dc.html" style="align-self: flex-start; height: 32px; display: flex; align-items: center; color: #43454F; text-decoration: none; font-size: 14px; font-weight: 500">← Besucher</a>
+    <section style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px">
+        <span style="width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #1B1D26; color: #FFFFFF; font-size: 30px; font-weight: 700">HF</span>
+        <button type="button" style="height: 32px; padding: 0 12px; border: 1px solid #1B1D26; border-radius: 999px; background: transparent; color: #1B1D26; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Bild ersetzen</button>
+      </div>
+      <div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 8px">
+        <h1 style="margin: 0; font-weight: 700; font-size: 36px; letter-spacing: -0.02em; line-height: 1.1">Dr. Henrik Faller</h1>
+        <span style="font-size: 15px; color: #43454F">Leiter Automatisierung · Rheinchem Werke GmbH</span>
+        <span style="display: flex; align-items: center; gap: 2px">
+          <code style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">3d18f6b2-0c7e-4a95-b2d1-8e4a6f13c057</code>
+          <button type="button" aria-label="GUID kopieren" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #5E606C; cursor: pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+        </span>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px">
+        <a href="https://viewer-namur2026.aas.neoception.dev/3d18f6b2-0c7e-4a95-b2d1-8e4a6f13c057" style="height: 44px; padding: 0 20px; display: flex; align-items: center; border: 1px solid #1B1D26; border-radius: 999px; color: #1B1D26; text-decoration: none; font-size: 15px; font-weight: 600">Im Viewer öffnen ↗</a>
+        <button type="button" style="height: 44px; padding: 0 22px; border: 0; border-radius: 999px; background: #00A587; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer">Speichern</button>
+      </div>
+    </section>
+    <section aria-labelledby="h-data" style="padding: 24px; display: flex; flex-direction: column; gap: 18px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+      <h2 id="h-data" style="margin: 0; font-weight: 700; font-size: 18px">Stammdaten</h2>
+      <div style="display: flex; flex-direction: column; gap: 6px; max-width: 560px">
+        <label for="f-guid" style="font-size: 12px; font-weight: 600; color: #43454F">GUID</label>
+        <div style="display: flex; gap: 8px">
+          <input id="f-guid" type="text" value="3d18f6b2-0c7e-4a95-b2d1-8e4a6f13c057" style="flex: 1; min-width: 0; height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font-family: 'IBM Plex Mono', monospace; font-size: 13px">
+          <button type="button" style="height: 44px; padding: 0 16px; border: 1px solid #1B1D26; border-radius: 999px; background: transparent; color: #1B1D26; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Erzeugen</button>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px 20px">
+        <sc-for list="{{fields}}" as="f" hint-placeholder-count="10">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="{{f.id}}" style="font-size: 12px; font-weight: 600; color: #43454F">{{f.label}}</label>
+            <input id="{{f.id}}" type="text" value="{{f.value}}" style="height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #CBCCD2; border-radius: 0; background: #FFFFFF; color: #1B1D26; font: inherit; font-size: 15px">
+          </div>
+        </sc-for>
+      </div>
+    </section>
+    <section aria-labelledby="h-asg" style="display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: baseline; gap: 12px">
+        <h2 id="h-asg" style="margin: 0; font-weight: 700; font-size: 22px">Zuordnungen</h2>
+        <span style="font-size: 13px; color: #5E606C">4 Exponate, 12 Inhalte</span>
+      </div>
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+        <article style="background: #FFFFFF; box-shadow: 0 2px 6px rgba(27,29,38,0.07)">
+          <header style="padding: 16px 20px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; border-bottom: 1px solid #E3E4E7">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{g.id}}</span>
+            <a href="ExhibitDetail.dc.html" style="color: #1B1D26; text-decoration: none; font-size: 15px; font-weight: 700">{{g.name}}</a>
+            <span style="margin-left: auto; font-size: 12px; color: #5E606C">{{g.when}}</span>
+          </header>
+          <sc-for list="{{g.items}}" as="it" hint-placeholder-count="3">
+            <div style="min-height: 46px; padding: 2px 8px 2px 20px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid #EFEFEF">
+              <span style="width: 110px; flex: none; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5E606C">{{it.kind}}</span>
+              <span style="flex: 1; min-width: 0; font-size: 14px; font-weight: 500">{{it.title}}</span>
+              <button type="button" aria-label="{{it.aria}}" style="height: 36px; padding: 0 12px; border: 0; background: transparent; color: #43454F; font: inherit; font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer">Entfernen</button>
+            </div>
+          </sc-for>
+        </article>
+      </sc-for>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const fields = [
+      ['f-fn', 'Vorname', 'Henrik'], ['f-ln', 'Nachname', 'Faller'], ['f-firm', 'Firma', 'Rheinchem Werke GmbH'],
+      ['f-pos', 'Position', 'Leiter Automatisierung'], ['f-mail', 'E-Mail', 'h.faller@rheinchem.de'], ['f-web', 'Website', 'www.rheinchem-werke.de'],
+      ['f-str', 'Straße', 'Industriestraße 40'], ['f-plz', 'PLZ', '67063'], ['f-ort', 'Ort', 'Ludwigshafen am Rhein'], ['f-land', 'Land', 'Deutschland']
+    ].map((f) => ({ id: f[0], label: f[1], value: f[2] }));
+    const mk = (kind, title) => ({ kind, title, aria: title + ' entfernen' });
+    const groups = [
+      { id: 'E03', name: 'Ethernet-APL Feldgeräte', when: 'Heute 14:32 · Jana Lindqvist', items: [
+        mk('Dokument', 'Datenblatt APL-Feldswitch FS-240'), mk('Dokument', 'Whitepaper Ethernet-APL in Ex-Zone 1'),
+        mk('Dokument', '3D-Modell PT-80'), mk('Link', 'Projektierungsleitfaden Ethernet-APL'),
+        mk('Ansprechpartner', 'Dr. Ines Marquardt'), mk('Ansprechpartner', 'Philipp Sanders') ] },
+      { id: 'E01', name: 'Modulare Anlage mit MTP', when: 'Heute 11:05 · Markus Ebeling', items: [
+        mk('Dokument', 'Whitepaper MTP in der Praxis'), mk('Link', 'Demo-Video Orchestrierung'), mk('Ansprechpartner', 'Lars Vogelsang') ] },
+      { id: 'E04', name: 'Ventilinsel mit Diagnose', when: 'Heute 10:41 · Jana Lindqvist', items: [
+        mk('Dokument', 'Datenblatt Ventilinsel VI-12'), mk('Ansprechpartner', 'Dr. Ines Marquardt') ] },
+      { id: 'E02', name: 'NOA Monitoring', when: 'Heute 09:58 · Sophie Brandt', items: [
+        mk('Dokument', 'Architekturübersicht NOA Gateway') ] }
+    ];
+    return { yes: true, fields, groups };
+  }
+}
+</script>
+</body>
+</html>

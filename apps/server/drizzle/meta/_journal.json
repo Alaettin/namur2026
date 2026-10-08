@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1791458413431,
+      "tag": "0000_tan_bloodstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1791462516854,
+      "tag": "0001_milky_post",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791466254796,
+      "tag": "0002_loving_shatterstar",
+      "breakpoints": true
+    }
+  ]
+}
