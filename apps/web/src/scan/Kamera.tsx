@@ -114,7 +114,10 @@ export function Kamera({
       <video ref={video} className="size-full object-cover" playsInline muted />
 
       {/* Zielrahmen. Reine Zierde, deshalb aus dem Zugänglichkeitsbaum genommen. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+      >
         <div className="size-[62vw] max-h-[280px] max-w-[280px] border-2 border-white/80" />
       </div>
 

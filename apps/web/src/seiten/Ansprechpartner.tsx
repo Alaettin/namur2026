@@ -6,6 +6,7 @@ import {
   Fehlerhinweis,
   Knopf,
   Kopfzelle,
+  Reihe,
   Tabellenflaeche,
   Ueberschrift,
   Zelle,
@@ -80,8 +81,8 @@ export function Ansprechpartner() {
         leerText="Noch keine Ansprechpartner angelegt."
       >
         <Tabellenflaeche>
-          <table className="w-full min-w-[720px] border-collapse text-sm">
-            <thead>
+          <table className="w-full border-collapse text-sm max-sm:block sm:min-w-[720px]">
+            <thead className="max-sm:hidden">
               <tr>
                 <Kopfzelle>Name</Kopfzelle>
                 <Kopfzelle>Firma und Position</Kopfzelle>
@@ -92,13 +93,13 @@ export function Ansprechpartner() {
                 </Kopfzelle>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="max-sm:block">
               {sichtbar.map((p) => (
-                <tr key={p.id}>
+                <Reihe key={p.id}>
                   <Zelle className="font-semibold">
                     {p.vorname} {p.nachname}
                   </Zelle>
-                  <Zelle>
+                  <Zelle titel="Firma">
                     <span className="flex flex-col gap-0.5">
                       <span className="font-medium">{p.firma ?? "—"}</span>
                       {p.position !== null && (
@@ -106,8 +107,12 @@ export function Ansprechpartner() {
                       )}
                     </span>
                   </Zelle>
-                  <Zelle className="text-text-zweit">{p.email ?? "—"}</Zelle>
-                  <Zelle className="text-text-zweit">{p.exponate.length}</Zelle>
+                  <Zelle titel="E-Mail" className="text-text-zweit">
+                    {p.email ?? "—"}
+                  </Zelle>
+                  <Zelle titel="Exponate" className="text-text-zweit">
+                    {p.exponate.length}
+                  </Zelle>
                   <Zelle className="text-right">
                     <span className="flex flex-wrap justify-end gap-2">
                       <Knopf
@@ -132,7 +137,7 @@ export function Ansprechpartner() {
                       </Knopf>
                     </span>
                   </Zelle>
-                </tr>
+                </Reihe>
               ))}
             </tbody>
           </table>

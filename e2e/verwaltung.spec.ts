@@ -1,8 +1,14 @@
-import { expect, test } from "@playwright/test";
-import { merkeBesucher, raeumeBesucherAuf } from "./exponate.js";
+import { expect, test, type Locator, type Page } from "@playwright/test";
+import {
+  merkeAnsprechpartner,
+  merkeBesucher,
+  raeumeAnsprechpartnerAuf,
+  raeumeBesucherAuf,
+} from "./exponate.js";
 
 test.afterEach(async ({ request }) => {
   await raeumeBesucherAuf(request);
+  await raeumeAnsprechpartnerAuf(request);
 });
 
 /**
@@ -86,7 +92,16 @@ test("der Reset-Knopf bleibt gesperrt, bis das Wort genau stimmt", async ({ page
 });
 
 test("der Seitenkoerper scrollt nicht waagerecht", async ({ page }) => {
-  for (const pfad of ["/", "/besucher", "/exponate", "/nutzer", "/api", "/einstellungen"]) {
+  for (const pfad of [
+    "/",
+    "/besucher",
+    "/besucher/import",
+    "/exponate",
+    "/ansprechpartner",
+    "/nutzer",
+    "/api",
+    "/einstellungen",
+  ]) {
     await page.goto(pfad);
     await expect(page.locator("main")).toBeVisible();
 
@@ -213,4 +228,117 @@ test("die Seitenumschaltung wandert mit der aktuellen Seite", async ({ page }) =
   await expect(leiste.getByRole("button", { name: "1", exact: true })).toHaveCount(0);
   // Und es sind fünf Zahlen plus zwei Pfeile.
   await expect(leiste.getByRole("button")).toHaveCount(7);
+});
+
+/**
+ * Die Navigation hat zwei Formen, und **beide** werden geprüft.
+ *
+ * Wird nur die Handy-Form geprüft, belegt ein grüner Lauf nicht, dass die Reiterzeile am
+ * Desktop noch da ist, und umgekehrt. Eine Regel mit zwei Richtungen braucht zwei Fälle,
+ * sonst beweist die eine Hälfte die andere mit.
+ */
+test.describe("Navigation", () => {
+  test("am Handy führen die drei Striche auf eine andere Seite", async ({ page, viewport }) => {
+    test.skip((viewport?.width ?? 0) >= 900, "gilt nur für die schmale Form");
+    await page.goto("/");
+
+    // Die Reiterzeile ist weg, sonst stünde die Navigation doppelt da.
+    await expect(page.getByRole("navigation", { name: "Hauptnavigation" })).toBeHidden();
+
+    await page.getByRole("button", { name: "Menü" }).click();
+    await page.getByRole("menuitem", { name: "Exponate" }).click();
+
+    await expect(page).toHaveURL(/\/exponate$/);
+    await expect(page.getByRole("heading", { name: "Exponate" })).toBeVisible();
+  });
+
+  test("am Desktop bleibt die Reiterzeile und es gibt kein Menü", async ({ page, viewport }) => {
+    test.skip((viewport?.width ?? 0) < 900, "gilt nur für die breite Form");
+    await page.goto("/");
+
+    await expect(page.getByRole("navigation", { name: "Hauptnavigation" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Menü" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Abmelden" })).toBeVisible();
+  });
+});
+
+/**
+ * **Liegt an der Stelle des Knopfes auch der Knopf?**
+ *
+ * `toBeVisible` hat genau diese Frage hier schon einmal nicht beantwortet: ein Element kann
+ * sichtbar sein und trotzdem hinter einer Überlagerung liegen, und ein Bild des Fehllaufs
+ * zeigt dann zwei Knöpfe, die niemand treffen kann. Gemessen wird deshalb mit
+ * `elementFromPoint` auf der Mitte des Knopfes, ob der Treffer der Knopf selbst ist oder
+ * etwas in ihm.
+ */
+async function liegtFrei(page: Page, knopf: Locator) {
+  const kasten = await knopf.boundingBox();
+  expect(kasten, "der Knopf hat keine Fläche").not.toBeNull();
+  if (kasten === null) return false;
+
+  return page.evaluate(
+    ({ x, y }) => {
+      const getroffen = document.elementFromPoint(x, y);
+      if (getroffen === null) return false;
+      const ziel = getroffen.closest("button, a");
+      return ziel !== null;
+    },
+    { x: kasten.x + kasten.width / 2, y: kasten.y + kasten.height / 2 },
+  );
+}
+
+test.describe("am Handy bedienbar", () => {
+  test.beforeEach(({ viewport }) => {
+    test.skip((viewport?.width ?? 0) >= 900, "gilt nur für die schmale Form");
+  });
+
+  /**
+   * Die Listen erscheinen als Karten. Vorher lag die Aktionsspalte hinter dem waagerechten
+   * Scrollbereich der Tabelle, war also nur erreichbar, wenn man ahnte, dass dort etwas ist.
+   */
+  test("der Aktionsknopf einer Liste liegt frei", async ({ page }) => {
+    await page.goto("/nutzer");
+    await expect(page.getByRole("table")).toBeVisible();
+
+    // Der Tabellenkopf ist in der Kartenansicht weg; die Beschriftung steht je Zelle.
+    await expect(page.getByRole("columnheader", { name: "E-Mail" })).toBeHidden();
+
+    const knopf = page.getByRole("button", { name: "Passwort" }).first();
+    await expect(knopf).toBeVisible();
+    expect(await liegtFrei(page, knopf), "etwas liegt über dem Knopf").toBe(true);
+  });
+
+  /**
+   * Dasselbe im Fenster: dort war der Klick bis zum 08.10.2026 nicht zuverlässig.
+   *
+   * Genommen wird eine **Rückfrage**, nicht irgendein Fenster: nur sie hat die Knopfzeile,
+   * die am Handy unten klebt. Der Zurücksetzen-Dialog aus den Einstellungen taugt dafür
+   * nicht, der hängt am Entwicklermodus und ist im Normalbetrieb gar nicht da.
+   */
+  test("die Knöpfe im Fenster liegen frei", async ({ page, request }) => {
+    const marke = String(Date.now()).slice(-6);
+    const angelegt = await (
+      await request.post("/api/ansprechpartner", {
+        data: { vorname: "Fenster", nachname: `Probe${marke}` },
+      })
+    ).json();
+    merkeAnsprechpartner(angelegt.id as string);
+
+    await page.goto("/ansprechpartner");
+    const zeile = page.getByRole("row", { name: new RegExp(`Probe${marke}`) });
+    await zeile.getByRole("button", { name: "Löschen" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+
+    for (const name of ["Abbrechen", "Löschen"]) {
+      const knopf = dialog.getByRole("button", { name, exact: true });
+      await expect(knopf).toBeVisible();
+      expect(await liegtFrei(page, knopf), `etwas liegt über "${name}"`).toBe(true);
+    }
+
+    // Abbrechen: dieser Fall darf den Bestand nicht anfassen.
+    await dialog.getByRole("button", { name: "Abbrechen" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  });
 });

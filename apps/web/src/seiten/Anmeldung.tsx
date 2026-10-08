@@ -55,7 +55,7 @@ export function Anmeldung({ aufAngemeldet }: { aufAngemeldet: () => void }) {
         aria-hidden="true"
         className="pointer-events-none absolute top-1/2 left-1/2 w-[1700px] max-w-none -translate-x-1/2 -translate-y-1/2"
       />
-      <main className="relative flex w-full max-w-[420px] flex-col gap-7 bg-flaeche p-10 shadow-[0_18px_48px_rgba(27,29,38,0.13)]">
+      <main className="relative flex w-full max-w-[420px] flex-col gap-7 bg-flaeche p-6 shadow-[0_18px_48px_rgba(27,29,38,0.13)] sm:p-10">
         <div className="flex flex-col gap-5">
           <img src={logo} alt="Neoception AXON" className="-mx-5 -my-3 block h-auto w-[132px]" />
           <div className="flex flex-col gap-1.5">

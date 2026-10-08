@@ -162,18 +162,14 @@ test("die entfernten Blöcke sind nirgends mehr zu finden", async ({ page }) => 
  * deaktivierbar, damit ein Zurücksetzen niemanden aussperrt.
  */
 /*
- * **Nur am Desktop.** Bei 390 px ist der Klick auf die Knöpfe im Dialog nicht zuverlässig
- * automatisierbar: Playwright meldet abwechselnd die Überlagerung und das Eingabefeld als
- * Abfänger. Auf dem Bild des Fehllaufs sind beide Knöpfe sichtbar, es ist also keine
- * fehlende Darstellung; ob ein Mensch dort tippen kann, ist damit **nicht** belegt.
- *
- * Die Verwaltung ist laut Übergabe Desktop-Arbeit, und dieselbe Beschränkung tragen bereits
- * vier Fälle in `stammdaten.spec.ts`. Offen bleibt die Frage für den Scan-Ablauf, der am
- * Handy läuft; dort gibt es keinen solchen Dialog.
+ * **Laeuft auch bei 390 px.** Bis zum 08.10.2026 war das ausgenommen: Playwright meldete
+ * abwechselnd die Überlagerung und das Eingabefeld als Abfänger des Klicks. Seit die
+ * Fenster am Handy als Blatt am unteren Rand stehen, liegt die Knopfzeile frei. Dass an
+ * dieser Stelle wirklich der Knopf liegt und nicht etwas darüber, misst ein eigener Fall in
+ * `verwaltung.spec.ts` mit `elementFromPoint`: dass ein Knopf *sichtbar* ist, hat hier
+ * schon einmal nichts bewiesen.
  */
-test.describe("am Desktop", () => {
-  test.skip(({ viewport }) => (viewport?.width ?? 0) < 900, "Dialogbedienung, siehe oben");
-
+test.describe("Passwort setzen", () => {
   test("ein Passwort lässt sich wählen statt nur würfeln", async ({ page, request }) => {
     const marke = String(Date.now()).slice(-8);
     const email = `passwort-${marke}@namur.de`;

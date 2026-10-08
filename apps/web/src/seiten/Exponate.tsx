@@ -8,6 +8,7 @@ import {
   Flaeche,
   Knopf,
   Kopfzelle,
+  Reihe,
   Markierung,
   Tabellenflaeche,
   Ueberschrift,
@@ -114,8 +115,8 @@ export function Exponate({ ich }: { ich: Ich }) {
         }
       >
         <Tabellenflaeche>
-          <table className="w-full min-w-[720px] border-collapse text-sm">
-            <thead>
+          <table className="w-full border-collapse text-sm max-sm:block sm:min-w-[720px]">
+            <thead className="max-sm:hidden">
               <tr>
                 <Kopfzelle>Kennung</Kopfzelle>
                 <Kopfzelle>Name</Kopfzelle>
@@ -126,16 +127,18 @@ export function Exponate({ ich }: { ich: Ich }) {
                 </Kopfzelle>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="max-sm:block">
               {sichtbar.map((e) => (
-                <tr key={e.id}>
-                  <Zelle className="font-mono text-xs font-semibold">{e.kennung}</Zelle>
+                <Reihe key={e.id}>
+                  <Zelle titel="Kennung" className="font-mono text-xs font-semibold">
+                    {e.kennung}
+                  </Zelle>
                   <Zelle className="font-semibold">{e.name}</Zelle>
-                  <Zelle className="text-text-zweit">
+                  <Zelle titel="Inhalte" className="text-text-zweit">
                     {e.anzahl.dokumente} Dokumente · {e.anzahl.links} Links · {e.anzahl.kontakte}{" "}
                     Kontakte
                   </Zelle>
-                  <Zelle>
+                  <Zelle titel="Status">
                     {e.scanbar ? (
                       <Markierung text="BEREIT" />
                     ) : (
@@ -157,7 +160,7 @@ export function Exponate({ ich }: { ich: Ich }) {
                       </Link>
                     </span>
                   </Zelle>
-                </tr>
+                </Reihe>
               ))}
             </tbody>
           </table>

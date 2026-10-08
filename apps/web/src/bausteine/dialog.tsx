@@ -8,6 +8,25 @@ import { Feld, Fehlerhinweis, Knopf } from "./basis.js";
  * Radix bringt Fokusfalle, Escape, Scroll-Sperre und die ARIA-Verdrahtung mit. Ein selbst
  * gebauter Dialog hat davon erfahrungsgemaess die Haelfte.
  */
+
+/**
+ * Lage und Groesse beider Fenster.
+ *
+ * **Ab `sm` mittig, darunter ein Blatt am unteren Rand.** Bei 390 px war die Bedienung
+ * nicht zuverlaessig: die Knoepfe standen oben, also ausserhalb der Daumenzone, und ein
+ * mittig schwebendes Fenster laesst darueber und darunter Flaechen stehen, die den Griff
+ * abfangen. Am unteren Rand gibt es beides nicht mehr, und das Fenster darf die volle
+ * Breite nehmen.
+ *
+ * `max-h-[85dvh]` statt `vh`: die Adressleiste mobiler Browser faehrt ein und aus, und
+ * `vh` rechnet mit der ausgefahrenen Hoehe. Der Unterschied ist genau die Knopfzeile.
+ */
+const LAGE = [
+  "fixed z-50 flex flex-col bg-flaeche",
+  "max-sm:inset-x-0 max-sm:bottom-0 max-sm:max-h-[85dvh] max-sm:rounded-t-xl",
+  "sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2",
+  "shadow-[0_18px_48px_rgba(27,29,38,0.22)]",
+].join(" ");
 export function Rueckfrage({
   offen,
   aufOffen,
@@ -53,7 +72,7 @@ export function Rueckfrage({
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
         <RadixDialog.Content
-          className="fixed top-1/2 left-1/2 z-50 flex w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col gap-5 bg-flaeche p-7 shadow-[0_18px_48px_rgba(27,29,38,0.22)]"
+          className={`${LAGE} gap-5 overflow-y-auto p-6 sm:w-[min(32rem,calc(100vw-2rem))] sm:p-7`}
           aria-describedby={undefined}
         >
           <RadixDialog.Title className="text-2xl font-bold tracking-[-0.01em]">
@@ -81,7 +100,7 @@ export function Rueckfrage({
             </label>
           )}
 
-          <div className="flex flex-wrap justify-end gap-3">
+          <div className="flex flex-wrap justify-end gap-3 max-sm:sticky max-sm:bottom-0 max-sm:-mx-6 max-sm:-mb-6 max-sm:justify-stretch max-sm:border-t max-sm:border-linie max-sm:bg-flaeche max-sm:p-4 max-sm:[&>*]:flex-1">
             <RadixDialog.Close asChild>
               <Knopf art="rand" disabled={laeuft}>
                 Abbrechen
@@ -123,8 +142,8 @@ export function Schaufenster({
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
         <RadixDialog.Content
-          className={`fixed top-1/2 left-1/2 z-50 flex max-h-[90dvh] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto bg-flaeche p-6 shadow-[0_18px_48px_rgba(27,29,38,0.22)] ${
-            breit ? "w-[min(60rem,calc(100vw-2rem))]" : "w-[min(34rem,calc(100vw-2rem))]"
+          className={`${LAGE} gap-4 overflow-y-auto p-6 sm:max-h-[90dvh] ${
+            breit ? "sm:w-[min(60rem,calc(100vw-2rem))]" : "sm:w-[min(34rem,calc(100vw-2rem))]"
           }`}
           aria-describedby={undefined}
         >

@@ -7,6 +7,7 @@ import {
   Flaeche,
   Knopf,
   Kopfzelle,
+  Reihe,
   Markierung,
   Monowert,
   Tabellenflaeche,
@@ -140,8 +141,8 @@ export function Nutzer() {
 
       <Zustand laedt={abruf.laedt} fehler={abruf.fehler}>
         <Tabellenflaeche>
-          <table className="w-full min-w-[780px] border-collapse text-sm">
-            <thead>
+          <table className="w-full border-collapse text-sm max-sm:block sm:min-w-[780px]">
+            <thead className="max-sm:hidden">
               <tr>
                 <Kopfzelle>Name</Kopfzelle>
                 <Kopfzelle>E-Mail</Kopfzelle>
@@ -152,24 +153,26 @@ export function Nutzer() {
                 </Kopfzelle>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="max-sm:block">
               {sichtbar.map((n) => (
-                <tr key={n.id}>
+                <Reihe key={n.id}>
                   <Zelle className="font-semibold">
                     <span className="flex items-center gap-2">
                       {n.name}
                       {!n.aktiv && <Markierung text="GESPERRT" farbe="var(--color-fehler)" />}
                     </span>
                   </Zelle>
-                  <Zelle className="text-text-zweit">{n.email}</Zelle>
-                  <Zelle>
+                  <Zelle titel="E-Mail" className="text-text-zweit">
+                    {n.email}
+                  </Zelle>
+                  <Zelle titel="Rolle">
                     {n.rolle === "admin" ? (
                       <Markierung text="ADMIN" />
                     ) : (
                       <Markierung text="BETREUER" farbe="var(--color-text-zweit)" />
                     )}
                   </Zelle>
-                  <Zelle>
+                  <Zelle titel="Exponate">
                     {n.rolle === "admin" ? (
                       // Ein Admin kommt an jedes Exponat, eine Zuweisung waere ohne Wirkung.
                       <span className="text-text-hinweis">alle</span>
@@ -221,7 +224,7 @@ export function Nutzer() {
                       </Knopf>
                     </span>
                   </Zelle>
-                </tr>
+                </Reihe>
               ))}
             </tbody>
           </table>

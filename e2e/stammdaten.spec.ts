@@ -16,8 +16,10 @@ import {
  * Drei Dinge, die der Server konnte und die Oberfläche nicht anbot, plus der Umbau der
  * Ansprechpartner auf eigenständige Datensätze.
  *
- * **Zwei Fälle laufen nur am Desktop**, siehe die Begründung dort. Dass die Seiten am Handy
- * nicht überlaufen, prüft `verwaltung.spec.ts` für alle Routen.
+ * **Alle Fälle laufen auch am Handy.** Bis zum 08.10.2026 war die Tabellenbedienung bei
+ * 390 px ausgenommen, weil die Aktionsspalte hinter dem waagerechten Scrollbereich lag.
+ * Seit die Listen dort als Karten erscheinen, gibt es keinen Scrollbereich mehr, und die
+ * Ausnahme fiel weg. Dass die Seiten nicht überlaufen, prüft `verwaltung.spec.ts`.
  */
 
 // Jeder Fall gibt seine Kennungen zurück, siehe die Begründung in `exponate.ts`.
@@ -27,15 +29,7 @@ test.afterEach(async ({ request }) => {
   await raeumeAnsprechpartnerAuf(request);
 });
 
-/*
- * Nur am Desktop: die Aktionsspalte der Tabelle liegt bei 390 px hinter dem waagerechten
- * Scrollbereich, und ein Klick darauf ist dort nicht zuverlässig messbar. Die Verwaltung
- * ist laut Übergabe Desktop-Arbeit; am Handy läuft der Scan-Ablauf, und der hat eigene
- * Prüfungen.
- */
-test.describe("am Desktop", () => {
-  test.skip(({ viewport }) => (viewport?.width ?? 0) < 900, "Tabellenbedienung, siehe oben");
-
+test.describe("Stammdaten", () => {
   test("Ansprechpartner lassen sich anlegen und zwei Exponaten zuweisen", async ({
     page,
     request,

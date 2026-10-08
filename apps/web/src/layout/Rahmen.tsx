@@ -1,14 +1,20 @@
-import { NavLink, Outlet, useNavigate } from "react-router";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
+import { DropdownMenu } from "radix-ui";
 import { api } from "../lib/api.js";
 import { Knopf, cn } from "../bausteine/basis.js";
 import type { Ich } from "../lib/ich.js";
 import logo from "../assets/axon-logo.svg";
 
 /**
- * Kopfzeile und Inhaltsspalte, auf allen Geraeten gleich.
+ * Kopfzeile und Inhaltsspalte.
  *
  * **Ein Layout, eine Kopfzeile.** In den Entwuerfen ist sie in jede Datei kopiert; das ist
  * ein Artefakt des Werkzeugs und keine Vorgabe.
+ *
+ * **Zwei Formen derselben Navigation.** Ab `sm` die Reiterzeile, darunter ein Menue hinter
+ * drei Strichen. Sieben Reiter passen bei 390 px nicht nebeneinander, und eine waagerecht
+ * scrollbare Zeile versteckt genau das, was rechts steht: niemand sucht dort. Die Eintraege
+ * kommen in beiden Formen aus derselben Liste, damit keine Form einen Punkt verliert.
  */
 
 const REITER_ADMIN = [
@@ -24,14 +30,27 @@ const REITER_ADMIN = [
 /** Ein Betreuer sieht nur seine Exponate. Von dort geht es in den Scan-Ablauf. */
 const REITER_BETREUER = [{ pfad: "/exponate", text: "Exponate", genau: true }];
 
+interface Reiter {
+  pfad: string;
+  text: string;
+  genau?: boolean;
+}
+
 export function Rahmen({ ich, aufAbmelden }: { ich: Ich; aufAbmelden: () => void }) {
   const navigate = useNavigate();
   const reiter = ich.rolle === "admin" ? REITER_ADMIN : REITER_BETREUER;
 
+  const abmelden = () => {
+    void api("/api/auth/abmelden", { method: "POST" }).finally(() => {
+      aufAbmelden();
+      void navigate("/anmeldung");
+    });
+  };
+
   return (
     <div className="min-h-screen bg-grund text-text">
       <header className="bg-flaeche">
-        <div className="flex min-h-14 items-center gap-4 border-b border-linie px-6">
+        <div className="flex min-h-14 items-center gap-3 border-b border-linie px-4 sm:gap-4 sm:px-6">
           <NavLink to="/" aria-label="Startseite" className="flex shrink-0">
             <img src={logo} alt="Neoception AXON" className="-my-1.5 block h-auto w-[86px]" />
           </NavLink>
@@ -44,25 +63,22 @@ export function Rahmen({ ich, aufAbmelden }: { ich: Ich; aufAbmelden: () => void
           <span className="min-w-0 truncate text-xs font-semibold tracking-[0.14em] text-primaer-dunkel">
             {ich.appName === "" ? "NAMUR HV 2026" : ich.appName}
           </span>
-          <span className="ml-auto flex min-w-0 items-center gap-3">
+
+          {/* Ab `sm`: Name und Abmelden stehen offen in der Kopfzeile. */}
+          <span className="ml-auto hidden min-w-0 items-center gap-3 sm:flex">
             <span className="min-w-0 truncate text-sm font-medium">{ich.name}</span>
-            <Knopf
-              art="rand"
-              className="h-[34px] px-3.5 text-[13px]"
-              onClick={() => {
-                void api("/api/auth/abmelden", { method: "POST" }).finally(() => {
-                  aufAbmelden();
-                  void navigate("/anmeldung");
-                });
-              }}
-            >
+            <Knopf art="rand" className="h-[34px] px-3.5 text-[13px]" onClick={abmelden}>
               Abmelden
             </Knopf>
           </span>
+
+          {/* Darunter: alles im Menue. */}
+          <span className="ml-auto flex sm:hidden">
+            <Hauptmenue reiter={reiter} ich={ich} aufAbmelden={abmelden} />
+          </span>
         </div>
 
-        <nav aria-label="Hauptnavigation" className="border-b border-linie">
-          {/* Auf schmalen Bildschirmen waagerecht scrollbar, statt umzubrechen. */}
+        <nav aria-label="Hauptnavigation" className="hidden border-b border-linie sm:block">
           <div className="mx-auto flex max-w-[992px] gap-1 overflow-x-auto px-4">
             {reiter.map((r) => (
               <NavLink
@@ -85,9 +101,107 @@ export function Rahmen({ ich, aufAbmelden }: { ich: Ich; aufAbmelden: () => void
         </nav>
       </header>
 
-      <main className="mx-auto flex max-w-[992px] flex-col gap-6 px-4 pt-10 pb-16">
+      <main className="mx-auto flex max-w-[992px] flex-col gap-6 px-4 pt-8 pb-16 sm:pt-10">
         <Outlet />
       </main>
     </div>
+  );
+}
+
+/**
+ * Die drei Striche und das, was darunter aufklappt.
+ *
+ * Radix statt Eigenbau: Tastaturbedienung, Fokusfalle, Escape, Scroll-Sperre und
+ * `aria-expanded` sind hier keine Kuer. Ein handgebautes Menue hat davon erfahrungsgemaess
+ * die Haelfte, und was fehlt, faellt erst am Stand auf.
+ *
+ * Der aktive Eintrag wird **aus dem Pfad** bestimmt und nicht nachgehalten: ein zweiter
+ * Zustand neben der Adresse koennte abweichen, und dann zeigte das Menue etwas anderes als
+ * die Seite. Dieselbe Regel wie bei `NavLink end`.
+ */
+function Hauptmenue({
+  reiter,
+  ich,
+  aufAbmelden,
+}: {
+  reiter: Reiter[];
+  ich: Ich;
+  aufAbmelden: () => void;
+}) {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const istAktiv = (r: Reiter) =>
+    r.genau === true
+      ? pathname === r.pfad
+      : pathname === r.pfad || pathname.startsWith(`${r.pfad}/`);
+
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button
+          type="button"
+          aria-label="Menü"
+          className="flex size-10 items-center justify-center border border-linie text-text"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <path d="M4 7h16" />
+            <path d="M4 12h16" />
+            <path d="M4 17h16" />
+          </svg>
+        </button>
+      </DropdownMenu.Trigger>
+
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="end"
+          sideOffset={6}
+          className="z-50 flex w-[min(16rem,calc(100vw-2rem))] flex-col bg-flaeche py-1 shadow-[0_18px_48px_rgba(27,29,38,0.22)]"
+        >
+          {reiter.map((r) => (
+            <DropdownMenu.Item
+              key={r.pfad}
+              onSelect={() => {
+                void navigate(r.pfad);
+              }}
+              className={cn(
+                "flex h-11 cursor-pointer items-center px-4 text-sm outline-none select-none",
+                "data-[highlighted]:bg-grund",
+                istAktiv(r)
+                  ? "font-semibold text-text shadow-[inset_3px_0_0_var(--color-primaer)]"
+                  : "font-medium text-text-hinweis",
+              )}
+            >
+              {r.text}
+            </DropdownMenu.Item>
+          ))}
+
+          <DropdownMenu.Separator className="my-1 h-px bg-linie" />
+
+          {/*
+            Der Name steht hier als Beschriftung, nicht als Eintrag: er ist nichts zum
+            Anklicken, und ein Label faengt keinen Tastaturfokus.
+          */}
+          <DropdownMenu.Label className="truncate px-4 pt-1 pb-2 text-xs text-text-hinweis">
+            Angemeldet als {ich.name}
+          </DropdownMenu.Label>
+          <DropdownMenu.Item
+            onSelect={aufAbmelden}
+            className="flex h-11 cursor-pointer items-center px-4 text-sm font-medium text-text outline-none select-none data-[highlighted]:bg-grund"
+          >
+            Abmelden
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
   );
 }

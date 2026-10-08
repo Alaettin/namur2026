@@ -6,6 +6,7 @@ import {
   Flaeche,
   Knopf,
   Kopfzelle,
+  Reihe,
   Tabellenflaeche,
   Ueberschrift,
   Zelle,
@@ -337,8 +338,8 @@ export function CsvImport() {
           <div className="flex flex-col gap-3">
             <h2 className="text-lg font-bold">Vorschau</h2>
             <Tabellenflaeche>
-              <table className="w-full min-w-[720px] border-collapse text-sm">
-                <thead>
+              <table className="w-full border-collapse text-sm max-sm:block sm:min-w-[720px]">
+                <thead className="max-sm:hidden">
                   <tr>
                     <Kopfzelle>Zeile</Kopfzelle>
                     <Kopfzelle>Name</Kopfzelle>
@@ -347,18 +348,22 @@ export function CsvImport() {
                     <Kopfzelle>Status</Kopfzelle>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="max-sm:block">
                   {befund.vorschau.map((z) => (
-                    <tr key={z.zeile}>
-                      <Zelle className="font-mono text-xs text-text-hinweis">{z.zeile}</Zelle>
+                    <Reihe key={z.zeile}>
+                      <Zelle titel="Zeile" className="font-mono text-xs text-text-hinweis">
+                        {z.zeile}
+                      </Zelle>
                       <Zelle className="font-semibold">
                         {`${z.werte["vorname"] ?? ""} ${z.werte["nachname"] ?? ""}`.trim() || "—"}
                       </Zelle>
-                      <Zelle className="text-text-zweit">{z.werte["firma"] ?? "—"}</Zelle>
-                      <Zelle className="font-mono text-xs">
+                      <Zelle titel="Firma" className="text-text-zweit">
+                        {z.werte["firma"] ?? "—"}
+                      </Zelle>
+                      <Zelle titel="GUID" className="font-mono text-xs">
                         {z.werte["guid"] ?? "wird erzeugt"}
                       </Zelle>
-                      <Zelle>
+                      <Zelle titel="Status">
                         {z.beanstandungen.length > 0 ? (
                           <span className="text-[13px] font-semibold text-fehler">
                             {z.beanstandungen.map((b) => ARTTEXT[b.art] ?? b.art).join(", ")}
@@ -369,7 +374,7 @@ export function CsvImport() {
                           <span className="text-[13px] text-text-zweit">neu</span>
                         )}
                       </Zelle>
-                    </tr>
+                    </Reihe>
                   ))}
                 </tbody>
               </table>

@@ -34,7 +34,13 @@ interface Element {
 }
 
 interface Treffer {
-  besucher: { guid: string; vorname: string; nachname: string; firma: string | null; position: string | null };
+  besucher: {
+    guid: string;
+    vorname: string;
+    nachname: string;
+    firma: string | null;
+    position: string | null;
+  };
   dokumente: Element[];
   links: Element[];
   kontakte: Element[];
@@ -79,7 +85,16 @@ export function Scan({ ich }: { ich: Ich }) {
           className="flex size-12 items-center justify-center"
           onClick={abbrechen}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
             <path d="M18 6L6 18" />
             <path d="M6 6l12 12" />
           </svg>
@@ -114,8 +129,8 @@ function OhneInhalt({ exponatId }: { exponatId: string }) {
       <Markierung text="OHNE INHALT" farbe="var(--color-fehler)" />
       <h1 className="text-2xl font-bold">Noch nichts zum Zuordnen</h1>
       <p className="max-w-prose text-text-zweit">
-        Dieses Exponat hat weder Dokumente noch Links oder Ansprechpartner. Solange das so
-        ist, bekäme ein Besucher beim Scannen nichts.
+        Dieses Exponat hat weder Dokumente noch Links oder Ansprechpartner. Solange das so ist,
+        bekäme ein Besucher beim Scannen nichts.
       </p>
       <Link to={`/exponate/${exponatId}`}>
         <Knopf art="rand">Zum Exponat</Knopf>
@@ -172,9 +187,8 @@ function Inhalt({
         <div className="flex-1" />
         {!kameraMoeglich() && (
           <p className="bg-fehler-grund px-4 py-3 text-sm">
-            Die Kamera ist hier nicht verfügbar. Browser geben sie nur über HTTPS frei, und
-            diese Seite läuft über eine ungesicherte Verbindung. Du kannst die GUID von Hand
-            eingeben.
+            Die Kamera ist hier nicht verfügbar. Browser geben sie nur über HTTPS frei, und diese
+            Seite läuft über eine ungesicherte Verbindung. Du kannst die GUID von Hand eingeben.
           </p>
         )}
         <Knopf
@@ -277,9 +291,18 @@ function Inhalt({
     );
   }
 
-  if (schritt.art === "erfolg") return <Erfolg anzahl={schritt.anzahl} setzeSchritt={setzeSchritt} />;
+  if (schritt.art === "erfolg")
+    return <Erfolg anzahl={schritt.anzahl} setzeSchritt={setzeSchritt} />;
 
-  return <Fehler schritt={schritt} setzeSchritt={setzeSchritt} auswahl={auswahl} letzterRumpf={letzterRumpf} exponatId={exponatId} />;
+  return (
+    <Fehler
+      schritt={schritt}
+      setzeSchritt={setzeSchritt}
+      auswahl={auswahl}
+      letzterRumpf={letzterRumpf}
+      exponatId={exponatId}
+    />
+  );
 }
 
 function TrefferAnsicht({
@@ -382,7 +405,10 @@ function TrefferAnsicht({
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-        <section aria-label="Besucher" className="flex items-center gap-4 bg-flaeche p-4 shadow-flaeche">
+        <section
+          aria-label="Besucher"
+          className="flex items-center gap-4 bg-flaeche p-4 shadow-flaeche"
+        >
           <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-text text-xl font-bold text-white">
             {(b.vorname[0] ?? "") + (b.nachname[0] ?? "")}
           </span>
@@ -407,9 +433,7 @@ function TrefferAnsicht({
               aria-labelledby="lbl-alles"
               className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${alleAn ? "bg-primaer" : "bg-linie-feld"}`}
               onClick={() => {
-                setzeAuswahl(
-                  alleAn ? new Set() : new Set(offen.map((x) => `${x.art}:${x.e.id}`)),
-                );
+                setzeAuswahl(alleAn ? new Set() : new Set(offen.map((x) => `${x.art}:${x.e.id}`)));
               }}
             >
               <span
@@ -562,7 +586,10 @@ function Fehler({
   return (
     <div className="flex flex-1 flex-col justify-end gap-4 p-6">
       <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-        <span className="flex size-14 items-center justify-center rounded-full bg-fehler-grund text-2xl text-fehler" aria-hidden="true">
+        <span
+          className="flex size-14 items-center justify-center rounded-full bg-fehler-grund text-2xl text-fehler"
+          aria-hidden="true"
+        >
           !
         </span>
         <h1 className="text-2xl font-bold">{titel}</h1>
@@ -621,7 +648,10 @@ function Fehler({
           Weiter scannen
         </Knopf>
       )}
-      <Link to={`/exponate/${exponatId}`} className="text-center text-[13px] font-semibold text-primaer-dunkel">
+      <Link
+        to={`/exponate/${exponatId}`}
+        className="text-center text-[13px] font-semibold text-primaer-dunkel"
+      >
         Zum Exponat
       </Link>
     </div>

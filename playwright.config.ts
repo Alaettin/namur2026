@@ -50,6 +50,18 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },
 
+    /*
+     * **Die Anmeldung auch bei 390 px.** Sie ist der erste Bildschirm, den ein Betreuer am
+     * Stand sieht, und lief bis zum 08.10.2026 nur in der breiten Form durch den
+     * Pruefstand. Eine Seite, die nie in der Form geprueft wird, in der sie benutzt wird,
+     * ist ungeprueft.
+     */
+    {
+      name: "anmeldung-handy",
+      testMatch: /anmeldung\.spec\.ts/,
+      use: { ...devices["Pixel 7"], viewport: { width: 390, height: 844 } },
+    },
+
     {
       name: "desktop",
       testIgnore: [/anmeldung\.spec\.ts/, /einrichtung\.setup\.ts/],

@@ -85,14 +85,26 @@ export function Flaeche({ className, children }: { className?: string; children:
  * im Aufbau, siehe `e2e/verwaltung.spec.ts`.
  */
 export function Tabellenflaeche({ children }: { children: ReactNode }) {
-  return <div className="overflow-x-auto bg-flaeche shadow-flaeche">{children}</div>;
+  /*
+   * **Der Ueberlauf erst ab `sm`.** Unter `sm` ist die Tabelle keine Tabelle mehr, sondern
+   * eine Liste von Karten (siehe `Reihe`), und dort gibt es nichts, was seitlich
+   * herausragt. Bliebe `overflow-x-auto` auch dort stehen, versteckte es wieder genau die
+   * Spalte mit den Knoepfen.
+   */
+  return <div className="bg-flaeche shadow-flaeche sm:overflow-x-auto">{children}</div>;
 }
 
 export function Ueberschrift({ children }: { children: ReactNode }) {
   return <h1 className="text-4xl leading-tight font-bold tracking-[-0.02em]">{children}</h1>;
 }
 
-/** Tabellenkopf: 11 px, Versalien, 0,08 em Sperrung. */
+/**
+ * Tabellenkopf: 11 px, Versalien, 0,08 em Sperrung.
+ *
+ * **Traegt eine Spalte hier eine Breite, gehoert sie in die `sm:`-Variante.** Eine Breite
+ * ohne Variante wirkt auch in der Kartenansicht und quetscht sie, und gegen eine
+ * `sm:`-Regel setzt sie sich ohnehin nicht durch.
+ */
 export function Kopfzelle({ children, className }: { children?: ReactNode; className?: string }) {
   return (
     <th
@@ -106,8 +118,71 @@ export function Kopfzelle({ children, className }: { children?: ReactNode; class
   );
 }
 
-export function Zelle({ children, className }: { children?: ReactNode; className?: string }) {
-  return <td className={cn("border-t border-linie px-4 py-3", className)}>{children}</td>;
+/**
+ * Eine Zeile der Tabelle, ab `sm`. Darunter eine Karte.
+ *
+ * Eine Tabelle mit fuenf Spalten passt bei 390 px nicht, und was seitlich herausragt,
+ * findet niemand. Statt fuenf Seiten zweimal zu schreiben, schaltet die Darstellung hier
+ * um: aus `table-row` wird ein Block mit Abstand und Trennlinie.
+ */
+export function Reihe({ children, className }: { children?: ReactNode; className?: string }) {
+  return (
+    <tr className={cn("max-sm:block max-sm:border-t max-sm:border-linie max-sm:py-2", className)}>
+      {children}
+    </tr>
+  );
+}
+
+/**
+ * Eine Zelle. `titel` ist die Beschriftung, die **nur in der Kartenansicht** erscheint.
+ *
+ * Ab `sm` steht sie im Tabellenkopf und waere hier doppelt; darunter gibt es keinen Kopf
+ * mehr, und ein Wert ohne Beschriftung ist dann nicht mehr zuzuordnen. Zellen, die fuer
+ * sich sprechen (ein Name, eine Knopfreihe), lassen `titel` weg.
+ */
+export function Zelle({
+  children,
+  className,
+  titel,
+}: {
+  children?: ReactNode;
+  className?: string;
+  titel?: string;
+}) {
+  return (
+    <td
+      className={cn(
+        "border-t border-linie px-4 py-3",
+        "max-sm:flex max-sm:items-start max-sm:justify-between max-sm:gap-4 max-sm:border-t-0 max-sm:py-1.5",
+        className,
+      )}
+    >
+      {titel !== undefined && (
+        <span
+          aria-hidden="true"
+          className="hidden shrink-0 pt-px text-[11px] font-semibold tracking-[0.08em] text-text-hinweis uppercase max-sm:block"
+        >
+          {titel}
+        </span>
+      )}
+      {/*
+        **`sm:contents` statt eines echten Elements.** Die Huelle braucht nur die
+        Kartenansicht, damit der Wert als *ein* Flex-Kind neben der Beschriftung steht. Ab
+        `sm` verschwindet sie aus dem Layout, und die Zelle sieht innen aus wie vorher;
+        sonst saesse auf einmal ein Inline-Element um Knopfreihen und Bilder.
+      */}
+      <span
+        className={cn(
+          "min-w-0 sm:contents",
+          // Mit Beschriftung steht der Wert rechts daneben; ohne nimmt er die Zeile ganz,
+          // damit eine Knopfreihe ihre eigene Ausrichtung behaelt statt mittig zu kleben.
+          titel !== undefined ? "max-sm:text-right" : "max-sm:w-full",
+        )}
+      >
+        {children}
+      </span>
+    </td>
+  );
 }
 
 /** Status-Markierung: eckig, 22 px hoch, mit Punkt. */

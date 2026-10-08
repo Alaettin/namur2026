@@ -6,6 +6,7 @@ import {
   Feld,
   Knopf,
   Kopfzelle,
+  Reihe,
   Monowert,
   Tabellenflaeche,
   Ueberschrift,
@@ -101,8 +102,8 @@ export function Besucher() {
         }
       >
         <Tabellenflaeche>
-          <table className="w-full min-w-[800px] border-collapse text-sm">
-            <thead>
+          <table className="w-full border-collapse text-sm max-sm:block sm:min-w-[800px]">
+            <thead className="max-sm:hidden">
               <tr>
                 <Kopfzelle>Name</Kopfzelle>
                 <Kopfzelle>Firma und Position</Kopfzelle>
@@ -113,13 +114,13 @@ export function Besucher() {
                 </Kopfzelle>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="max-sm:block">
               {daten?.eintraege.map((b) => (
-                <tr key={b.guid}>
+                <Reihe key={b.guid}>
                   <Zelle className="font-semibold">
                     {b.vorname} {b.nachname}
                   </Zelle>
-                  <Zelle>
+                  <Zelle titel="Firma">
                     <span className="flex flex-col gap-0.5">
                       <span className="font-medium">{b.firma ?? "—"}</span>
                       {b.position !== null && (
@@ -127,8 +128,10 @@ export function Besucher() {
                       )}
                     </span>
                   </Zelle>
-                  <Zelle className="text-text-zweit">{b.email ?? "—"}</Zelle>
-                  <Zelle className="py-1.5">
+                  <Zelle titel="E-Mail" className="text-text-zweit">
+                    {b.email ?? "—"}
+                  </Zelle>
+                  <Zelle titel="GUID" className="py-1.5">
                     <Monowert wert={b.guid} kurz />
                   </Zelle>
                   <Zelle className="text-right">
@@ -139,7 +142,7 @@ export function Besucher() {
                       Ansehen →
                     </Link>
                   </Zelle>
-                </tr>
+                </Reihe>
               ))}
             </tbody>
           </table>
