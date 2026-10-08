@@ -1,7 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import type { Db } from "../db/client.js";
 import type { Dateiablage } from "../ablage/dateien.js";
-import { stelleStandardAvatarSicher } from "./standardavatar.js";
+import { stelleGalerieSicher, stelleStandardAvatarSicher } from "./standardavatar.js";
 import { SCHLUESSEL_UNBEKANNT } from "./abrufe.js";
 import {
   appNutzer,
@@ -127,6 +127,9 @@ export async function setzeZurueck(db: Db, ablage: Dateiablage): Promise<Bestand
    */
   await stelleStandardAvatarSicher(db, ablage, () => {
     // Fehlt das Bild im Repo, ist das kein Grund, das Zuruecksetzen scheitern zu lassen.
+  });
+  await stelleGalerieSicher(db, ablage, () => {
+    // Dasselbe fuer die Auswahl am Tablet.
   });
 
   return vorher;

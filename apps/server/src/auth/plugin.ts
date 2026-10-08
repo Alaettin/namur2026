@@ -10,8 +10,15 @@ declare module "fastify" {
   interface FastifyInstance {
     /** Jede angemeldete Rolle. Wirft 401, wenn keine gueltige Sitzung vorliegt. */
     verlangeAnmeldung: (req: FastifyRequest) => Promise<void>;
-    /** Nur Admins. Wirft 401 ohne Sitzung, 403 fuer Betreuer. */
+    /** Nur Admins. Wirft 401 ohne Sitzung, 403 fuer Betreuer und Kiosk. */
     verlangeAdmin: (req: FastifyRequest) => Promise<void>;
+    /**
+     * Das Selbstbedienungs-Tablet. Laesst `kiosk` **und** `admin` durch.
+     *
+     * Der Admin ist dabei, damit sich der Ablauf ohne zweites Geraet pruefen laesst; ein
+     * Betreuer bleibt draussen, denn die Rolle ist eng und nicht nur anders.
+     */
+    verlangeKiosk: (req: FastifyRequest) => Promise<void>;
   }
   interface FastifyRequest {
     nutzer: Nutzer | null;
@@ -62,6 +69,14 @@ export async function installAuth(app: FastifyInstance, ctx: Kontext): Promise<v
     await this.verlangeAnmeldung(req);
     if (req.nutzer?.rolle !== "admin") {
       throw forbidden("nur-admin", "This action requires the admin role.");
+    }
+  });
+
+  app.decorate("verlangeKiosk", async function (this: FastifyInstance, req: FastifyRequest) {
+    await this.verlangeAnmeldung(req);
+    const rolle = req.nutzer?.rolle;
+    if (rolle !== "kiosk" && rolle !== "admin") {
+      throw forbidden("nur-kiosk", "This action requires the kiosk role.");
     }
   });
 }

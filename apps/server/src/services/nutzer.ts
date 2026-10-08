@@ -5,7 +5,13 @@ import { appNutzer, exponatBetreuer } from "../db/schema.js";
 import { erzeugeStartpasswort, hashePasswort, normalisiereEmail } from "../auth/passwort.js";
 import { badRequest, conflict, notFound } from "../errors.js";
 
-export type Rolle = "admin" | "betreuer";
+/**
+ * `kiosk` ist das Selbstbedienungs-Tablet am Stand, seit dem 08.10.2026.
+ *
+ * Es darf genau einen Besucher lesen und aendern, nachdem dessen Pass gescannt wurde, und
+ * sonst nichts: keine Liste, kein Hochladen, keine Verwaltung.
+ */
+export type Rolle = "admin" | "betreuer" | "kiosk";
 
 export interface Nutzer {
   readonly id: string;

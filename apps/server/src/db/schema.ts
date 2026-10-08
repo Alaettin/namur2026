@@ -24,7 +24,14 @@ export const appNutzer = sqliteTable(
     /** Immer klein geschrieben gespeichert, siehe `normalisiereEmail`. */
     email: text("email").notNull().unique(),
     passwortHash: text("passwort_hash").notNull(),
-    rolle: text("rolle", { enum: ["admin", "betreuer"] }).notNull(),
+    /*
+     * Reines `text` ohne CHECK in SQLite, der Aufzaehlungstyp wirkt nur in TypeScript.
+     * Eine weitere Rolle braucht deshalb **keine Migration**.
+     *
+     * `kiosk` ist das Selbstbedienungs-Tablet am Stand: es darf genau einen Besucher
+     * lesen und aendern, nachdem dessen Pass gescannt wurde, und sonst nichts.
+     */
+    rolle: text("rolle", { enum: ["admin", "betreuer", "kiosk"] }).notNull(),
     /*
      * Deaktivierte Nutzer bleiben stehen, statt geloescht zu werden: ihre Kennung haengt
      * an jeder Zuordnung, die sie vorgenommen haben, und die soll nachvollziehbar bleiben.

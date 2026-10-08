@@ -18,11 +18,13 @@ import {
 } from "../bausteine/basis.js";
 import { Rueckfrage, Schaufenster } from "../bausteine/dialog.js";
 
+type Rolle = "admin" | "betreuer" | "kiosk";
+
 interface Nutzerzeile {
   id: string;
   name: string;
   email: string;
-  rolle: "admin" | "betreuer";
+  rolle: Rolle;
   aktiv: boolean;
   zuletztAngemeldet: number | null;
   exponate: string[];
@@ -44,7 +46,7 @@ export function Nutzer() {
   );
   const [name, setzeName] = useState("");
   const [email, setzeEmail] = useState("");
-  const [rolle, setzeRolle] = useState<"admin" | "betreuer">("betreuer");
+  const [rolle, setzeRolle] = useState<Rolle>("betreuer");
   const [frage, setzeFrage] = useState<Nutzerzeile | null>(null);
   const [zuweisen, setzeZuweisen] = useState<Nutzerzeile | null>(null);
 
@@ -127,12 +129,17 @@ export function Nutzer() {
             <select
               value={rolle}
               onChange={(e) => {
-                setzeRolle(e.target.value as "admin" | "betreuer");
+                setzeRolle(e.target.value as Rolle);
               }}
               className="h-11 rounded-none border border-linie-feld bg-flaeche px-3 text-[15px]"
             >
               <option value="betreuer">Betreuer</option>
               <option value="admin">Admin</option>
+              {/*
+                Das Selbstbedienungs-Tablet am Stand. Es sieht keine Verwaltung, sondern
+                nur den Scan und danach die Daten des einen gescannten Besuchers.
+              */}
+              <option value="kiosk">Tablet (Selbstbedienung)</option>
             </select>
           </label>
           <Knopf type="submit">Anlegen</Knopf>
@@ -168,6 +175,8 @@ export function Nutzer() {
                   <Zelle titel="Rolle">
                     {n.rolle === "admin" ? (
                       <Markierung text="ADMIN" />
+                    ) : n.rolle === "kiosk" ? (
+                      <Markierung text="TABLET" farbe="var(--color-primaer-dunkel)" />
                     ) : (
                       <Markierung text="BETREUER" farbe="var(--color-text-zweit)" />
                     )}

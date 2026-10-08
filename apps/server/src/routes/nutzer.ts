@@ -12,11 +12,15 @@ import {
   type Rolle,
 } from "../services/nutzer.js";
 
+const ROLLEN = ["admin", "betreuer", "kiosk"] as const;
+
 function alsRolle(wert: unknown): Rolle {
-  if (wert !== "admin" && wert !== "betreuer") {
-    throw badRequest("rolle-ungueltig", 'Field rolle must be "admin" or "betreuer".');
+  // Gegen die Liste geprueft, nicht gegen einzelne Vergleiche: eine neue Rolle wird sonst
+  // an einer Stelle ergaenzt und an der anderen vergessen.
+  if (typeof wert !== "string" || !ROLLEN.includes(wert as Rolle)) {
+    throw badRequest("rolle-ungueltig", `Field rolle must be one of: ${ROLLEN.join(", ")}.`);
   }
-  return wert;
+  return wert as Rolle;
 }
 
 function alsText(feld: string, wert: unknown, maxLaenge = 200): string {

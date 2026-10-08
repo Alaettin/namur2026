@@ -24,6 +24,7 @@ try {
 }
 
 const SITZUNG = "e2e/.sitzung.json";
+const SITZUNG_KIOSK = "e2e/.sitzung-kiosk.json";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -62,9 +63,27 @@ export default defineConfig({
       use: { ...devices["Pixel 7"], viewport: { width: 390, height: 844 } },
     },
 
+    /*
+     * **Das Selbstbedienungs-Tablet** mit eigenem Konto und eigener Sitzung. Es darf die
+     * Verwaltung nicht sehen, und genau das laesst sich mit der Admin-Sitzung nicht
+     * pruefen.
+     */
+    { name: "einrichtung-kiosk", testMatch: /kiosk\.setup\.ts/ },
+    {
+      name: "kiosk",
+      testMatch: /kiosk\.spec\.ts/,
+      dependencies: ["einrichtung-kiosk"],
+      use: {
+        ...devices["Desktop Chrome"],
+        // Ein uebliches Tablet im Querformat.
+        viewport: { width: 1024, height: 768 },
+        storageState: SITZUNG_KIOSK,
+      },
+    },
+
     {
       name: "desktop",
-      testIgnore: [/anmeldung\.spec\.ts/, /einrichtung\.setup\.ts/],
+      testIgnore: [/anmeldung\.spec\.ts/, /einrichtung\.setup\.ts/, /kiosk\./],
       dependencies: ["einrichtung"],
       use: {
         ...devices["Desktop Chrome"],
@@ -74,7 +93,7 @@ export default defineConfig({
     },
     {
       name: "handy",
-      testIgnore: [/anmeldung\.spec\.ts/, /einrichtung\.setup\.ts/],
+      testIgnore: [/anmeldung\.spec\.ts/, /einrichtung\.setup\.ts/, /kiosk\./],
       dependencies: ["einrichtung"],
       use: {
         // 390 px ist die Breite, die das Design-Paket fuer das Handy ansetzt.

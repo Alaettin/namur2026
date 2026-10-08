@@ -12,6 +12,7 @@ import { CsvImport } from "./seiten/CsvImport.js";
 import { Dashboard } from "./seiten/Dashboard.js";
 import { Einstellungen } from "./seiten/Einstellungen.js";
 import { Monitoring } from "./seiten/Monitoring.js";
+import { KioskAvatar, KioskMenue, KioskScan, KioskStammdaten } from "./kiosk/Kiosk.js";
 import { ExponatDetail } from "./seiten/ExponatDetail.js";
 import { Exponate } from "./seiten/Exponate.js";
 import { Nutzer } from "./seiten/Nutzer.js";
@@ -51,6 +52,11 @@ export function App() {
     pruefe();
   }, [pruefe]);
 
+  /** Einmal definiert: die Kiosk-Routen brauchen dasselbe wie der Rahmen. */
+  const abmelden = () => {
+    setzeIch(null);
+  };
+
   // Bis die Auskunft da ist, wird nichts gezeigt. Sonst blitzt die Anmeldung auf, obwohl
   // die Sitzung gueltig ist.
   if (!geprueft) {
@@ -71,6 +77,22 @@ export function App() {
             /anmeldung aus einem Lesezeichen muss genauso gehen wie der Weg ueber /.
           */}
           <Route path="*" element={<Navigate to="/anmeldung" replace />} />
+        </Routes>
+      ) : ich.rolle === "kiosk" ? (
+        /*
+          **Ein eigener Baum, nicht ein paar versteckte Reiter.** Das Tablet steht
+          unbeaufsichtigt im Publikum; es soll die Verwaltungsseiten gar nicht erst
+          enthalten. Jede andere Adresse landet wieder beim Scan.
+        */
+        <Routes>
+          <Route path="/kiosk" element={<KioskScan ich={ich} aufAbmelden={abmelden} />} />
+          <Route path="/kiosk/:guid" element={<KioskMenue aufAbmelden={abmelden} />} />
+          <Route
+            path="/kiosk/:guid/stammdaten"
+            element={<KioskStammdaten aufAbmelden={abmelden} />}
+          />
+          <Route path="/kiosk/:guid/avatar" element={<KioskAvatar aufAbmelden={abmelden} />} />
+          <Route path="*" element={<Navigate to="/kiosk" replace />} />
         </Routes>
       ) : (
         <Routes>

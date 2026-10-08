@@ -19,4 +19,10 @@ data.verwaist-*/
 !.env.example
 
 # Playwright
-e2e/.sitzung.json
+e2e/.sitzung*.json
+
+# Die Rohbilder der Avatare, so wie sie geliefert wurden: 20 PNG mit je rund 2 MB.
+# Im Repo liegt nur die aufbereitete Fassung in apps/server/assets/avatare/ (512 px JPEG,
+# zusammen 758 KB). Die Rohdaten bleiben lokal; 43 MB Schmuckbilder gehoeren nicht in ein
+# oeffentliches Repo, und gebraucht werden sie nur, wenn jemand die Groesse neu waehlt.
+avatar/

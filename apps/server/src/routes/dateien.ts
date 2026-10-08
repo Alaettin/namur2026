@@ -9,7 +9,14 @@ export function dateiRoutes(app: FastifyInstance, ctx: Kontext): void {
    * Hochladen. Jede angemeldete Rolle darf das: ein Betreuer laedt am Stand ein Dokument
    * zu seinem Exponat hoch.
    */
-  app.post("/api/dateien", { preHandler: app.verlangeAnmeldung }, async (req, reply) => {
+  /*
+   * **Nur Admins.** Stand bis zum 08.10.2026 auf `verlangeAnmeldung` und damit jeder
+   * angemeldeten Rolle offen. Gebraucht wird es ausschliesslich beim Anhaengen von
+   * Dokumenten an ein Exponat, und das ist selbst Admin-Sache. Mit dem
+   * Selbstbedienungs-Tablet gibt es jetzt eine Rolle, die auf einem unbeaufsichtigten
+   * Geraet im Publikum laeuft; die soll nichts in die Ablage schreiben koennen.
+   */
+  app.post("/api/dateien", { preHandler: app.verlangeAdmin }, async (req, reply) => {
     const teil = await req.file();
     if (teil === undefined)
       throw badRequest("datei-fehlt", "Multipart field with a file required.");

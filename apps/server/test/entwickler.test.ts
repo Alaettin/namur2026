@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { galerieIds } from "../src/services/standardavatar.js";
 import { melde, starte, type Pruefstand } from "./hilfe.js";
 
 const ADMIN = { ADMIN_EMAIL: "admin@namur.de", ADMIN_PASSWORT: "startpasswort-123" };
@@ -72,11 +73,15 @@ describe("Entwicklermodus", () => {
       expect(nachher[feld], feld).toBe(0);
     }
     /*
-     * **Dateien: genau eine, nicht null.** Der Standard-Avatar wird nach dem Leeren wieder
-     * angelegt. Vorher war er weg und kam erst beim naechsten Serverstart zurueck; bis
-     * dahin antwortete `/api/standard-avatar` mit 404 und jeder Besucher erschien ohne Bild.
+     * **Dateien: die angelegten, nicht null.** Der Standard-Avatar und die Avatargalerie
+     * werden nach dem Leeren wieder angelegt. Vorher war der Standard weg und kam erst beim
+     * naechsten Serverstart zurueck; bis dahin antwortete `/api/standard-avatar` mit 404
+     * und jeder Besucher erschien ohne Bild.
+     *
+     * Gerechnet statt abgetippt: die Zahl der Galeriebilder steht in `galerieIds()`, und
+     * eine feste Zahl hier waere beim naechsten Bild still falsch.
      */
-    expect(nachher["dateien"], "nur der Standard-Avatar").toBe(1);
+    expect(nachher["dateien"], "Standard-Avatar und Galerie").toBe(1 + galerieIds().length);
   });
 
   /**

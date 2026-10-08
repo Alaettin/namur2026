@@ -3,7 +3,7 @@ import rateLimit from "@fastify/rate-limit";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { Database as SqliteDatabase } from "better-sqlite3";
 import { Dateiablage } from "./ablage/dateien.js";
-import { stelleStandardAvatarSicher } from "./services/standardavatar.js";
+import { stelleGalerieSicher, stelleStandardAvatarSicher } from "./services/standardavatar.js";
 import { installAuth } from "./auth/plugin.js";
 import { oeffneDb } from "./db/client.js";
 import { migriere } from "./db/migrate.js";
@@ -16,6 +16,7 @@ import { authRoutes } from "./routes/auth.js";
 import { besucherRoutes } from "./routes/besucher.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
 import { monitoringRoutes } from "./routes/monitoring.js";
+import { kioskRoutes } from "./routes/kiosk.js";
 import { dateiRoutes } from "./routes/dateien.js";
 import { entwicklerRoutes } from "./routes/entwickler.js";
 import { exponatRoutes } from "./routes/exponate.js";
@@ -80,6 +81,10 @@ export async function buildServer(
   await stelleStandardAvatarSicher(db, ctx.ablage, (text) => {
     app.log.warn(text);
   });
+  // Dieselbe Haltung fuer die Avatare zur Auswahl am Tablet.
+  await stelleGalerieSicher(db, ctx.ablage, (text) => {
+    app.log.warn(text);
+  });
 
   // Der SPA-Rueckfall haengt am 404-Handler, und den gibt es nur einmal je Instanz.
   const hatFrontend = frontendOrdner !== undefined && frontendVorhanden(frontendOrdner);
@@ -125,6 +130,7 @@ export async function buildServer(
   scanRoutes(app, ctx);
   dashboardRoutes(app, ctx);
   monitoringRoutes(app, ctx);
+  kioskRoutes(app, ctx);
   entwicklerRoutes(app, ctx);
   /*
    * Die oeffentliche API. Eigener Geltungsbereich mit eigenem Fehlerhandler: sie antwortet
