@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type ReactNode } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { ApiFehler, api, useAbruf } from "../lib/api.js";
 import {
   Feld,
@@ -9,6 +9,7 @@ import {
   Markierung,
   Ueberschrift,
   Zustand,
+  knopfKlassen,
 } from "../bausteine/basis.js";
 import { Rueckfrage, Schaufenster } from "../bausteine/dialog.js";
 import type { Ich } from "../lib/ich.js";
@@ -77,6 +78,8 @@ interface ExponatDaten {
   kontakte: Kontakt[];
   betreuer: string[];
   scanbar: boolean;
+  /** Verschiedene Besucher, denen an diesem Exponat schon etwas zugeordnet wurde. */
+  betroffeneBesucher: number;
 }
 
 /** Ein Symbol, das eine Adresse in einem neuen Tab öffnet. */
@@ -146,6 +149,8 @@ export function ExponatDetail({ ich }: { ich: Ich }) {
   const { id } = useParams();
   const abruf = useAbruf<ExponatDaten>(`/api/exponate/${String(id)}`);
   const [fehler, setzeFehler] = useState<string | null>(null);
+  const [exponatLoeschen, setzeExponatLoeschen] = useState(false);
+  const navigate = useNavigate();
   const [zuLoeschen, setzeZuLoeschen] = useState<{
     art: string;
     zielId: string;
@@ -289,6 +294,17 @@ export function ExponatDetail({ ich }: { ich: Ich }) {
               <Knopf>Scannen</Knopf>
             </Link>
           )}
+          {e !== null && istAdmin && (
+            <Knopf
+              art="gefahr"
+              onClick={() => {
+                setzeFehler(null);
+                setzeExponatLoeschen(true);
+              }}
+            >
+              Exponat löschen
+            </Knopf>
+          )}
           <Link to="/exponate" className="text-[13px] font-semibold text-primaer-dunkel">
             ← Zurück zur Liste
           </Link>
@@ -315,15 +331,22 @@ export function ExponatDetail({ ich }: { ich: Ich }) {
               anzahl={e.dokumente.length}
               grenze={MAX.dokumente}
               formular={
-                <label className="flex flex-col gap-2 border-t border-linie pt-4 text-[13px] font-semibold">
-                  Dokument hinzufügen
-                  <input
-                    type="file"
-                    multiple
-                    onChange={(ev) => void ladeDokumenteHoch(ev)}
-                    className="text-sm font-normal file:mr-3 file:h-10 file:rounded-full file:border-0 file:bg-primaer file:px-5 file:text-sm file:font-semibold file:text-white"
-                  />
-                </label>
+                <div className="flex flex-col gap-2 border-t border-linie pt-4">
+                  {/*
+                    Feld `sr-only`, Label als Knopf: neben einem sichtbaren Dateifeld setzt
+                    der Browser seinen eigenen Text ("Keine Datei ausgewaehlt"), und der
+                    ist mit CSS nicht erreichbar.
+                  */}
+                  <label className={knopfKlassen("rand", "cursor-pointer self-start")}>
+                    Dokument hinzufügen
+                    <input
+                      type="file"
+                      multiple
+                      onChange={(ev) => void ladeDokumenteHoch(ev)}
+                      className="sr-only"
+                    />
+                  </label>
+                </div>
               }
             >
               {e.dokumente.map((d) => (
@@ -502,6 +525,56 @@ export function ExponatDetail({ ich }: { ich: Ich }) {
         </p>
         <p>Der Platz wird frei und beim nächsten Hinzufügen wieder vergeben.</p>
       </Rueckfrage>
+
+      {/*
+        **Das ganze Exponat.** Mit Tippwort, und das Tippwort ist die Kennung: der Vorgang
+        ist nicht umkehrbar und trifft Besucher, nicht nur den Bestand. Die Rückfrage nennt
+        Zahlen statt "sind Sie sicher"; eine Warnung ohne Zahl ist eine Behauptung.
+      */}
+      {e !== null && (
+        <Rueckfrage
+          offen={exponatLoeschen}
+          aufOffen={setzeExponatLoeschen}
+          titel="Exponat löschen?"
+          bestaetigenText="Endgültig löschen"
+          art="gefahr"
+          tippwort={e.kennung}
+          aufBestaetigen={() => {
+            void api(`/api/exponate/${String(id)}`, { method: "DELETE" })
+              .then(() => {
+                setzeExponatLoeschen(false);
+                void navigate("/exponate");
+              })
+              .catch((ursache: unknown) => {
+                setzeExponatLoeschen(false);
+                setzeFehler(
+                  ursache instanceof ApiFehler
+                    ? ursache.message
+                    : "Das Exponat ließ sich nicht löschen.",
+                );
+              });
+          }}
+        >
+          <p>
+            <b>
+              {e.kennung} {e.name}
+            </b>{" "}
+            verschwindet mit allem, was daran hängt: {e.dokumente.length} Dokumente,{" "}
+            {e.links.length} Links und {e.kontakte.length} Ansprechpartner-Zuweisungen.
+          </p>
+          <p>
+            {e.betroffeneBesucher > 0 ? (
+              <>
+                <b>{e.betroffeneBesucher} Besucher</b> haben davon bereits etwas zugeordnet
+                bekommen. Es verschwindet auch bei ihnen aus dem Viewer.
+              </>
+            ) : (
+              "Bisher hat kein Besucher etwas von diesem Exponat zugeordnet bekommen."
+            )}
+          </p>
+          <p>Die Ansprechpartner selbst bleiben in den Stammdaten erhalten.</p>
+        </Rueckfrage>
+      )}
     </>
   );
 }
@@ -625,7 +698,7 @@ function KontaktAuswahl({
   }
 
   return (
-    <Schaufenster offen={offen} aufOffen={aufOffen} titel="Ansprechpartner auswählen">
+    <Schaufenster offen={offen} aufOffen={aufOffen} titel="Ansprechpartner auswählen" fliessend>
       {fehler !== null && <Fehlerhinweis>{fehler}</Fehlerhinweis>}
 
       <Feld
@@ -648,7 +721,12 @@ function KontaktAuswahl({
             : "Niemand passt zu dieser Suche."
         }
       >
-        <ul className="flex max-h-[50dvh] flex-col overflow-y-auto">
+        {/*
+          `min-h-0 flex-1`: nur **diese** Liste laeuft, das Fenster selbst nicht. Vorher
+          scrollten beide ineinander und der innere Balken lag ueber der Liste. `min-h-0`
+          ist noetig, weil ein Flex-Kind sonst nicht unter seine Inhaltshoehe schrumpft.
+        */}
+        <ul className="flex min-h-0 flex-1 flex-col overflow-y-auto">
           {offene.map((p) => (
             <li key={p.id} className="border-b border-linie last:border-b-0">
               <button

@@ -15,6 +15,7 @@ import { ansprechpartnerRoutes } from "./routes/ansprechpartner.js";
 import { authRoutes } from "./routes/auth.js";
 import { besucherRoutes } from "./routes/besucher.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
+import { monitoringRoutes } from "./routes/monitoring.js";
 import { dateiRoutes } from "./routes/dateien.js";
 import { entwicklerRoutes } from "./routes/entwickler.js";
 import { exponatRoutes } from "./routes/exponate.js";
@@ -123,6 +124,7 @@ export async function buildServer(
   ansprechpartnerRoutes(app, ctx);
   scanRoutes(app, ctx);
   dashboardRoutes(app, ctx);
+  monitoringRoutes(app, ctx);
   entwicklerRoutes(app, ctx);
   /*
    * Die oeffentliche API. Eigener Geltungsbereich mit eigenem Fehlerhandler: sie antwortet

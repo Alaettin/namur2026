@@ -246,3 +246,31 @@ export const einstellungen = sqliteTable("einstellungen", {
   wert: text("wert").notNull(),
   geaendert: integer("geaendert").notNull().default(jetzt),
 });
+
+// --- Monitoring der Konnektor-Abrufe --------------------------------------------------
+
+/**
+ * Wie oft und wann Axon eine GUID abgefragt hat.
+ *
+ * **Eine Zeile je Besucher, nicht je Anfrage.** Ein vollstaendiges Abrufprotokoll gab es
+ * hier schon einmal und flog am 08.10.2026 wieder raus, weil es unbegrenzt waechst. Diese
+ * Fassung beantwortet dieselbe Frage mit Zaehlern: die Tabelle kann nie groesser werden
+ * als die Besucherzahl, und je Anfrage faellt genau ein Upsert an.
+ *
+ * **Nur bekannte GUIDs stehen hier.** Die Konnektor-API verlangt bewusst keine Anmeldung;
+ * legte jede unbekannte GUID eine Zeile an, koennte sie jeder beliebig aufblaehen. Abrufe
+ * auf Unbekanntes zaehlt deshalb ein einzelner Wert in `einstellungen`.
+ *
+ * Die drei Spalten sind die drei Endpunkte mit GUID. Getrennt, weil die Frage am Stand
+ * nicht "wurde abgefragt" lautet, sondern "kam der Viewer bis zu den Dokumenten".
+ */
+export const konnektorAbrufe = sqliteTable("konnektor_abrufe", {
+  guid: text("guid")
+    .primaryKey()
+    .references(() => besucher.guid, { onDelete: "cascade" }),
+  hierarchy: integer("hierarchy").notNull().default(0),
+  werte: integer("werte").notNull().default(0),
+  dokumente: integer("dokumente").notNull().default(0),
+  zuerst: integer("zuerst").notNull().default(jetzt),
+  zuletzt: integer("zuletzt").notNull().default(jetzt),
+});

@@ -6,6 +6,7 @@ import type { Kontext } from "../kontext.js";
 import { baueModell } from "../modell/modell.js";
 import { leseAnfrage, nachAussen, sammleWerte } from "../modell/werte.js";
 import { anmeldungVerlangt } from "../services/einstellungen.js";
+import { zaehleAbruf, zaehleUnbekannt, type Abrufart } from "../services/abrufe.js";
 import { pruefeBasic } from "./basic.js";
 import {
   ApiFehler,
@@ -186,13 +187,13 @@ export function konnektorApiRoutes(app: FastifyInstance, ctx: Kontext): void {
 
     scope.get(`${wurzel}/product/:itemId/hierarchy`, { config: grenzen }, (req) => {
       const guid = itemIdAus(req);
-      if (!besucherVorhanden(ctx, guid)) throw itemUnbekannt(guid);
+      pruefeUndZaehle(ctx, guid, "hierarchy");
       return [{ level: EBENE_NR, name: KNOTEN_NAME }];
     });
 
     scope.post(`${wurzel}/product/:itemId/values`, { config: grenzen }, async (req) => {
       const guid = itemIdAus(req);
-      if (!besucherVorhanden(ctx, guid)) throw itemUnbekannt(guid);
+      pruefeUndZaehle(ctx, guid, "werte");
 
       const anfrage = leseAnfrage(req.body);
       const gefragt = anfrage.mitSprache.length + anfrage.ohneSprache.length;
@@ -215,7 +216,7 @@ export function konnektorApiRoutes(app: FastifyInstance, ctx: Kontext): void {
 
     scope.post(`${wurzel}/product/:itemId/documents`, { config: grenzen }, async (req) => {
       const guid = itemIdAus(req);
-      if (!besucherVorhanden(ctx, guid)) throw itemUnbekannt(guid);
+      pruefeUndZaehle(ctx, guid, "dokumente");
 
       /*
        * Der Rumpf ist `PropertiesWithLanguage`, und `propertyIds` traegt hier laut Spec die
@@ -285,6 +286,23 @@ function besucherVorhanden(ctx: Kontext, guid: string): boolean {
     ctx.db.select({ guid: besucher.guid }).from(besucher).where(eq(besucher.guid, guid)).get() !==
     undefined
   );
+}
+
+/**
+ * Pruefen und zaehlen in einem Zug. Wirft `itemUnbekannt`, wenn die GUID nicht existiert.
+ *
+ * **Bewusst zusammengelegt.** Jeder Endpunkt mit GUID muss beides tun, und zwei getrennte
+ * Aufrufe laden dazu ein, bei einem neuen Endpunkt das Zaehlen zu vergessen. Ein
+ * vergessener Zaehler faellt nirgends auf: die Schnittstelle antwortet richtig, nur das
+ * Monitoring luegt.
+ */
+function pruefeUndZaehle(ctx: Kontext, guid: string, art: Abrufart): void {
+  if (!besucherVorhanden(ctx, guid)) {
+    // Unbekanntes bekommt keine eigene Zeile, siehe `services/abrufe.ts`.
+    zaehleUnbekannt(ctx.db);
+    throw itemUnbekannt(guid);
+  }
+  zaehleAbruf(ctx.db, guid, art);
 }
 
 /**

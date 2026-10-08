@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, countDistinct, eq } from "drizzle-orm";
 import type { Db } from "../db/client.js";
 import {
   dateien,
@@ -238,6 +238,23 @@ export function betroffeneBesucher(
     .from(zuordnungen)
     .where(and(eq(zuordnungen.art, art), eq(zuordnungen.zielId, zielId)))
     .all().length;
+}
+
+/**
+ * Wie viele **verschiedene** Besucher ein Loeschen des ganzen Exponats betrifft.
+ *
+ * `countDistinct`, nicht `count`: ein Besucher, der an diesem Exponat drei Dokumente
+ * bekommen hat, ist ein Betroffener und nicht drei. Eine zu grosse Zahl in einer
+ * Rueckfrage ist genauso falsch wie eine zu kleine.
+ */
+export function betroffeneBesucherVonExponat(db: Db, exponatId: string): number {
+  return (
+    db
+      .select({ n: countDistinct(zuordnungen.besucherGuid) })
+      .from(zuordnungen)
+      .where(eq(zuordnungen.exponatId, exponatId))
+      .get()?.n ?? 0
+  );
 }
 
 export function loescheInhalt(

@@ -86,6 +86,38 @@ export const ZIELFELDER = [
 export type Zielfeld = (typeof ZIELFELDER)[number];
 
 /**
+ * Eine leere Vorlage zum Herunterladen, erzeugt aus **`ZIELFELDER`**.
+ *
+ * Aus derselben Liste, gegen die der Import abgleicht. Eine von Hand gepflegte Vorlage
+ * liefe auseinander, sobald eine Spalte dazukommt, und zwar still: die Datei bliebe
+ * lesbar, nur fehlte die Spalte.
+ *
+ * **Mit BOM.** Excel liest eine UTF-8-Datei ohne Byte Order Mark als Windows-1252 und
+ * macht aus jedem Umlaut zwei Zeichen. Der Import hier kaeme damit zurecht, der Weg
+ * ueber Excel und zurueck nicht.
+ */
+export function vorlageCsv(): string {
+  const beispiel: Partial<Record<Zielfeld, string>> = {
+    guid: "A1B2C3D4",
+    vorname: "Erika",
+    nachname: "Mustermann",
+    firma: "Beispiel GmbH",
+    position: "Leitung Technik",
+    email: "erika.mustermann@example.org",
+    strasse: "Musterweg 1",
+    plz: "68307",
+    ort: "Mannheim",
+    land: "Deutschland",
+    website: "https://example.org",
+  };
+  const zeilen = [ZIELFELDER.join(";"), ZIELFELDER.map((f) => beispiel[f] ?? "").join(";")];
+  // BOM und CRLF als Codepunkte, damit die Datei genau das enthaelt, was Excel erwartet.
+  const bom = "\uFEFF";
+  const zeilenende = "\r\n";
+  return bom + zeilen.join(zeilenende) + zeilenende;
+}
+
+/**
  * Bekannte Spaltennamen, klein geschrieben und ohne Sonderzeichen verglichen.
  *
  * Mehrere Schreibweisen je Feld, weil die Datei aus einem Anmeldewerkzeug kommt und

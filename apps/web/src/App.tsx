@@ -11,6 +11,7 @@ import { BesucherDetail } from "./seiten/BesucherDetail.js";
 import { CsvImport } from "./seiten/CsvImport.js";
 import { Dashboard } from "./seiten/Dashboard.js";
 import { Einstellungen } from "./seiten/Einstellungen.js";
+import { Monitoring } from "./seiten/Monitoring.js";
 import { ExponatDetail } from "./seiten/ExponatDetail.js";
 import { Exponate } from "./seiten/Exponate.js";
 import { Nutzer } from "./seiten/Nutzer.js";
@@ -103,6 +104,7 @@ export function App() {
             <Route path="/ansprechpartner" element={<Ansprechpartner />} />
             <Route path="/nutzer" element={<Nutzer />} />
             <Route path="/api" element={<Api />} />
+            <Route path="/monitoring" element={<Monitoring />} />
             <Route path="/einstellungen" element={<Einstellungen ich={ich} />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

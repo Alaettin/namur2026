@@ -247,7 +247,9 @@ export function Einstellungen({ ich }: { ich: Ich }) {
           <li>
             <b>{b?.zuordnungen ?? 0}</b> Zuordnungen und {b?.dateien ?? 0} hochgeladene Dateien
           </li>
-          <li>das Abrufprotokoll mit {b?.abrufe ?? 0} Einträgen</li>
+          <li>
+            die Abrufzähler für <b>{b?.abrufe ?? 0}</b> GUIDs
+          </li>
         </ul>
         <p>
           Die <b>{b?.appNutzer ?? 0} Anmeldungen bleiben erhalten</b>, sonst käme danach niemand

@@ -11,7 +11,9 @@ import {
   Ueberschrift,
   Zelle,
   cn,
+  knopfKlassen,
 } from "../bausteine/basis.js";
+import { bieteAlsDatei } from "../lib/download.js";
 import { Rueckfrage } from "../bausteine/dialog.js";
 
 /**
@@ -156,13 +158,28 @@ export function CsvImport() {
   /** Die übersprungenen Zeilen als Datei anbieten. */
   function ladeUebersprungeneHerunter() {
     if (ergebnis === null) return;
-    const blob = new Blob([ergebnis.uebersprungeneCsv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "uebersprungene-zeilen.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    bieteAlsDatei(ergebnis.uebersprungeneCsv, "uebersprungene-zeilen.csv");
+  }
+
+  /**
+   * Die leere Vorlage holen und anbieten.
+   *
+   * **Vom Server, nicht hier zusammengebaut.** Die Spaltenliste steht in `ZIELFELDER`, und
+   * genau dagegen gleicht der Import ab; eine zweite Liste im Klienten liefe still
+   * auseinander, sobald eine Spalte dazukommt.
+   */
+  async function ladeVorlageHerunter() {
+    setzeFehler(null);
+    try {
+      const { dateiname, inhalt } = await api<{ dateiname: string; inhalt: string }>(
+        "/api/besucher/import/vorlage",
+      );
+      bieteAlsDatei(inhalt, dateiname);
+    } catch (ursache) {
+      setzeFehler(
+        ursache instanceof ApiFehler ? ursache.message : "Die Vorlage ließ sich nicht laden.",
+      );
+    }
   }
 
   return (
@@ -226,17 +243,25 @@ export function CsvImport() {
       {schritt === 1 && (
         <Flaeche className="flex flex-col gap-4 p-6">
           <h2 className="text-lg font-semibold">Datei wählen</h2>
-          <input
-            type="file"
-            accept=".csv,text/csv"
-            onChange={waehle}
-            className="text-sm file:mr-3 file:h-10 file:rounded-full file:border-0 file:bg-primaer file:px-5 file:text-sm file:font-semibold file:text-white"
-          />
-          <p className="text-[13px] leading-relaxed text-text-hinweis">
-            Nur CSV, keine Bilder und kein ZIP. Trennzeichen Semikolon oder Komma, beides wird
-            erkannt. Fotos lädst du je Besucher in der Detailansicht hoch. Eine Datei aus Excel wird
-            auch dann richtig gelesen, wenn sie nicht als UTF-8 gespeichert ist.
-          </p>
+          <div className="flex flex-wrap gap-3">
+            {/*
+              Das Feld ist `sr-only`, das Label traegt das Aussehen: neben ein sichtbares
+              `<input type="file">` setzt der Browser seinen eigenen Text ("Keine Datei
+              ausgewaehlt"), und der ist mit CSS nicht erreichbar.
+            */}
+            <label className={knopfKlassen("primaer", "cursor-pointer")}>
+              CSV auswählen
+              <input type="file" accept=".csv,text/csv" onChange={waehle} className="sr-only" />
+            </label>
+            <Knopf
+              art="rand"
+              onClick={() => {
+                void ladeVorlageHerunter();
+              }}
+            >
+              Vorlage herunterladen
+            </Knopf>
+          </div>
         </Flaeche>
       )}
 

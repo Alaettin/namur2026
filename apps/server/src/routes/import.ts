@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { badRequest } from "../errors.js";
 import type { Kontext } from "../kontext.js";
-import { leseCsv } from "../services/csv.js";
+import { leseCsv, vorlageCsv } from "../services/csv.js";
 import { leseZuordnung, pruefeImport, uebernehmeImport, type Modus } from "../services/import.js";
 
 /**
@@ -15,6 +15,15 @@ import { leseZuordnung, pruefeImport, uebernehmeImport, type Modus } from "../se
  * 500 Besucher sind etwa 60 KB.
  */
 export function importRoutes(app: FastifyInstance, ctx: Kontext): void {
+  /**
+   * Die leere Vorlage. Als Text statt als Download-Antwort: der Klient hat bereits einen
+   * Weg, einen Blob anzubieten, und so bleibt der Dateiname an einer Stelle.
+   */
+  app.get("/api/besucher/import/vorlage", { preHandler: app.verlangeAdmin }, () => ({
+    dateiname: "besucher-vorlage.csv",
+    inhalt: vorlageCsv(),
+  }));
+
   app.post("/api/besucher/import/pruefen", { preHandler: app.verlangeAdmin }, async (req) => {
     const { inhalt, zuordnung } = await leseAnfrage(req);
     return pruefeImport(ctx.db, inhalt, zuordnung);

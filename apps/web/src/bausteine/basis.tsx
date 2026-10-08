@@ -185,6 +185,36 @@ export function Zelle({
   );
 }
 
+/**
+ * Mehrere Zahlen nebeneinander, Zahl gross und Bezeichnung klein darunter.
+ *
+ * Fuer die Inhalte eines Exponats. Vorher stand dort "2 Dokumente · 2 Links · 2 Kontakte"
+ * in einer Zeile; die Zahlen gingen im Text unter, und am Telefon brach die Zeile um.
+ *
+ * `tabular-nums`, damit die Zahlen in untereinanderstehenden Zeilen auf derselben Breite
+ * sitzen und die Spalte nicht zappelt.
+ */
+export function Zaehlerreihe({
+  werte,
+  className,
+}: {
+  werte: { zahl: number; text: string }[];
+  className?: string;
+}) {
+  return (
+    <span className={cn("flex flex-wrap items-start gap-x-5 gap-y-2", className)}>
+      {werte.map((w) => (
+        <span key={w.text} className="flex flex-col leading-tight">
+          <span className="text-[15px] font-semibold tabular-nums">{w.zahl}</span>
+          <span className="text-[10px] font-semibold tracking-[0.08em] text-text-hinweis uppercase">
+            {w.text}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 /** Status-Markierung: eckig, 22 px hoch, mit Punkt. */
 export function Markierung({
   text,

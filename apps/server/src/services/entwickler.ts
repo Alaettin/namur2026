@@ -1,7 +1,8 @@
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { Db } from "../db/client.js";
 import type { Dateiablage } from "../ablage/dateien.js";
 import { stelleStandardAvatarSicher } from "./standardavatar.js";
+import { SCHLUESSEL_UNBEKANNT } from "./abrufe.js";
 import {
   appNutzer,
   besucher,
@@ -11,7 +12,9 @@ import {
   exponatDokumente,
   ansprechpartner,
   exponatAnsprechpartner,
+  einstellungen,
   exponatLinks,
+  konnektorAbrufe,
   zuordnungen,
 } from "../db/schema.js";
 
@@ -31,6 +34,8 @@ export interface Bestand {
   kontakte: number;
   zuordnungen: number;
   dateien: number;
+  /** GUIDs mit mindestens einem Konnektor-Abruf, siehe `services/abrufe.ts`. */
+  abrufe: number;
   /** Bleiben beim Zuruecksetzen erhalten. Nur zur Anzeige im Rueckfragedialog. */
   appNutzer: number;
 }
@@ -52,6 +57,7 @@ export function leseBestand(db: Db): Bestand {
     kontakte: n(db.select({ n: sql<number>`count(*)` }).from(ansprechpartner)),
     zuordnungen: n(db.select({ n: sql<number>`count(*)` }).from(zuordnungen)),
     dateien: n(db.select({ n: sql<number>`count(*)` }).from(dateien)),
+    abrufe: n(db.select({ n: sql<number>`count(*)` }).from(konnektorAbrufe)),
     appNutzer: n(db.select({ n: sql<number>`count(*)` }).from(appNutzer)),
   };
 }
@@ -84,6 +90,18 @@ export async function setzeZurueck(db: Db, ablage: Dateiablage): Promise<Bestand
      * erledigen, aber nur solange `foreign_keys = ON` wirklich gesetzt ist; ausdrueckliches
      * Loeschen haengt nicht an einem PRAGMA.
      */
+    /*
+     * Die Abrufzaehler zuerst: sie haengen an `besucher`, und ein stehengebliebener
+     * Zaehler waere nach dem Zuruecksetzen eine Zahl ohne Besucher dahinter.
+     */
+    tx.delete(konnektorAbrufe).run();
+    /*
+     * Und der Zaehler fuer unbekannte GUIDs, der an keinem Besucher haengt. **Gezielt
+     * dieser eine Schluessel**, nicht die ganze Tabelle `einstellungen`: dort steht auch
+     * der Schalter fuer die Konnektor-Anmeldung, und der ist eine Einstellung des
+     * Betreibers, kein Fachbestand.
+     */
+    tx.delete(einstellungen).where(eq(einstellungen.schluessel, SCHLUESSEL_UNBEKANNT)).run();
     tx.delete(zuordnungen).run();
     tx.delete(exponatDokumente).run();
     tx.delete(exponatLinks).run();

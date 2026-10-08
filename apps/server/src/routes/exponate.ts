@@ -7,6 +7,7 @@ import {
   betroffeneBesucher,
   findeExponat,
   hatInhalte,
+  betroffeneBesucherVonExponat,
   inhalteVonExponat,
   legeDokumentAn,
   legeExponatAn,
@@ -66,6 +67,8 @@ export function exponatRoutes(app: FastifyInstance, ctx: Kontext): void {
         ...inhalteVonExponat(ctx.db, req.params.id),
         betreuer: betreuerVonExponat(ctx.db, req.params.id),
         scanbar: hatInhalte(ctx.db, req.params.id),
+        // Fuer die Rueckfrage vor dem Loeschen: eine Warnung ohne Zahl ist eine Behauptung.
+        betroffeneBesucher: betroffeneBesucherVonExponat(ctx.db, req.params.id),
       };
     },
   );

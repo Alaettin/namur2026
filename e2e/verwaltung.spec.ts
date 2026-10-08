@@ -4,6 +4,7 @@ import {
   merkeBesucher,
   raeumeAnsprechpartnerAuf,
   raeumeBesucherAuf,
+  seiteMitEintrag,
 } from "./exponate.js";
 
 test.afterEach(async ({ request }) => {
@@ -324,7 +325,13 @@ test.describe("am Handy bedienbar", () => {
     ).json();
     merkeAnsprechpartner(angelegt.id as string);
 
-    await page.goto("/ansprechpartner");
+    /*
+     * **Auf die richtige Seite gehen.** Die Liste blaettert zu zehnt, und ein neuer
+     * Ansprechpartner landet alphabetisch irgendwo; auf Seite eins zu suchen ging bisher
+     * nur aus Glueck gut und fiel um, als der Bestand wuchs.
+     */
+    const seite = await seiteMitEintrag(request, "/api/ansprechpartner", angelegt.id as string);
+    await page.goto(`/ansprechpartner?seite=${String(seite)}`);
     const zeile = page.getByRole("row", { name: new RegExp(`Probe${marke}`) });
     await zeile.getByRole("button", { name: "Löschen" }).click();
 

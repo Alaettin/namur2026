@@ -2,7 +2,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { DropdownMenu } from "radix-ui";
 import { api } from "../lib/api.js";
 import { Knopf, cn } from "../bausteine/basis.js";
-import { AxonLogo, Logoreihe, NamurLogo, PepperlLogo } from "../bausteine/logos.js";
+import { Logoreihe } from "../bausteine/logos.js";
 import type { Ich } from "../lib/ich.js";
 
 /**
@@ -24,6 +24,7 @@ const REITER_ADMIN = [
   { pfad: "/ansprechpartner", text: "Ansprechpartner" },
   { pfad: "/nutzer", text: "Nutzer" },
   { pfad: "/api", text: "API" },
+  { pfad: "/monitoring", text: "Monitoring" },
   { pfad: "/einstellungen", text: "Einstellungen" },
 ];
 
@@ -61,14 +62,16 @@ export function Rahmen({ ich, aufAbmelden }: { ich: Ich; aufAbmelden: () => void
           nur oben Platz. Das ist auf einem Telefon der Unterschied zwischen laestig und egal.
         */}
         <div className="border-b border-linie px-4 py-2.5 lg:hidden">
-          <Logoreihe art="kopf" />
+          <Logoreihe art="kopf" zurStartseite />
         </div>
 
-        <div className="relative flex min-h-14 items-center gap-3 border-b border-linie px-4 sm:gap-4 sm:px-6">
-          {/* Ab `lg` steht AXON wieder hier; darunter deckt es die Logozeile ab. */}
-          <NavLink to="/" aria-label="Startseite" className="hidden shrink-0 lg:flex">
-            <AxonLogo art="kopf" className="-my-1.5" />
-          </NavLink>
+        <div className="flex min-h-14 items-center gap-3 border-b border-linie px-4 sm:gap-4 sm:px-6">
+          {/*
+            Ab `lg` stehen die drei Logos hier, links gruppiert; darunter deckt sie die
+            Logozeile oben ab. Dieselbe `Logoreihe`, nur ohne das voreingestellte
+            `justify-between`: `cn` arbeitet mit twMerge, `justify-start` setzt sich durch.
+          */}
+          <Logoreihe art="kopf" zurStartseite className="hidden shrink-0 justify-start lg:flex" />
           <span aria-hidden="true" className="hidden h-7 w-px shrink-0 bg-linie lg:block" />
           {/*
             Nur **einmal** der Name, gruen und gesperrt. Der Entwurf zeigt daneben noch
@@ -79,19 +82,8 @@ export function Rahmen({ ich, aufAbmelden }: { ich: Ich; aufAbmelden: () => void
             {ich.appName === "" ? "NAMUR HV 2026" : ich.appName}
           </span>
 
-          {/*
-            NAMUR in der **echten** Mitte der Zeile, nicht zwischen den Nachbarn: so bleibt es
-            mittig, egal wie lang der Name des Angemeldeten ist. `pointer-events-none`, damit
-            das schwebende Bild nichts abfaengt.
-          */}
-          <span className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 lg:block">
-            <NamurLogo art="kopf" />
-          </span>
-
           {/* Ab `sm`: Name und Abmelden stehen offen in der Kopfzeile. */}
-          <span className="ml-auto hidden min-w-0 items-center gap-3 sm:flex sm:gap-4">
-            <PepperlLogo art="kopf" className="hidden lg:block" />
-            <span aria-hidden="true" className="hidden h-7 w-px shrink-0 bg-linie lg:block" />
+          <span className="ml-auto hidden min-w-0 items-center gap-3 sm:flex">
             <span className="min-w-0 truncate text-sm font-medium">{ich.name}</span>
             <Knopf art="rand" className="h-[34px] px-3.5 text-[13px]" onClick={abmelden}>
               Abmelden

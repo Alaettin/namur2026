@@ -128,6 +128,7 @@ export function Schaufenster({
   aufOffen,
   titel,
   breit = false,
+  fliessend = false,
   children,
 }: {
   offen: boolean;
@@ -135,6 +136,15 @@ export function Schaufenster({
   titel: string;
   /** Für Bilder: nimmt so viel Platz, wie der Bildschirm hergibt. */
   breit?: boolean;
+  /**
+   * Das Fenster scrollt **nicht** selbst; ein Kind übernimmt die Höhe.
+   *
+   * Für Inhalte mit einer langen Liste darin. Ohne das scrollen zwei Dinge ineinander,
+   * das Fenster und die Liste, und man bekommt zwei Scrollbalken nebeneinander, von denen
+   * der innere über der Liste liegt. Das Kind, das laufen soll, trägt dann
+   * `min-h-0 flex-1 overflow-y-auto`, und Titel und Suchfeld bleiben stehen.
+   */
+  fliessend?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -142,9 +152,9 @@ export function Schaufenster({
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
         <RadixDialog.Content
-          className={`${LAGE} gap-4 overflow-y-auto p-6 sm:max-h-[90dvh] ${
-            breit ? "sm:w-[min(60rem,calc(100vw-2rem))]" : "sm:w-[min(34rem,calc(100vw-2rem))]"
-          }`}
+          className={`${LAGE} gap-4 p-6 sm:max-h-[90dvh] ${
+            fliessend ? "overflow-hidden" : "overflow-y-auto"
+          } ${breit ? "sm:w-[min(60rem,calc(100vw-2rem))]" : "sm:w-[min(34rem,calc(100vw-2rem))]"}`}
           aria-describedby={undefined}
         >
           <div className="flex items-start justify-between gap-4">

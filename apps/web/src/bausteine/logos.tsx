@@ -1,3 +1,4 @@
+import { NavLink } from "react-router";
 import { cn } from "./basis.js";
 import axon from "../assets/axon-logo.svg";
 import namur from "../assets/namur.png";
@@ -59,10 +60,32 @@ export function PepperlLogo({ art, className }: { art: keyof typeof MASSE; class
  * Genutzt auf der Anmeldeseite und in der schmalen Kopfzeile. Die breite Kopfzeile setzt die
  * drei einzeln, weil dort noch Appname, Benutzername und „Abmelden" dazwischenstehen.
  */
-export function Logoreihe({ art, className }: { art: keyof typeof MASSE; className?: string }) {
+export function Logoreihe({
+  art,
+  className,
+  zurStartseite = false,
+}: {
+  art: keyof typeof MASSE;
+  className?: string;
+  /**
+   * Macht **nur AXON** zum Link auf die Startseite.
+   *
+   * Nur AXON, weil das unsere Anwendung ist: ein Klick auf das NAMUR- oder Pepperl-Zeichen
+   * soll nirgendwohin fuehren, erst recht nicht auf unser Dashboard. Auf der Anmeldeseite
+   * gibt es keine Startseite, dort bleibt alles unverlinkt.
+   */
+  zurStartseite?: boolean;
+}) {
+  const axonbild = <AxonLogo art={art} />;
   return (
     <div className={cn("flex items-center justify-between gap-3", className)}>
-      <AxonLogo art={art} />
+      {zurStartseite ? (
+        <NavLink to="/" aria-label="Startseite" className="flex shrink-0">
+          {axonbild}
+        </NavLink>
+      ) : (
+        axonbild
+      )}
       <NamurLogo art={art} />
       <PepperlLogo art={art} />
     </div>

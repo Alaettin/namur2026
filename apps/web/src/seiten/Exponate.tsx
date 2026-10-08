@@ -12,6 +12,7 @@ import {
   Markierung,
   Tabellenflaeche,
   Ueberschrift,
+  Zaehlerreihe,
   Zelle,
   Zustand,
 } from "../bausteine/basis.js";
@@ -134,9 +135,15 @@ export function Exponate({ ich }: { ich: Ich }) {
                     {e.kennung}
                   </Zelle>
                   <Zelle className="font-semibold">{e.name}</Zelle>
-                  <Zelle titel="Inhalte" className="text-text-zweit">
-                    {e.anzahl.dokumente} Dokumente · {e.anzahl.links} Links · {e.anzahl.kontakte}{" "}
-                    Kontakte
+                  <Zelle titel="Inhalte">
+                    <Zaehlerreihe
+                      className="max-sm:justify-end"
+                      werte={[
+                        { zahl: e.anzahl.dokumente, text: "Dok." },
+                        { zahl: e.anzahl.links, text: "Links" },
+                        { zahl: e.anzahl.kontakte, text: "Kontakte" },
+                      ]}
+                    />
                   </Zelle>
                   <Zelle titel="Status">
                     {e.scanbar ? (
