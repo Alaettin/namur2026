@@ -26,6 +26,18 @@ const CSP = [
   "img-src 'self' data: blob:",
   "font-src 'self'",
   "connect-src 'self'",
+  /*
+   * `worker-src 'self' blob:` fuer den Dekodierer von `qr-scanner`. Die Bibliothek baut
+   * ihren Worker selbst zusammen: `new Worker(URL.createObjectURL(new Blob([...])))`.
+   * Ohne eigene Direktive faellt `worker-src` auf `default-src 'self'` zurueck, und der
+   * Browser blockiert ihn. Das Kamerabild erscheint trotzdem, weil ein MediaStream nicht
+   * der CSP unterliegt, nur dekodiert dann niemand: der Fehler sieht wie ein Kamerafehler
+   * aus und ist eine Kopfzeile.
+   *
+   * Das ist **keine** allgemeine Lockerung. Ein Blob-Worker kann nur Code ausfuehren, der
+   * ohnehin schon auf der Seite lag; `script-src` bleibt bei `'self'`, ohne `blob:`.
+   */
+  "worker-src 'self' blob:",
   "frame-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",

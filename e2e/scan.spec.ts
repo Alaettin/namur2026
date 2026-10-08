@@ -148,3 +148,66 @@ test("ohne sicheren Kontext wird der Grund genannt, nicht nur verweigert", async
   // Der Weg von Hand bleibt offen.
   await expect(page.getByRole("button", { name: "GUID von Hand eingeben" })).toBeEnabled();
 });
+
+/**
+ * **Der Dekodierer darf überhaupt starten.**
+ *
+ * `qr-scanner` baut seinen Worker selbst zusammen:
+ * `new Worker(URL.createObjectURL(new Blob([...])))`. Fehlt `worker-src` in der CSP, fällt
+ * die Direktive still auf `default-src 'self'` zurück und der Browser blockiert ihn. Das
+ * Kamerabild erscheint trotzdem, weil ein MediaStream nicht der CSP unterliegt, nur
+ * dekodiert niemand: genau der Fehler, der am 08.10.2026 am Stand aufgefallen wäre.
+ *
+ * Geprüft wird hier der Mechanismus, nicht die Bibliothek: ein eigener blob:-Worker muss
+ * antworten, und die Seite darf dabei keine CSP-Verletzung melden. Dass eine echte
+ * Telefonkamera einen echten Pass dekodiert, beweist das **nicht**; der Prüfstand hat keine
+ * Kamera. Das bleibt beim Feldtest.
+ */
+test("die CSP lässt den blob:-Worker des Scanners zu", async ({ page, request }) => {
+  const { exponatId } = await bestand(request);
+
+  // Vor dem Laden horchen, sonst entgeht uns eine Verletzung beim Seitenaufbau.
+  const verletzungen: string[] = [];
+  await page.addInitScript(() => {
+    (window as unknown as { __csp: string[] }).__csp = [];
+    document.addEventListener("securitypolicyviolation", (e) => {
+      (window as unknown as { __csp: string[] }).__csp.push(
+        `${e.violatedDirective} <- ${e.blockedURI}`,
+      );
+    });
+  });
+
+  await page.goto(`/exponate/${exponatId}/scan`);
+  await expect(page.getByRole("button", { name: "GUID von Hand eingeben" }).first()).toBeVisible();
+
+  const antwort = await page.evaluate(async () => {
+    const quelle = "self.onmessage = () => { self.postMessage('da'); };";
+    const url = URL.createObjectURL(new Blob([quelle], { type: "text/javascript" }));
+    try {
+      const worker = new Worker(url);
+      return await new Promise<string>((loese) => {
+        const uhr = setTimeout(() => {
+          loese("keine Antwort");
+        }, 5000);
+        worker.onmessage = (e: MessageEvent<string>) => {
+          clearTimeout(uhr);
+          worker.terminate();
+          loese(e.data);
+        };
+        worker.postMessage("los");
+      });
+    } catch (fehler) {
+      // Ein von der CSP blockierter Worker wirft hier bereits.
+      return `Fehler: ${(fehler as Error).message}`;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  });
+
+  expect(antwort, "der blob:-Worker hat nicht geantwortet").toBe("da");
+
+  verletzungen.push(
+    ...(await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp)),
+  );
+  expect(verletzungen, "die Seite meldet CSP-Verletzungen").toEqual([]);
+});
