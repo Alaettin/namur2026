@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { legeExponatAn, raeumeExponateAuf } from "./exponate.js";
+import { legeExponatAn, raeumeExponateAuf, seiteMitEintrag } from "./exponate.js";
 
 test.afterEach(async ({ request }) => {
   await raeumeExponateAuf(request);
@@ -150,4 +150,59 @@ test("die entfernten Blöcke sind nirgends mehr zu finden", async ({ page }) => 
   await expect(page.getByText("Letzte Zuordnungen")).toHaveCount(0);
   // Die Balken je Exponat bleiben.
   await expect(page.getByText("Zuordnungen je Exponat")).toBeVisible();
+});
+
+/**
+ * Das Passwortfenster in der Nutzerliste.
+ *
+ * **Der Knopf würfelt nicht mehr sofort.** Vorher setzte ein einziger Klick ein neues
+ * Passwort, was einen Betreuer mitten am Stand aussperren konnte.
+ *
+ * Der Prüfnutzer bleibt im Bestand: App-Nutzer sind nach Entwurf nicht löschbar, nur
+ * deaktivierbar, damit ein Zurücksetzen niemanden aussperrt.
+ */
+/*
+ * **Nur am Desktop.** Bei 390 px ist der Klick auf die Knöpfe im Dialog nicht zuverlässig
+ * automatisierbar: Playwright meldet abwechselnd die Überlagerung und das Eingabefeld als
+ * Abfänger. Auf dem Bild des Fehllaufs sind beide Knöpfe sichtbar, es ist also keine
+ * fehlende Darstellung; ob ein Mensch dort tippen kann, ist damit **nicht** belegt.
+ *
+ * Die Verwaltung ist laut Übergabe Desktop-Arbeit, und dieselbe Beschränkung tragen bereits
+ * vier Fälle in `stammdaten.spec.ts`. Offen bleibt die Frage für den Scan-Ablauf, der am
+ * Handy läuft; dort gibt es keinen solchen Dialog.
+ */
+test.describe("am Desktop", () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 0) < 900, "Dialogbedienung, siehe oben");
+
+  test("ein Passwort lässt sich wählen statt nur würfeln", async ({ page, request }) => {
+    const marke = String(Date.now()).slice(-8);
+    const email = `passwort-${marke}@namur.de`;
+    const name = `Passwortprobe ${marke}`;
+    const angelegt = await (
+      await request.post("/api/nutzer", { data: { name, email, rolle: "betreuer" } })
+    ).json();
+
+    const seite = await seiteMitEintrag(request, "/api/nutzer", angelegt.id as string);
+    await page.goto(`/nutzer?seite=${String(seite)}`);
+
+    await page
+      .getByRole("row", { name: new RegExp(name) })
+      .getByRole("button", { name: "Passwort" })
+      .click();
+
+    const fenster = page.getByRole("dialog");
+    await expect(fenster.getByRole("heading", { name: `Passwort für ${name}` })).toBeVisible();
+
+    // Zu kurz: der Knopf bleibt gesperrt, und die Begründung steht da.
+    await fenster.getByLabel("Neues Passwort").fill("zukurz");
+    await expect(fenster.getByRole("button", { name: "Setzen" })).toBeDisabled();
+    await expect(fenster.getByText(/Mindestens 12 Zeichen, aktuell 6/)).toBeVisible();
+
+    // Lang genug: setzen, und der Wert erscheint danach zum Kopieren.
+    await fenster.getByLabel("Neues Passwort").fill("Probe@Namur2026");
+    await fenster.getByRole("button", { name: "Setzen" }).click();
+
+    await expect(page.getByRole("heading", { name: `Startpasswort für ${email}` })).toBeVisible();
+    await expect(page.getByText("Probe@Namur2026", { exact: true })).toBeVisible();
+  });
 });

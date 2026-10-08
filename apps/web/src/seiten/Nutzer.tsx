@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { ApiFehler, api, useAbruf } from "../lib/api.js";
 import { Blaetterleiste, useBlaettern, useSprungZuEintrag } from "../bausteine/blaettern.js";
 import {
-  Feld,
   Fehlerhinweis,
+  Feld,
   Flaeche,
   Knopf,
   Kopfzelle,
@@ -13,6 +13,7 @@ import {
   Ueberschrift,
   Zelle,
   Zustand,
+  cn,
 } from "../bausteine/basis.js";
 import { Rueckfrage, Schaufenster } from "../bausteine/dialog.js";
 
@@ -32,6 +33,11 @@ export function Nutzer() {
   const springeZu = useSprungZuEintrag(abruf.daten ?? [], zuSeite);
   const [fehler, setzeFehler] = useState<string | null>(null);
   /** Wird genau einmal angezeigt, nach dem Anlegen oder Zuruecksetzen. */
+  const [passwortFuer, setzePasswortFuer] = useState<{
+    id: string;
+    name: string;
+    email: string;
+  } | null>(null);
   const [startpasswort, setzeStartpasswort] = useState<{ email: string; wert: string } | null>(
     null,
   );
@@ -187,15 +193,7 @@ export function Nutzer() {
                         className="h-8 px-3 text-[13px]"
                         onClick={() => {
                           setzeFehler(null);
-                          void api<{ startpasswort: string }>(`/api/nutzer/${n.id}/passwort`, {
-                            method: "POST",
-                          })
-                            .then((a) => {
-                              setzeStartpasswort({ email: n.email, wert: a.startpasswort });
-                            })
-                            .catch((u: unknown) => {
-                              melde(u, "Zurücksetzen nicht möglich.");
-                            });
+                          setzePasswortFuer({ id: n.id, name: n.name, email: n.email });
                         }}
                       >
                         Passwort
@@ -231,6 +229,18 @@ export function Nutzer() {
       </Zustand>
 
       <Blaetterleiste seite={seite} gesamt={gesamt} aufSeite={zuSeite} />
+
+      <Passwortfenster
+        nutzer={passwortFuer}
+        aufSchliessen={() => {
+          setzePasswortFuer(null);
+        }}
+        aufGesetzt={(email, wert) => {
+          setzeStartpasswort({ email, wert });
+          setzePasswortFuer(null);
+        }}
+        aufFehler={setzeFehler}
+      />
 
       <ExponatZuweisung
         nutzer={zuweisen}
@@ -379,6 +389,110 @@ function ExponatZuweisung({
         <Knopf disabled={laeuft} onClick={() => void speichern()}>
           {laeuft ? "Wird gespeichert …" : "Speichern"}
         </Knopf>
+      </div>
+    </Schaufenster>
+  );
+}
+
+/**
+ * Passwort setzen oder erzeugen.
+ *
+ * **Warum ein Fenster und nicht ein Klick.** Bis zum 08.10.2026 würfelte der Knopf sofort
+ * ein neues Passwort. Ein Fehlklick in der Zeile eines Betreuers sperrte ihn damit mitten
+ * am Stand aus, ohne Rückfrage und ohne Weg zurück.
+ *
+ * Ein leeres Feld heißt **erzeugen**, das ist der alte Weg. Steht etwas drin, wird genau das
+ * gesetzt. Die Untergrenze prüft der Server; hier steht sie nur als Hinweis, damit man sie
+ * vor dem Absenden sieht.
+ */
+const MIN_PASSWORTLAENGE = 12;
+
+function Passwortfenster({
+  nutzer,
+  aufSchliessen,
+  aufGesetzt,
+  aufFehler,
+}: {
+  nutzer: { id: string; name: string; email: string } | null;
+  aufSchliessen: () => void;
+  aufGesetzt: (email: string, wert: string) => void;
+  aufFehler: (text: string | null) => void;
+}) {
+  const [wunsch, setzeWunsch] = useState("");
+  const [laeuft, setzeLaeuft] = useState(false);
+
+  // Beim Öffnen leeren, sonst steht die Eingabe vom letzten Nutzer noch da.
+  useEffect(() => {
+    setzeWunsch("");
+  }, [nutzer]);
+
+  async function setze(eigenes: boolean) {
+    if (nutzer === null) return;
+    setzeLaeuft(true);
+    aufFehler(null);
+    try {
+      const antwort = await api<{ startpasswort: string }>(`/api/nutzer/${nutzer.id}/passwort`, {
+        method: "POST",
+        body: JSON.stringify(eigenes ? { passwort: wunsch } : {}),
+      });
+      aufGesetzt(nutzer.email, antwort.startpasswort);
+    } catch (ursache) {
+      aufFehler(
+        ursache instanceof ApiFehler ? ursache.message : "Passwort ließ sich nicht setzen.",
+      );
+    } finally {
+      setzeLaeuft(false);
+    }
+  }
+
+  const zuKurz = wunsch !== "" && wunsch.length < MIN_PASSWORTLAENGE;
+
+  return (
+    <Schaufenster
+      offen={nutzer !== null}
+      aufOffen={(o) => {
+        if (!o) aufSchliessen();
+      }}
+      titel={nutzer === null ? "Passwort" : `Passwort für ${nutzer.name}`}
+    >
+      <div className="flex flex-col gap-4">
+        <label className="flex flex-col gap-2 text-[13px] font-semibold">
+          Neues Passwort
+          <Feld
+            type="text"
+            value={wunsch}
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="leer lassen zum Erzeugen"
+            onChange={(ev) => {
+              setzeWunsch(ev.target.value);
+            }}
+          />
+        </label>
+        <p className={cn("text-[13px]", zuKurz ? "text-fehler" : "text-text-hinweis")}>
+          {zuKurz
+            ? `Mindestens ${String(MIN_PASSWORTLAENGE)} Zeichen, aktuell ${String(wunsch.length)}.`
+            : `Mindestens ${String(MIN_PASSWORTLAENGE)} Zeichen. Leer gelassen wird eines erzeugt.`}
+        </p>
+        <div className="flex flex-wrap gap-2.5">
+          <Knopf
+            disabled={laeuft || wunsch === "" || zuKurz}
+            onClick={() => {
+              void setze(true);
+            }}
+          >
+            Setzen
+          </Knopf>
+          <Knopf
+            art="rand"
+            disabled={laeuft}
+            onClick={() => {
+              void setze(false);
+            }}
+          >
+            Erzeugen
+          </Knopf>
+        </div>
       </div>
     </Schaufenster>
   );

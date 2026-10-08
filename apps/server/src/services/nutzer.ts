@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import type { Db } from "../db/client.js";
 import { appNutzer, exponatBetreuer } from "../db/schema.js";
 import { erzeugeStartpasswort, hashePasswort, normalisiereEmail } from "../auth/passwort.js";
-import { conflict, notFound } from "../errors.js";
+import { badRequest, conflict, notFound } from "../errors.js";
 
 export type Rolle = "admin" | "betreuer";
 
@@ -73,19 +73,48 @@ export async function legeNutzerAn(
 }
 
 /**
- * Setzt ein neues Startpasswort und gibt es **einmal** zurueck.
+ * Die Untergrenze fuer ein selbst gewaehltes Passwort.
  *
- * Es wird nirgends gespeichert und steht in keinem Protokoll. Geht es verloren, wird ein
- * neues gesetzt; das ist der gewollte Weg.
+ * Bis zum 08.10.2026 gab es **gar keine**: Passwoerter wurden nur gewuerfelt, also stellte
+ * sich die Frage nie. Sobald jemand eines eingeben darf, braucht es eine Regel, und sie
+ * gehoert auf den Server; die Oberflaeche darf sie spiegeln, aber nicht ersetzen.
  */
-export async function setzePasswortZurueck(db: Db, id: string): Promise<string> {
+export const MIN_PASSWORTLAENGE = 12;
+
+/**
+ * Setzt das Passwort eines Nutzers und gibt es **einmal** zurueck.
+ *
+ * Ohne `wunsch` wird eines erzeugt, wie bisher. Mit `wunsch` wird genau dieses gesetzt:
+ * ein Betreuer, der sein Startpasswort verliert, bekam sonst nur ein neues zufaelliges und
+ * konnte es nie aendern.
+ *
+ * Das Passwort wird nirgends gespeichert und steht in keinem Protokoll. Geht es verloren,
+ * wird ein neues gesetzt; das ist der gewollte Weg.
+ */
+export async function setzePasswort(db: Db, id: string, wunsch?: string): Promise<string> {
   if (findeNutzerPerId(db, id) === null) throw notFound("nutzer-unbekannt", "Unknown user.");
-  const startpasswort = erzeugeStartpasswort();
+
+  /*
+   * **Erst pruefen, dann schreiben.** Ein zu kurzes Passwort darf das Konto nicht
+   * beschaedigen; nach einem abgewiesenen Versuch muss das alte weiter gelten.
+   *
+   * Nicht getrimmt: ein fuehrendes Leerzeichen ist Teil des Passworts, und wer es
+   * wegschneidet, laesst die Anmeldung spaeter mit genau dem Wert scheitern, den der
+   * Nutzer notiert hat.
+   */
+  if (wunsch !== undefined && wunsch.length < MIN_PASSWORTLAENGE) {
+    throw badRequest(
+      "passwort-zu-kurz",
+      `Password must be at least ${String(MIN_PASSWORTLAENGE)} characters.`,
+    );
+  }
+
+  const passwort = wunsch ?? erzeugeStartpasswort();
   db.update(appNutzer)
-    .set({ passwortHash: await hashePasswort(startpasswort) })
+    .set({ passwortHash: await hashePasswort(passwort) })
     .where(eq(appNutzer.id, id))
     .run();
-  return startpasswort;
+  return passwort;
 }
 
 /**

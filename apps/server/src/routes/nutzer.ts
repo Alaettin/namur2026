@@ -8,7 +8,7 @@ import {
   listeNutzer,
   setzeAktiv,
   setzeExponateVonNutzer,
-  setzePasswortZurueck,
+  setzePasswort,
   type Rolle,
 } from "../services/nutzer.js";
 
@@ -94,10 +94,25 @@ export function nutzerRoutes(app: FastifyInstance, ctx: Kontext): void {
     },
   );
 
-  app.post<{ Params: { id: string } }>(
+  /**
+   * Passwort setzen oder erzeugen.
+   *
+   * Ohne Rumpf wird eines gewuerfelt, wie bisher. Mit `{ passwort }` wird genau dieses
+   * gesetzt. Beides gibt den Wert **einmal** zurueck, damit die Oberflaeche denselben
+   * Anzeigeweg nutzen kann.
+   */
+  app.post<{ Params: { id: string }; Body: { passwort?: unknown } }>(
     "/api/nutzer/:id/passwort",
     { preHandler: app.verlangeAdmin },
-    async (req) => ({ startpasswort: await setzePasswortZurueck(ctx.db, req.params.id) }),
+    async (req) => {
+      const wunsch = req.body?.passwort;
+      if (wunsch !== undefined && typeof wunsch !== "string") {
+        throw badRequest("passwort-ungueltig", "Field passwort must be a string.");
+      }
+      // Ein leeres Feld in der Oberflaeche heisst "erzeugen", nicht "leeres Passwort".
+      const gewaehlt = typeof wunsch === "string" && wunsch !== "" ? wunsch : undefined;
+      return { startpasswort: await setzePasswort(ctx.db, req.params.id, gewaehlt) };
+    },
   );
 
   app.post<{ Params: { id: string }; Body: { aktiv?: unknown } }>(
