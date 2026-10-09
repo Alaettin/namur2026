@@ -30,8 +30,11 @@ export function Anmeldung({ aufAngemeldet }: { aufAngemeldet: () => void }) {
       /*
        * **Eine Meldung fuer jeden Fall**, wie im Entwurf: weder wird verraten, ob die
        * E-Mail bekannt ist, noch ob das Konto deaktiviert wurde. Eine Sperre mit Countdown
-       * gibt es laut Design nicht; die Anmeldegrenze des Servers meldet sich mit 429 und
-       * bekommt deshalb einen eigenen Satz.
+       * gibt es laut Design nicht.
+       *
+       * Der 429-Zweig bleibt stehen, obwohl die Anmeldegrenze am 09.10.2026 entfernt
+       * wurde: andere Grenzen des Servers koennen ihn weiterhin ausloesen, und ein
+       * unbehandelter 429 saehe aus wie ein falsches Passwort.
        */
       const status = ursache instanceof ApiFehler ? ursache.status : 0;
       setzeFehler(

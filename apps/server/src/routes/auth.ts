@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { normalisiereEmail, pruefeInsLeere, pruefePasswort } from "../auth/passwort.js";
+import { pruefeInsLeere, pruefePasswort } from "../auth/passwort.js";
 import { clearSession, issueSession } from "../auth/session.js";
 import { anmeldungFalsch, badRequest } from "../errors.js";
 import type { Kontext } from "../kontext.js";
@@ -14,28 +14,17 @@ export function authRoutes(app: FastifyInstance, ctx: Kontext): void {
   app.post<{ Body: AnmeldeKoerper }>(
     "/api/auth/anmelden",
     {
-      config: {
-        /*
-         * 10 Versuche je Viertelstunde, **je E-Mail** statt je IP.
-         *
-         * Je IP waere hier falsch herum: am Stand haengen alle Handys am selben WLAN und
-         * damit an einer Adresse, ein Betreuer mit Tippfehler sperrte die ganze Mannschaft
-         * aus. Die E-Mail trifft dagegen genau das Konto, auf das geraten wird.
-         *
-         * Fehlt sie im Rumpf, faellt der Schluessel auf die IP zurueck: ein Angreifer soll
-         * die Grenze nicht dadurch umgehen koennen, dass er das Feld weglaesst.
-         */
-        rateLimit: {
-          max: 10,
-          timeWindow: "15 minutes",
-          keyGenerator: (req: { body?: unknown; ip: string }) => {
-            const email = (req.body as AnmeldeKoerper | undefined)?.email;
-            return typeof email === "string" && email.trim() !== ""
-              ? `anmeldung:${normalisiereEmail(email)}`
-              : `anmeldung-ip:${req.ip}`;
-          },
-        },
-      },
+      /*
+       * **Keine Anmeldegrenze.** Bis zum 09.10.2026 standen hier 10 Versuche je
+       * Viertelstunde und E-Mail. Auf ausdrueckliche Entscheidung entfernt: am Stand
+       * sperrte sie einen Betreuer mit Tippfehler fuer eine Viertelstunde aus, und sie
+       * legte wiederholt die eigene Abnahme lahm.
+       *
+       * **Was damit wegfaellt:** das Durchprobieren von Passwoertern ist jetzt
+       * unbegrenzt. Wer eine Betreuer-E-Mail kennt, kann beliebig raten. Geblieben sind
+       * argon2id beim Hashen und die gleiche Fehlermeldung fuer jeden Fall, also kein
+       * Hinweis darauf, ob eine Adresse existiert.
+       */
     },
     async (req, reply) => {
       const { email, passwort } = req.body ?? {};

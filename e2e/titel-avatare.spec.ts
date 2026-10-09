@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { merkeBesucher, raeumeBesucherAuf } from "./exponate.js";
+import { merkeBesucher, raeumeBesucherAuf, seiteMitEintrag } from "./exponate.js";
 
 /**
  * Titel, gruppierte Stammdaten und die Avatarverwaltung, aus der Verwaltungssicht.
@@ -158,4 +158,71 @@ test("ein zu grosses Bild wird abgewiesen", async ({ request }) => {
   });
   expect(antwort.status()).toBe(400);
   expect((await antwort.json()).code).toBe("datei-zu-gross");
+});
+
+/**
+ * **Die Grenze für die gewählte Datei, und die Meldung dazu.**
+ *
+ * Nicht nur, dass abgewiesen wird: bei einer Grenze von 1 MB rundete die alte Meldung eine
+ * 1,4-MB-Datei auf „1 MB" und sagte damit „1 MB ist zu groß, höchstens 1 MB". Geprüft wird
+ * deshalb, dass die genannte Größe über der Grenze liegt.
+ */
+test("eine Datei über 1 MB wird mit einer lesbaren Meldung abgewiesen", async ({ page }) => {
+  await page.goto("/einstellungen");
+  await page.getByRole("heading", { name: "Avatare", exact: true }).click();
+
+  await expect(page.getByText("Höchstens 1,0 MB je Datei")).toBeVisible();
+
+  // 1,4 MB: knapp über der Grenze, genau der Fall, den das Runden verdorben hat.
+  await page.setInputFiles('input[type="file"]', {
+    name: "zu-gross.jpg",
+    mimeType: "image/jpeg",
+    buffer: Buffer.alloc(Math.round(1.4 * 1024 * 1024), 0x41),
+  });
+
+  const meldung = page.getByRole("alert");
+  await expect(meldung).toContainText("1,4 MB");
+  await expect(meldung).toContainText("Höchstens 1,0 MB");
+});
+
+/** Der Anzeigename ist neu, der gespeicherte Wert nicht. Beide Hälften. */
+test("die Rolle heißt Terminal, gespeichert wird weiterhin kiosk", async ({ page, request }) => {
+  await page.goto("/nutzer");
+  const auswahl = page.getByLabel("Rolle");
+  await expect(auswahl).toBeVisible();
+  await expect(auswahl.getByRole("option", { name: "Terminal" })).toHaveCount(1);
+  await expect(auswahl.getByRole("option", { name: /Tablet/i })).toHaveCount(0);
+
+  /*
+   * Und der Wert dahinter: das Abnahmekonto des Terminals läuft seit gestern mit der Rolle
+   * `kiosk`. Stünde dort etwas anderes, wäre der Wächter umgangen worden.
+   */
+  const nutzer = (await (await request.get("/api/nutzer")).json()) as {
+    id: string;
+    email: string;
+    rolle: string;
+  }[];
+  const terminal = nutzer.find((n) => n.rolle === "kiosk");
+  expect(terminal, "kein Konto mit der Rolle kiosk").toBeDefined();
+
+  /*
+   * Und der Vermerk in der Liste. Die Liste blaettert zu zehnt, das Konto steht also nicht
+   * zwingend auf Seite eins; die Seite wird gerechnet statt geklickt.
+   */
+  const seite = await seiteMitEintrag(request, "/api/nutzer", terminal?.id ?? "");
+  await page.goto(`/nutzer?seite=${String(seite)}`);
+  /*
+   * **In der Zeile dieses Kontos**, nicht irgendwo auf der Seite: so ist zugleich belegt,
+   * dass der Vermerk am richtigen Nutzer hängt. Ohne `exact`, denn die Markierung rendert
+   * einen Aufzählungspunkt vor dem Text.
+   */
+  const zeile = page.getByRole("row", { name: new RegExp(terminal?.email ?? "") });
+  await expect(zeile.getByText("TERMINAL")).toBeVisible();
+
+  /*
+   * **Kein seitenweiter Gegencheck auf "TABLET".** `getByText` sucht ohne Ruecksicht auf
+   * Gross- und Kleinschreibung, und das Abnahmekonto heisst "Tablet Abnahme"; die Suche
+   * koennte hier nie null ergeben und waere ein Kriterium, das bei richtigem Aufbau rot
+   * bleibt. Den alten Namen schliesst die Pruefung der Auswahlliste oben aus.
+   */
 });

@@ -61,7 +61,17 @@ describe("Anmeldung", () => {
     expect(antwort.statusCode).toBe(200);
   });
 
-  it("weist den elften Versuch je E-Mail ab", async () => {
+  /**
+   * **Es gibt keine Anmeldegrenze mehr.**
+   *
+   * Bis zum 09.10.2026 waren es 10 Versuche je Viertelstunde und E-Mail. Auf ausdrueckliche
+   * Entscheidung entfernt, weil sie am Stand einen Betreuer mit Tippfehler fuer eine
+   * Viertelstunde aussperrte.
+   *
+   * Der Fall steht hier weiter, nur umgedreht: faellt die Entscheidung einmal anders,
+   * faellt er auf und niemand muss raten, ob die Grenze absichtlich fehlt.
+   */
+  it("laesst auch den elften Fehlversuch durch, ohne zu sperren", async () => {
     stand = await starte(ADMIN);
     const versuch = () =>
       stand!.app.inject({
@@ -70,20 +80,17 @@ describe("Anmeldung", () => {
         payload: { email: "admin@namur.de", passwort: "stimmt-nicht" },
       });
 
-    for (let i = 0; i < 10; i++) expect((await versuch()).statusCode).toBe(401);
-    expect((await versuch()).statusCode).toBe(429);
+    for (let i = 0; i < 12; i++) {
+      expect((await versuch()).statusCode, `Versuch ${String(i + 1)}`).toBe(401);
+    }
 
-    /*
-     * Die Gegenprobe zur Grenze: eine **andere** E-Mail ist davon unberuehrt. Waere der
-     * Schluessel die IP, saehe dieser Aufruf ebenfalls 429, und die Grenze sperrte am
-     * Stand die ganze Mannschaft aus einem WLAN aus.
-     */
-    const andere = await stand.app.inject({
+    // Und das richtige Passwort geht danach weiterhin durch, nicht erst nach Wartezeit.
+    const richtig = await stand.app.inject({
       method: "POST",
       url: "/api/auth/anmelden",
-      payload: { email: "wer-anders@namur.de", passwort: "egal" },
+      payload: { email: "admin@namur.de", passwort: "startpasswort-123" },
     });
-    expect(andere.statusCode).toBe(401);
+    expect(richtig.statusCode).toBe(200);
   });
 
   it("beendet die laufende Sitzung eines deaktivierten Nutzers", async () => {

@@ -42,8 +42,7 @@ setup("anmelden und Sitzung ablegen", async ({ page }) => {
   if (await fehler.isVisible().catch(() => false)) {
     throw new Error(
       `Anmeldung fehlgeschlagen: "${await fehler.innerText()}". ` +
-        "Bei 'Zu viele Versuche' ist die Anmeldegrenze erschoepft; sie haelt den Zaehler im " +
-        "Speicher, ein Neustart des Dienstes setzt sie zurueck.",
+        "Pruefe ADMIN_EMAIL und ADMIN_PASSWORT in der .env gegen den laufenden Dienst.",
     );
   }
 

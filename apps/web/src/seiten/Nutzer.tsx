@@ -136,10 +136,14 @@ export function Nutzer() {
               <option value="betreuer">Betreuer</option>
               <option value="admin">Admin</option>
               {/*
-                Das Selbstbedienungs-Tablet am Stand. Es sieht keine Verwaltung, sondern
-                nur den Scan und danach die Daten des einen gescannten Besuchers.
+                Das Selbstbedienungsgeraet am Stand. Es sieht keine Verwaltung, sondern nur
+                den Scan und danach die Daten des einen gescannten Besuchers.
+
+                **Nur der Anzeigename ist "Terminal".** Gespeichert, in den Waechtern und in
+                den Routen heisst die Rolle weiterhin `kiosk`; das umzubenennen waere eine
+                Migration fuer einen Namen, den niemand sieht.
               */}
-              <option value="kiosk">Tablet (Selbstbedienung)</option>
+              <option value="kiosk">Terminal</option>
             </select>
           </label>
           <Knopf type="submit">Anlegen</Knopf>
@@ -176,7 +180,7 @@ export function Nutzer() {
                     {n.rolle === "admin" ? (
                       <Markierung text="ADMIN" />
                     ) : n.rolle === "kiosk" ? (
-                      <Markierung text="TABLET" farbe="var(--color-primaer-dunkel)" />
+                      <Markierung text="TERMINAL" farbe="var(--color-primaer-dunkel)" />
                     ) : (
                       <Markierung text="BETREUER" farbe="var(--color-text-zweit)" />
                     )}

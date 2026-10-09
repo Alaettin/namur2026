@@ -23,10 +23,25 @@ const GUETE = 0.82;
  *
  * Eine zweite Grenze neben der des Servers, und sie misst etwas anderes: der Server prüft
  * das **Ergebnis** (300 KB nach dem Verkleinern), diese hier die **Quelle**. Ohne sie geht
- * ein 40-MB-Foto aus einer Kamera zuerst durch `createImageBitmap`, und auf einem Tablet
- * bringt das den Tab um, bevor überhaupt etwas hochgeladen wird.
+ * ein Kamerafoto zuerst durch `createImageBitmap`, und auf einem Tablet bringt das den Tab
+ * um, bevor überhaupt etwas hochgeladen wird. 1 MB reicht fuer jede Vorlage, aus der ein
+ * 512er-Ausschnitt entsteht.
  */
-const HOECHSTE_QUELLE = 10 * 1024 * 1024;
+const HOECHSTE_QUELLE = 1024 * 1024;
+
+/**
+ * Eine Dateigroesse, die sich lesen laesst.
+ *
+ * **Nicht auf ganze MB runden.** Bei einer Grenze von 1 MB meldete eine 1,4-MB-Datei sonst
+ * "ist 1 MB gross. Hoechstens 1 MB", und das liest sich wie ein Fehler des Programms statt
+ * wie eine Grenze.
+ */
+function groesse(bytes: number): string {
+  const mb = bytes / 1024 / 1024;
+  if (mb < 1) return `${String(Math.round(bytes / 1024))} KB`;
+  // `toFixed` liefert einen Punkt; in einer deutschen Oberflaeche gehoert dort ein Komma hin.
+  return `${mb.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MB`;
+}
 
 interface Zeile {
   dateiId: string;
@@ -118,8 +133,8 @@ export function Avatarverwaltung() {
     const zuGross = gewaehlt.find((d) => d.size > HOECHSTE_QUELLE);
     if (zuGross !== undefined) {
       setzeFehler(
-        `„${zuGross.name}" ist ${String(Math.round(zuGross.size / 1024 / 1024))} MB groß. ` +
-          `Höchstens ${String(HOECHSTE_QUELLE / 1024 / 1024)} MB je Datei.`,
+        `„${zuGross.name}" ist ${groesse(zuGross.size)} groß. ` +
+          `Höchstens ${groesse(HOECHSTE_QUELLE)} je Datei.`,
       );
       return;
     }
@@ -207,7 +222,7 @@ export function Avatarverwaltung() {
               />
             </label>
             <span className="text-[13px] text-text-hinweis">
-              Höchstens {HOECHSTE_QUELLE / 1024 / 1024} MB je Datei
+              Höchstens {groesse(HOECHSTE_QUELLE)} je Datei
             </span>
           </div>
 
@@ -296,7 +311,7 @@ export function Avatarverwaltung() {
           if (zuLoeschen !== null) void loesche(zuLoeschen);
         }}
       >
-        <p>Das Bild steht am Tablet nicht mehr zur Auswahl.</p>
+        <p>Das Bild steht nicht mehr zur Auswahl.</p>
         <p>
           Besucher, die es tragen, bekommen wieder das <b>Standardbild</b>.
         </p>
