@@ -54,12 +54,15 @@ export function Einstellungen({ ich }: { ich: Ich }) {
     setzeFehler(null);
     try {
       if (was === "aussaat") {
-        const e = await api<{ exponate: number; besucher: number; zuordnungen: number }>(
-          "/api/aussaat",
-          { method: "POST" },
-        );
+        const e = await api<{
+          exponate: number;
+          besucher: number;
+          zuordnungen: number;
+          runden: number;
+        }>("/api/aussaat", { method: "POST" });
         setzeMeldung(
-          `Testdaten eingespielt: ${String(e.exponate)} Exponate, ${String(e.besucher)} Besucher, ${String(e.zuordnungen)} Zuordnungen.`,
+          `Testdaten eingespielt: ${String(e.exponate)} Exponate, ${String(e.besucher)} Besucher, ` +
+            `${String(e.zuordnungen)} Zuordnungen, ${String(e.runden)} Rundenzeiten.`,
         );
       } else {
         const e = await api<{ geloescht: Bestand }>("/api/entwickler/zuruecksetzen", {

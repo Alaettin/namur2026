@@ -1,7 +1,8 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import type { Db } from "../db/client.js";
 import { besucher, runden } from "../db/schema.js";
 import { badRequest, kontingentErschoepft, notFound } from "../errors.js";
+import { avatarFuer } from "./standardavatar.js";
 
 /**
  * Rundenzeiten von der Carrera-Bahn.
@@ -221,4 +222,87 @@ export function rundeAlsText(runde: {
     runde.laneNumber === null ? null : `Spur ${String(runde.laneNumber)}`,
   ].filter((t): t is string => t !== null);
   return teile.join(" · ");
+}
+
+/** So viele Plaetze zeigt die Bestenliste. */
+export const BESTENLISTE_LAENGE = 50;
+
+export interface Platz {
+  rang: number;
+  guid: string;
+  name: string;
+  firma: string | null;
+  /** Die **beste** Zeit dieses Fahrers, nicht die letzte. */
+  bestMs: number;
+  anzeige: string;
+  /** Wie viele Runden er insgesamt gefahren ist. */
+  runden: number;
+  avatarDateiId: string | null;
+}
+
+/**
+ * Die schnellsten Fahrer, **einer je Person**.
+ *
+ * **Gruppiert in der Abfrage, nicht nachtraeglich in JavaScript.** Die Anforderung lautet,
+ * dass niemand mehrfach vorkommt; steht die Gruppierung im SQL, wirkt die Grenze von 50 auf
+ * **Personen** und nicht auf Runden. Nachtraeglich zu filtern hiesse, 50 Runden zu holen und
+ * am Ende vielleicht 30 Fahrer zu zeigen.
+ *
+ * Sortiert nach Zeit, **bei Gleichstand nach GUID**: ohne zweites Kriterium gibt SQLite bei
+ * gleicher Zeit eine beliebige Reihenfolge, und die Liste saehe bei jedem Aufruf anders aus.
+ */
+export function bestenliste(db: Db, grenze = BESTENLISTE_LAENGE): Platz[] {
+  const zeilen = db
+    .select({
+      guid: runden.besucherGuid,
+      bestMs: sql<number>`min(${runden.durationMs})`,
+      anzahl: sql<number>`count(*)`,
+      titel: besucher.titel,
+      vorname: besucher.vorname,
+      nachname: besucher.nachname,
+      firma: besucher.firma,
+      avatarDateiId: besucher.avatarDateiId,
+    })
+    .from(runden)
+    .innerJoin(besucher, eq(besucher.guid, runden.besucherGuid))
+    .groupBy(runden.besucherGuid)
+    .orderBy(sql`min(${runden.durationMs}) asc`, asc(runden.besucherGuid))
+    .limit(grenze)
+    .all();
+
+  return zeilen.map((z, i) => ({
+    rang: i + 1,
+    guid: z.guid,
+    // Der Titel gehoert zum Namen, wie ueberall sonst auch.
+    name: [z.titel, z.vorname, z.nachname].filter((t) => t !== null && t !== "").join(" "),
+    firma: z.firma,
+    bestMs: z.bestMs,
+    anzeige: dauerAlsText(z.bestMs),
+    runden: z.anzahl,
+    avatarDateiId: avatarFuer(db, z.avatarDateiId),
+  }));
+}
+
+export interface Rundenzahlen {
+  fahrer: number;
+  runden: number;
+  bestMs: number | null;
+}
+
+/** Die drei Zahlen ueber der Bestenliste. Aus derselben Tabelle, nicht aus der Liste. */
+export function rundenzahlen(db: Db): Rundenzahlen {
+  const zeile = db
+    .select({
+      fahrer: sql<number>`count(distinct ${runden.besucherGuid})`,
+      runden: sql<number>`count(*)`,
+      bestMs: sql<number | null>`min(${runden.durationMs})`,
+    })
+    .from(runden)
+    .get();
+
+  return {
+    fahrer: zeile?.fahrer ?? 0,
+    runden: zeile?.runden ?? 0,
+    bestMs: zeile?.bestMs ?? null,
+  };
 }

@@ -16,6 +16,7 @@ import {
   einstellungen,
   exponatLinks,
   konnektorAbrufe,
+  runden,
   zuordnungen,
 } from "../db/schema.js";
 
@@ -37,6 +38,8 @@ export interface Bestand {
   dateien: number;
   /** GUIDs mit mindestens einem Konnektor-Abruf, siehe `services/abrufe.ts`. */
   abrufe: number;
+  /** Gemeldete Rundenzeiten der Carrera-Bahn. */
+  runden: number;
   /** Bleiben beim Zuruecksetzen erhalten. Nur zur Anzeige im Rueckfragedialog. */
   appNutzer: number;
 }
@@ -59,6 +62,7 @@ export function leseBestand(db: Db): Bestand {
     zuordnungen: n(db.select({ n: sql<number>`count(*)` }).from(zuordnungen)),
     dateien: n(db.select({ n: sql<number>`count(*)` }).from(dateien)),
     abrufe: n(db.select({ n: sql<number>`count(*)` }).from(konnektorAbrufe)),
+    runden: n(db.select({ n: sql<number>`count(*)` }).from(runden)),
     appNutzer: n(db.select({ n: sql<number>`count(*)` }).from(appNutzer)),
   };
 }
@@ -96,6 +100,9 @@ export async function setzeZurueck(db: Db, ablage: Dateiablage): Promise<Bestand
      * Zaehler waere nach dem Zuruecksetzen eine Zahl ohne Besucher dahinter.
      */
     tx.delete(konnektorAbrufe).run();
+    // Dasselbe fuer die Rundenzeiten: sie haengen an `besucher` und werden hier
+    // ausdruecklich geloescht, nicht ueber das PRAGMA.
+    tx.delete(runden).run();
     /*
      * Und der Zaehler fuer unbekannte GUIDs, der an keinem Besucher haengt. **Gezielt
      * dieser eine Schluessel**, nicht die ganze Tabelle `einstellungen`: dort steht auch

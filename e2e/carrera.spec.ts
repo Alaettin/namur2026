@@ -188,3 +188,98 @@ test("der Fahrer-Endpunkt steht auf der Seite API und antwortet", async ({ page,
   await expect(eintrag.getByText("HTTP 200")).toBeVisible();
   await expect(eintrag.locator("pre")).toContainText("Fahrer");
 });
+
+/**
+ * Die Bestenliste.
+ *
+ * **Gegen die API geprüft, nicht gegen eine feste Zahl.** Wie viele Fahrer im Bestand
+ * stehen, hängt davon ab, ob jemand die Testdaten eingespielt hat; eine erwartete 50 wäre
+ * ein Kriterium, das bei richtigem Aufbau rot bleibt. Die Grenze selbst prüft der
+ * Servertest.
+ */
+test("die Bestenliste zeigt Podest und Liste, passend zur API", async ({ page, request }) => {
+  const zeiten = [
+    ["POD-A", 4321],
+    ["POD-B", 5432],
+    ["POD-C", 6543],
+  ] as const;
+
+  for (const [stamm, dauer] of zeiten) {
+    const guid = `${stamm}-${String(Date.now()).slice(-6)}`;
+    const angelegt = await request.post("/api/besucher", {
+      data: { guid, vorname: "Renn", nachname: stamm },
+    });
+    expect(angelegt.status()).toBe(201);
+    merkeBesucher(guid);
+    // Zwei Runden, die zweite schneller: so steht die beste Zeit auf dem Podest.
+    const antwort = await request.post("/carrera/runden", {
+      data: meldung(`${guid}-lap-1`, guid, 1, dauer + 900),
+    });
+    expect(antwort.status()).toBe(200);
+    expect(
+      (
+        await request.post("/carrera/runden", { data: meldung(`${guid}-lap-2`, guid, 2, dauer) })
+      ).status(),
+    ).toBe(200);
+  }
+
+  const stand = await (await request.get("/api/carrera/bestenliste")).json();
+  expect(stand.plaetze.length).toBeGreaterThanOrEqual(3);
+
+  await page.goto("/carrera");
+  await expect(page.getByRole("heading", { name: "Carrera" })).toBeVisible();
+
+  const podest = page.getByRole("region", { name: "Podest" });
+  const tabelle = page.getByRole("table");
+
+  /*
+   * Genau so viele Datenzeilen, wie die API Plätze meldet. **Ohne die Kopfzeile gezählt:**
+   * sie ist bei 390 px ausgeblendet, und „plus eins" wäre dort ein Kriterium, das bei
+   * richtigem Aufbau rot bleibt.
+   */
+  await expect(tabelle.locator("tbody").getByRole("row")).toHaveCount(stand.plaetze.length);
+
+  // Platz 1 steht auf dem Podest **und** in der ersten Zeile, mit derselben Zeit.
+  const erster = stand.plaetze[0];
+  await expect(podest.getByText(erster.name, { exact: true })).toBeVisible();
+  await expect(podest.getByText(erster.anzeige, { exact: true })).toBeVisible();
+  // Ebenfalls im `tbody`: `nth(1)` wäre bei 390 px die **zweite** Datenzeile.
+  const ersteZeile = tabelle.locator("tbody").getByRole("row").first();
+  await expect(ersteZeile).toContainText(erster.name);
+  await expect(ersteZeile).toContainText(erster.anzeige);
+
+  /*
+   * **Das Bild ist wirklich geladen.** Ein `<img>` mit 404 ist sichtbar und hat ein `src`;
+   * nur `naturalWidth` unterscheidet das Bild von seinem Platzhalter.
+   */
+  const bild = podest.locator("img").first();
+  await expect(bild).toBeVisible();
+  expect(await bild.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
+});
+
+/** Ein Fahrer mit mehreren Runden steht genau einmal in der Liste. */
+test("niemand steht zweimal in der Bestenliste", async ({ page, request }) => {
+  const guid = `POD-D-${String(Date.now()).slice(-6)}`;
+  const angelegt = await request.post("/api/besucher", {
+    data: { guid, vorname: "Vielfahrer", nachname: "Doppelt" },
+  });
+  expect(angelegt.status()).toBe(201);
+  merkeBesucher(guid);
+  for (const [i, dauer] of [8100, 4100, 6100].entries()) {
+    expect(
+      (
+        await request.post("/carrera/runden", {
+          data: meldung(`${guid}-l${String(i)}`, guid, i + 1, dauer),
+        })
+      ).status(),
+    ).toBe(200);
+  }
+
+  await page.goto("/carrera");
+  const tabelle = page.getByRole("table");
+  await expect(tabelle.getByRole("row", { name: new RegExp("Vielfahrer") })).toHaveCount(1);
+  // Und mit der schnellsten seiner drei Zeiten, nicht der ersten oder letzten.
+  await expect(tabelle.getByRole("row", { name: new RegExp("Vielfahrer") })).toContainText(
+    "4,100 s",
+  );
+});

@@ -32,6 +32,64 @@ describe("Entwicklermodus", () => {
     expect(bestand["appNutzer"]).toBe(1);
   });
 
+  /**
+   * **Die Runden der Carrera-Bahn gehören zu den Testdaten.**
+   *
+   * Geprüft werden alle drei Vorgaben zusammen: die Hälfte der Besucher fährt, jeder von
+   * ihnen drei bis fünf Runden, und keiner der übrigen hat eine. Nur die Gesamtzahl zu
+   * prüfen ginge auch bei 100 Fahrern mit je sieben Runden durch.
+   */
+  it("legt Rundenzeiten fuer die Haelfte der Besucher an", async () => {
+    const { s, keks } = await mitSaat();
+    const bestand = (
+      await s.app.inject({ url: "/api/entwickler/bestand", headers: { cookie: keks } })
+    ).json<Record<string, number>>();
+
+    const besucher = bestand["besucher"] ?? 0;
+    const liste = (
+      await s.app.inject({ url: "/api/carrera/bestenliste", headers: { cookie: keks } })
+    ).json<{ fahrer: number; runden: number; plaetze: { runden: number }[] }>();
+
+    expect(liste.fahrer, "nicht die Haelfte der Besucher").toBe(besucher / 2);
+    expect(bestand["runden"], "der Bestand zaehlt die Runden nicht mit").toBe(liste.runden);
+
+    // Drei bis fuenf je Fahrer, an der Liste der Schnellsten abgelesen.
+    for (const p of liste.plaetze) {
+      expect(p.runden).toBeGreaterThanOrEqual(3);
+      expect(p.runden).toBeLessThanOrEqual(5);
+    }
+    expect(liste.runden).toBeGreaterThanOrEqual(liste.fahrer * 3);
+    expect(liste.runden).toBeLessThanOrEqual(liste.fahrer * 5);
+  });
+
+  /**
+   * **Zweimal aussaeen ergibt dieselbe Bestenliste.**
+   *
+   * Mit `Math.random()` waere sie jedes Mal eine andere; dann liesse sich kein Fehler
+   * nachstellen und keine Abnahme darauf stuetzen.
+   */
+  it("saet immer dieselben Zeiten", async () => {
+    const { s, keks } = await mitSaat();
+    const ersterLauf = (
+      await s.app.inject({ url: "/api/carrera/bestenliste", headers: { cookie: keks } })
+    ).json<{ plaetze: { guid: string; bestMs: number }[] }>().plaetze;
+
+    await s.app.inject({
+      method: "POST",
+      url: "/api/entwickler/zuruecksetzen",
+      headers: { cookie: keks },
+      payload: { bestaetigung: "ZURUECKSETZEN" },
+    });
+    await s.app.inject({ method: "POST", url: "/api/aussaat", headers: { cookie: keks } });
+
+    const zweiterLauf = (
+      await s.app.inject({ url: "/api/carrera/bestenliste", headers: { cookie: keks } })
+    ).json<{ plaetze: { guid: string; bestMs: number }[] }>().plaetze;
+
+    expect(zweiterLauf).toEqual(ersterLauf);
+    expect(ersterLauf.length).toBeGreaterThan(0);
+  });
+
   it("verlangt die Bestaetigung auch auf dem Server", async () => {
     const { s, keks } = await mitSaat();
     for (const koerper of [

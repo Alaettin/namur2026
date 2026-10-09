@@ -6,6 +6,7 @@ import { legeBesucherAn } from "./besucher.js";
 import { legeDokumentAn, legeExponatAn, legeLinkAn } from "./exponate.js";
 import { legeAnsprechpartnerAn, weiseZu } from "./ansprechpartner.js";
 import { speichereDatei } from "./dateien.js";
+import { nimmRundeAuf } from "./runden.js";
 import { ordneZu } from "./zuordnungen.js";
 
 /**
@@ -194,6 +195,77 @@ const STAEDTE: [string, string][] = [
 /** So viele Besucher legt die Aussaat an. */
 const BESUCHER_ANZAHL = 700;
 
+/**
+ * Jeder **zweite** Besucher ist an der Carrera-Bahn gefahren.
+ *
+ * Die Haelfte ohne Runden ist genauso wichtig wie die mit: die Bestenliste muss zeigen, dass
+ * sie nicht auftauchen, und der Block im Besucherdetail muss seinen Leerfall haben.
+ */
+const JEDER_WIEVIELTE_FAEHRT = 2;
+
+/** Zwischen so vielen Runden je Fahrer, einschliesslich der Grenzen. */
+const RUNDEN_MIN = 3;
+const RUNDEN_MAX = 5;
+
+/**
+ * Zufallszahlen, die bei jedem Lauf dieselben sind.
+ *
+ * **Kein `Math.random()`.** Eine Aussaat, die jedes Mal andere Zeiten legt, ergibt jedes Mal
+ * eine andere Bestenliste; darauf laesst sich weder eine Abnahme stuetzen noch ein Fehler
+ * nachstellen. Ein linearer Kongruenzgenerator reicht dafuer vollkommen: er muss nicht gut
+ * streuen, er muss wiederholbar sein.
+ */
+function wuerfel(saat: number): () => number {
+  let zustand = (saat * 2654435761) % 2147483647;
+  if (zustand <= 0) zustand += 2147483646;
+  return () => {
+    zustand = (zustand * 16807) % 2147483647;
+    return (zustand - 1) / 2147483646;
+  };
+}
+
+/** Der erste Messetag, 09:00 Uhr Ortszeit. Nur fuer plausible Startzeitpunkte. */
+const MESSE_START_MS = Date.UTC(2026, 10, 25, 8, 0, 0);
+const TAG_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Legt die Runden eines Fahrers an, ueber die **echte** Schnittstellenfunktion.
+ *
+ * `nimmRundeAuf` statt eines direkten `insert`: so laufen Platzvergabe und Obergrenze durch
+ * denselben Weg wie im Betrieb, und die Testdaten koennen gar nicht in einen Zustand
+ * geraten, den die Bahn nie erzeugen wuerde.
+ */
+function saeRundenAus(db: Db, guid: string, index: number): number {
+  const naechste = wuerfel(index + 1);
+  const anzahl = RUNDEN_MIN + Math.floor(naechste() * (RUNDEN_MAX - RUNDEN_MIN + 1));
+  const spur = 1 + Math.floor(naechste() * 4);
+  const beginn = MESSE_START_MS + Math.floor(naechste() * 3) * TAG_MS + index * 1000;
+
+  for (let n = 1; n <= anzahl; n++) {
+    // 4,200 s bis 9,900 s, in Millisekunden.
+    const dauer = 4200 + Math.floor(naechste() * 5700);
+    nimmRundeAuf(db, {
+      lap_id: `aussaat-${guid}-${String(n)}`,
+      race_id: `rennen-${String(Math.floor(index / 4))}`,
+      event_id: "Hauptversammlung-2026",
+      event_name: "Hauptversammlung 2026",
+      identity_namespace: "PF-CA-1",
+      participant_id: guid,
+      pseudonym: null,
+      is_anonymous: 0,
+      lane_number: spur,
+      target_lap_count: anzahl,
+      installation_label: "Carrera-Bahn",
+      lap_number: n,
+      started_utc_ms: beginn + n * 20000,
+      local_date: new Date(beginn).toISOString().slice(0, 10),
+      local_utc_offset_minutes: 60,
+      duration_ms: dauer,
+    });
+  }
+  return anzahl;
+}
+
 /** Ein winziges, gueltiges PNG: ein Pixel. Als Avatar genug, um den Wertweg zu pruefen. */
 const EIN_PIXEL_PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
@@ -207,6 +279,8 @@ export interface AussaatErgebnis {
   links: number;
   kontakte: number;
   zuordnungen: number;
+  /** Rundenzeiten an der Carrera-Bahn, fuer die Haelfte der Besucher. */
+  runden: number;
 }
 
 export async function saeAus(
@@ -228,6 +302,7 @@ export async function saeAus(
     links: 0,
     kontakte: 0,
     zuordnungen: 0,
+    runden: 0,
   };
 
   const angelegteExponate: {
@@ -354,6 +429,14 @@ export async function saeAus(
      * Aussaat je Besucher eine eigene Datei an; das waren 356 der 419 Dateien im Bestand,
      * alle mit demselben Ein-Pixel-Bild.
      */
+
+    /*
+     * **Die Haelfte faehrt an der Carrera-Bahn**, je drei bis fuenf Runden. Die andere
+     * Haelfte bleibt ohne: die Bestenliste soll zeigen, dass dort nur Fahrer stehen.
+     */
+    if (i % JEDER_WIEVIELTE_FAEHRT === 0) {
+      ergebnis.runden += saeRundenAus(db, person.guid, i);
+    }
 
     /*
      * Jeder dritte Besucher bekommt Zuordnungen an einem Exponat. Die uebrigen bleiben

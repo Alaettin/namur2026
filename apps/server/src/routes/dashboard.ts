@@ -22,6 +22,7 @@ import {
 } from "../services/einstellungen.js";
 import { FELDER_BESUCHER, baueModell } from "../modell/modell.js";
 import { listeExponate } from "../services/exponate.js";
+import { bestenliste, rundenzahlen } from "../services/runden.js";
 
 /**
  * Dashboard und der Bildschirm API.
@@ -168,6 +169,17 @@ export function dashboardRoutes(app: FastifyInstance, ctx: Kontext): void {
       return { anmeldungVerlangt: wert };
     },
   );
+
+  /**
+   * Die Bestenliste der Carrera-Bahn.
+   *
+   * **Nur fuer Admins**, wie das Monitoring. Sie nennt Namen und Firmen aller Fahrer auf
+   * einem Blatt; ein Betreuer sieht laut Uebergabe allein seine Exponate.
+   */
+  app.get("/api/carrera/bestenliste", { preHandler: app.verlangeAdmin }, async () => ({
+    ...rundenzahlen(ctx.db),
+    plaetze: bestenliste(ctx.db),
+  }));
 
   /**
    * Derselbe Schalter fuer die Schnittstelle der Carrera-Bahn.
