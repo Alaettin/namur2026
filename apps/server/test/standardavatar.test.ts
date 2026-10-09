@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { PROJEKT_WURZEL } from "../src/env.js";
-import { galerieIds, STANDARD_AVATAR_ID } from "../src/services/standardavatar.js";
+import { STANDARD_AVATAR_ID } from "../src/services/standardavatar.js";
 import { melde, starte, type Pruefstand } from "./hilfe.js";
 
 /**
@@ -78,7 +78,10 @@ describe("Standard-Avatar", () => {
      * Genau die angelegten Dateien: der Standard-Avatar plus die Galerie, **keine
      * Dubletten**. Darum geht es hier; dass es einmal 1 war, war nur der damalige Stand.
      */
-    expect(bestand.json<{ dateien: number }>().dateien).toBe(1 + galerieIds().length);
+    const galerie = (
+      await zweiter.app.inject({ url: "/api/kiosk/avatare", headers: { cookie: keks2 } })
+    ).json<{ avatare: string[] }>().avatare;
+    expect(bestand.json<{ dateien: number }>().dateien).toBe(1 + galerie.length);
   });
 
   it("erscheint in den Werten, obwohl der Besucher kein eigenes Bild hat", async () => {

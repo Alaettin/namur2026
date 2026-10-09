@@ -54,7 +54,12 @@ test("die CSV-Vorlage lässt sich herunterladen und trägt die Kopfzeile", async
 
   // Geprüft wird der Inhalt, nicht bloß dass eine Datei kam.
   expect(text.charCodeAt(0), "ohne BOM zeigt Excel Umlaute falsch").toBe(0xfeff);
-  expect(text).toContain("guid;vorname;nachname");
+  /*
+   * Die Kopfzeile folgt `ZIELFELDER`, und dort kam am 09.10.2026 der Titel dazu. Geprueft
+   * wird der Anfang der Liste, nicht die ganze Zeile: sonst scheitert der Fall bei jedem
+   * weiteren Feld, obwohl nichts kaputt ist.
+   */
+  expect(text).toContain("guid;titel;vorname;nachname");
 });
 
 /** Der Browser setzt den Text neben ein sichtbares Dateifeld; er darf nirgends stehen. */

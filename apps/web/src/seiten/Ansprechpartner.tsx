@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ApiFehler, api, useAbruf } from "../lib/api.js";
+import { GRUPPEN, PERSONENFELDER, felderDerGruppe } from "../lib/personenfelder.js";
 import { Blaetterleiste, useBlaettern, useSprungZuEintrag } from "../bausteine/blaettern.js";
 import {
   Feld,
@@ -22,21 +23,9 @@ import { Rueckfrage, Schaufenster } from "../bausteine/dialog.js";
  * wird nur noch ausgewählt.
  */
 
-export const KONTAKTFELDER = [
-  { name: "vorname", text: "Vorname", pflicht: true },
-  { name: "nachname", text: "Nachname", pflicht: true },
-  { name: "firma", text: "Firma" },
-  { name: "position", text: "Position" },
-  { name: "email", text: "E-Mail", typ: "email" },
-  { name: "strasse", text: "Straße" },
-  { name: "plz", text: "PLZ" },
-  { name: "ort", text: "Ort" },
-  { name: "land", text: "Land" },
-  { name: "website", text: "Website" },
-] as const;
-
 export interface Person {
   id: string;
+  titel: string | null;
   vorname: string;
   nachname: string;
   firma: string | null;
@@ -48,6 +37,8 @@ export interface Person {
   land: string | null;
   website: string | null;
   exponate: string[];
+  /** Die Masken lesen die Felder ueber `PERSONENFELDER`, also ueber den Namen. */
+  [feld: string]: unknown;
 }
 
 export function Ansprechpartner() {
@@ -222,7 +213,10 @@ function PersonFormular({
       return;
     }
     const vorbelegt: Record<string, string> = {};
-    for (const f of KONTAKTFELDER) vorbelegt[f.name] = person[f.name] ?? "";
+    for (const f of PERSONENFELDER) {
+      const wert = person[f.name];
+      vorbelegt[f.name] = typeof wert === "string" ? wert : "";
+    }
     setzeWerte(vorbelegt);
   }, [person]);
 
@@ -275,18 +269,25 @@ function PersonFormular({
         }}
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          {KONTAKTFELDER.map((f) => (
-            <label key={f.name} className="flex flex-col gap-2 text-[13px] font-semibold">
-              {f.text}
-              <Feld
-                type={"typ" in f ? f.typ : "text"}
-                required={"pflicht" in f}
-                value={werte[f.name] ?? ""}
-                onChange={(ev) => {
-                  setzeWerte((w) => ({ ...w, [f.name]: ev.target.value }));
-                }}
-              />
-            </label>
+          {GRUPPEN.map((gruppe) => (
+            <fieldset key={gruppe} className="contents">
+              <legend className="col-span-full pt-2 text-[11px] font-semibold tracking-[0.08em] text-text-hinweis uppercase">
+                {gruppe}
+              </legend>
+              {felderDerGruppe(gruppe).map((f) => (
+                <label key={f.name} className="flex flex-col gap-2 text-[13px] font-semibold">
+                  {f.text}
+                  <Feld
+                    type={f.typ ?? "text"}
+                    required={f.pflicht === true}
+                    value={werte[f.name] ?? ""}
+                    onChange={(ev) => {
+                      setzeWerte((w) => ({ ...w, [f.name]: ev.target.value }));
+                    }}
+                  />
+                </label>
+              ))}
+            </fieldset>
           ))}
         </div>
 

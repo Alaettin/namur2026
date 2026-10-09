@@ -14,6 +14,7 @@ import { MAX_KONTAKTE } from "../modell/felder.js";
  */
 
 export const TEXTFELDER = [
+  "titel",
   "vorname",
   "nachname",
   "firma",
@@ -119,6 +120,13 @@ export function ansprechpartnerVonExponat(db: Db, exponatId: string) {
     .select({
       id: ansprechpartner.id,
       platz: exponatAnsprechpartner.platz,
+      /*
+       * **Spalten einzeln gewaehlt, also hier nachtragen.** Der Titel fehlte beim ersten
+       * Anlauf genau hier: er stand in der Tabelle und im Formular, kam aber nie in der
+       * Konnektor-Antwort an. Eine Auswahl, die Felder aufzaehlt, muss bei jedem neuen
+       * Feld mitwachsen.
+       */
+      titel: ansprechpartner.titel,
       vorname: ansprechpartner.vorname,
       nachname: ansprechpartner.nachname,
       firma: ansprechpartner.firma,

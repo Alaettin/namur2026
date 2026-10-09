@@ -71,6 +71,7 @@ export function erkenneTrennzeichen(text: string): ";" | "," {
 /** Die Zielfelder, auf die sich eine Spalte abbilden laesst. */
 export const ZIELFELDER = [
   "guid",
+  "titel",
   "vorname",
   "nachname",
   "firma",
@@ -99,6 +100,7 @@ export type Zielfeld = (typeof ZIELFELDER)[number];
 export function vorlageCsv(): string {
   const beispiel: Partial<Record<Zielfeld, string>> = {
     guid: "A1B2C3D4",
+    titel: "Dr.",
     vorname: "Erika",
     nachname: "Mustermann",
     firma: "Beispiel GmbH",
@@ -126,6 +128,8 @@ export function vorlageCsv(): string {
 const BEKANNT: Record<string, Zielfeld> = {
   guid: "guid",
   id: "guid",
+  titel: "titel",
+  title: "titel",
   passid: "guid",
   ausweis: "guid",
   vorname: "vorname",
@@ -141,7 +145,14 @@ const BEKANNT: Record<string, Zielfeld> = {
   position: "position",
   funktion: "position",
   rolle: "position",
-  titel: "position",
+  /*
+   * **`titel` meint ab dem 09.10.2026 den akademischen Titel**, nicht mehr die Position.
+   * Bis dahin gab es kein eigenes Feld dafuer, und eine Spalte "Titel" konnte nur der
+   * Jobtitel sein. Fuer den bleiben `position`, `funktion` und `rolle`, dazu die
+   * englischen Schreibweisen.
+   */
+  jobtitel: "position",
+  jobtitle: "position",
   email: "email",
   mail: "email",
   epost: "email",

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { dateien } from "../src/db/schema.js";
-import { galerieAvatarId, STANDARD_AVATAR_ID } from "../src/services/standardavatar.js";
+import { STANDARD_AVATAR_ID } from "../src/services/standardavatar.js";
 import { melde, starte, type Pruefstand } from "./hilfe.js";
 
 /**
@@ -49,6 +49,12 @@ async function konten(): Promise<Konten> {
     kiosk: await lege("kiosk", "tablet@namur.de"),
     betreuer: await lege("betreuer", "betreuer-kiosk@namur.de"),
   };
+}
+
+/** Die Galerie ueber die Schnittstelle, statt feste Ids anzunehmen. */
+async function galerie(s: Pruefstand, keks: string): Promise<string[]> {
+  const antwort = await s.app.inject({ url: "/api/kiosk/avatare", headers: { cookie: keks } });
+  return antwort.json<{ avatare: string[] }>().avatare;
 }
 
 async function legeBesucher(s: Pruefstand, keks: string, guid: string) {
@@ -205,7 +211,7 @@ describe("Kiosk: Stammdaten", () => {
       method: "PATCH",
       url: "/api/kiosk/besucher/KIOSK-0013",
       headers: { cookie: kiosk },
-      payload: { avatarDateiId: galerieAvatarId(1), firma: "Egal" },
+      payload: { avatarDateiId: (await galerie(s, kiosk))[0], firma: "Egal" },
     });
 
     // Unveraendert: jeder neue Besucher traegt den Standard, und der steht noch da.
@@ -223,15 +229,16 @@ describe("Kiosk: Avatar", () => {
     const antwort = await s.app.inject({ url: "/api/kiosk/avatare", headers: { cookie: kiosk } });
     expect(antwort.statusCode).toBe(200);
     const { avatare } = antwort.json<{ avatare: string[] }>();
-    expect(avatare.length).toBeGreaterThan(0);
-    expect(avatare[0]).toBe(galerieAvatarId(1));
+    // Die Erstbefuellung legt 20 Bilder an; geprueft wird, dass sie vollstaendig da sind.
+    expect(avatare).toHaveLength(20);
+    expect(new Set(avatare).size, "Dubletten in der Galerie").toBe(20);
   });
 
   it("setzt einen Avatar aus der Galerie und wieder zurueck auf Standard", async () => {
     const { s, admin, kiosk } = await konten();
     await legeBesucher(s, admin, "KIOSK-0020");
 
-    const gewaehlt = galerieAvatarId(3);
+    const gewaehlt = (await galerie(s, kiosk))[2] ?? "";
     const gesetzt = await s.app.inject({
       method: "PATCH",
       url: "/api/kiosk/besucher/KIOSK-0020/avatar",

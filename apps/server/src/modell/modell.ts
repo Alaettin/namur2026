@@ -21,6 +21,15 @@ import {
 } from "./felder.js";
 
 /**
+ * Wie viele Personenfelder wirklich als Eigenschaft hinausgehen.
+ *
+ * **Nicht `PERSONENFELDER.length`.** Der Titel steht in der Liste, bekommt aber keine
+ * propertyId; er wird dem Vornamen vorangestellt. Gerechnet statt eingetragen, damit die
+ * Zahl beim naechsten Feld nicht still falsch wird: sie speist den ETag des Modells.
+ */
+const AUSGEGEBENE_PERSONENFELDER = PERSONENFELDER.filter((f) => f.id !== null).length;
+
+/**
  * Das Datenmodell, das Axon beim Mappen liest.
  *
  * **Es enthaelt immer alle Plaetze bis zur Obergrenze, auch leere.** Der Nutzer mappt vor
@@ -61,6 +70,8 @@ export function baueModell(db: Db): DataModelProperty[] {
 
   // --- Der Besucher -------------------------------------------------------------------
   for (const { id, name } of PERSONENFELDER) {
+    // `id: null` heisst "geht nicht einzeln hinaus", siehe den Titel in `felder.ts`.
+    if (id === null) continue;
     felder.push(eintrag(visitorFeld(id), `Besucher ${name}`, PROPERTY_TYPE.property));
   }
   felder.push(eintrag(VISITOR_AVATAR, "Besucher Foto", PROPERTY_TYPE.document));
@@ -101,6 +112,7 @@ export function baueModell(db: Db): DataModelProperty[] {
     for (let p = 1; p <= MAX_KONTAKTE; p++) {
       const nr = platzNr(p);
       for (const { id, name } of PERSONENFELDER) {
+        if (id === null) continue;
         felder.push(
           eintrag(
             kontaktFeld(k, p, id),
@@ -122,7 +134,7 @@ export function baueModell(db: Db): DataModelProperty[] {
  * aus 107 Datenpunkten je Exponat wurden 102.
  */
 export const FELDER_JE_EXPONAT =
-  2 + MAX_DOKUMENTE * 3 + MAX_LINKS * 2 + MAX_KONTAKTE * PERSONENFELDER.length;
+  2 + MAX_DOKUMENTE * 3 + MAX_LINKS * 2 + MAX_KONTAKTE * AUSGEGEBENE_PERSONENFELDER;
 
 /** Zahl der Besucherdatenpunkte. */
-export const FELDER_BESUCHER = PERSONENFELDER.length + 1;
+export const FELDER_BESUCHER = AUSGEGEBENE_PERSONENFELDER + 1;

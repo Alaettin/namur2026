@@ -2,7 +2,8 @@ import type { FastifyInstance } from "fastify";
 import { badRequest } from "../errors.js";
 import type { Kontext } from "../kontext.js";
 import { aendereBesucher, findeBesucher, TEXTFELDER } from "../services/besucher.js";
-import { leseGalerie, STANDARD_AVATAR_ID } from "../services/standardavatar.js";
+import { STANDARD_AVATAR_ID } from "../services/standardavatar.js";
+import { galerieIds } from "../services/avatare.js";
 
 /**
  * Das Selbstbedienungs-Tablet am Stand.
@@ -77,7 +78,7 @@ export function kioskRoutes(app: FastifyInstance, ctx: Kontext): void {
    */
   app.get("/api/kiosk/avatare", { preHandler: app.verlangeKiosk }, () => ({
     standard: STANDARD_AVATAR_ID,
-    avatare: leseGalerie(ctx.db),
+    avatare: galerieIds(ctx.db),
   }));
 
   /**
@@ -105,7 +106,7 @@ export function kioskRoutes(app: FastifyInstance, ctx: Kontext): void {
       const wunsch = roh ?? STANDARD_AVATAR_ID;
 
       // **Nur Galerie oder Standard.** Alles andere waere eine beliebige Datei.
-      if (wunsch !== STANDARD_AVATAR_ID && !leseGalerie(ctx.db).includes(wunsch)) {
+      if (wunsch !== STANDARD_AVATAR_ID && !galerieIds(ctx.db).includes(wunsch)) {
         throw badRequest("avatar-unbekannt", "Field avatarDateiId must be one of the gallery.");
       }
 

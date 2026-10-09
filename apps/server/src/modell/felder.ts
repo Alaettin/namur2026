@@ -26,6 +26,15 @@ export const PROPERTY_TYPE = { property: 0, document: 1 } as const;
  * dieselben, nur ohne GUID. Eine Liste statt zwei, damit sie nicht auseinanderlaufen.
  */
 export const PERSONENFELDER = [
+  /*
+   * **Der Titel hat bewusst keine eigene propertyId.** Er wird in `werte.ts` dem Vornamen
+   * vorangestellt, sodass "Dr. Anna" als `FirstName` hinausgeht. Eine eigene Eigenschaft
+   * haette der Content-Admin in Axon nachmappen muessen, sonst waere der Titel im Viewer
+   * unsichtbar geblieben; so aendert sich das Modell ueberhaupt nicht.
+   *
+   * `id: null` ist deshalb kein Mangel, sondern die Aussage "geht nicht einzeln hinaus".
+   */
+  { feld: "titel", id: null, name: "Titel" },
   { feld: "vorname", id: "FirstName", name: "Vorname" },
   { feld: "nachname", id: "LastName", name: "Nachname" },
   { feld: "firma", id: "Company", name: "Firma" },

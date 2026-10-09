@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ApiFehler, api, useAbruf } from "../lib/api.js";
+import { GRUPPEN, PERSONENFELDER, felderDerGruppe } from "../lib/personenfelder.js";
 import {
   Feld,
   Fehlerhinweis,
@@ -20,25 +21,6 @@ import type { Ich } from "../lib/ich.js";
  * TypeScript aus der Liste eine Vereinigung ab, in der `pflicht` nur bei manchen
  * Varianten existiert und deshalb nirgends lesbar ist.
  */
-interface Feldbeschreibung {
-  name: string;
-  text: string;
-  pflicht?: boolean;
-  typ?: "text" | "email";
-}
-
-const FELDER: Feldbeschreibung[] = [
-  { name: "vorname", text: "Vorname", pflicht: true },
-  { name: "nachname", text: "Nachname", pflicht: true },
-  { name: "firma", text: "Firma" },
-  { name: "position", text: "Position" },
-  { name: "email", text: "E-Mail", typ: "email" },
-  { name: "strasse", text: "Straße" },
-  { name: "plz", text: "PLZ" },
-  { name: "ort", text: "Ort" },
-  { name: "land", text: "Land" },
-  { name: "website", text: "Website" },
-];
 
 type Werte = Record<string, string>;
 
@@ -78,7 +60,7 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
   useEffect(() => {
     if (abruf.daten === null) return;
     const vorbelegt: Werte = {};
-    for (const f of FELDER) vorbelegt[f.name] = abruf.daten[f.name] ?? "";
+    for (const f of PERSONENFELDER) vorbelegt[f.name] = abruf.daten[f.name] ?? "";
     setzeWerte(vorbelegt);
   }, [abruf.daten]);
 
@@ -132,19 +114,30 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
               void speichern();
             }}
           >
-            {FELDER.map((f) => (
-              <label key={f.name} className="flex flex-col gap-2 text-[13px] font-semibold">
-                {f.text}
-                {f.pflicht === true && <span className="sr-only">Pflichtfeld</span>}
-                <Feld
-                  type={f.typ ?? "text"}
-                  required={f.pflicht === true}
-                  value={werte[f.name] ?? ""}
-                  onChange={(e) => {
-                    setzeWerte((w) => ({ ...w, [f.name]: e.target.value }));
-                  }}
-                />
-              </label>
+            {/*
+              Nach Gruppen, mit Zwischenüberschrift. Elf Felder am Stück sind eine Wand;
+              die Anschrift gehört sichtbar zusammen.
+            */}
+            {GRUPPEN.map((gruppe) => (
+              <fieldset key={gruppe} className="contents">
+                <legend className="col-span-full pt-2 text-[11px] font-semibold tracking-[0.08em] text-text-hinweis uppercase">
+                  {gruppe}
+                </legend>
+                {felderDerGruppe(gruppe).map((f) => (
+                  <label key={f.name} className="flex flex-col gap-2 text-[13px] font-semibold">
+                    {f.text}
+                    {f.pflicht === true && <span className="sr-only">Pflichtfeld</span>}
+                    <Feld
+                      type={f.typ ?? "text"}
+                      required={f.pflicht === true}
+                      value={werte[f.name] ?? ""}
+                      onChange={(e) => {
+                        setzeWerte((w) => ({ ...w, [f.name]: e.target.value }));
+                      }}
+                    />
+                  </label>
+                ))}
+              </fieldset>
             ))}
 
             {neu && (

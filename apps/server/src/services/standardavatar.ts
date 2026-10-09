@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { Dateiablage } from "../ablage/dateien.js";
 import type { Db } from "../db/client.js";
 import { dateien } from "../db/schema.js";
@@ -85,95 +85,6 @@ export async function stelleStandardAvatarSicher(
       angelegt: Date.now(),
     })
     .run();
-}
-
-// --- Die Galerie zur Auswahl am Tablet ------------------------------------------------
-
-/**
- * Wie viele Bilder in `apps/server/assets/avatare/` liegen.
- *
- * Fest eingetragen statt den Ordner zu lesen: gebuendelt liegt der Server in `dist/`, und
- * ein Verzeichnis zur Laufzeit zu durchsuchen macht die Zahl vom Ausrollen abhaengig. Eine
- * fehlende Datei faellt beim Start als Warnung auf, nicht als stille Luecke.
- */
-const GALERIE_ANZAHL = 20;
-
-/** Der Ordner mit den Bildern, am selben Anker wie der Standard-Avatar. */
-const GALERIE_ORDNER = resolve(PROJEKT_WURZEL, "apps/server/assets/avatare");
-
-/**
- * Die feste Id des n-ten Galeriebildes, nach dem Muster des Standard-Avatars.
- *
- * `…0a7a01` bis `…0a7a20`. Feste Ids, damit ein zweiter Start nichts doppelt anlegt und
- * ein gesetzter Avatar ein Ausrollen ueberlebt; wuerden sie gewuerfelt, zeigte jeder
- * Besucher nach dem naechsten Start ins Leere.
- */
-export function galerieAvatarId(nummer: number): string {
-  return `00000000-0000-4000-8000-0000000a7a${String(nummer).padStart(2, "0")}`;
-}
-
-/** Alle Ids der Galerie, in Anzeigereihenfolge. */
-export function galerieIds(): string[] {
-  return Array.from({ length: GALERIE_ANZAHL }, (_, i) => galerieAvatarId(i + 1));
-}
-
-/**
- * Legt die Galerie an, soweit sie fehlt. Wird beim Start aufgerufen.
- *
- * Dieselbe Haltung wie beim Standard-Avatar: vorhandene Zeilen bleiben unberuehrt, und
- * eine fehlende Bilddatei bricht den Start **nicht** ab. Ein Dienst, der wegen eines
- * Schmuckbildes nicht hochkommt, nimmt der Konferenz den Scan weg.
- */
-export async function stelleGalerieSicher(
-  db: Db,
-  ablage: Dateiablage,
-  warne: (text: string) => void,
-): Promise<void> {
-  for (let nummer = 1; nummer <= GALERIE_ANZAHL; nummer++) {
-    const id = galerieAvatarId(nummer);
-    const vorhanden = db.select({ id: dateien.id }).from(dateien).where(eq(dateien.id, id)).get();
-    if (vorhanden !== undefined) continue;
-
-    const name = `avatar-${String(nummer).padStart(2, "0")}.jpg`;
-    let inhalt: Buffer;
-    try {
-      inhalt = await readFile(resolve(GALERIE_ORDNER, name));
-    } catch {
-      warne(`Avatarbild fehlt: ${name}. Es steht am Tablet nicht zur Auswahl.`);
-      continue;
-    }
-
-    const { pfad, sha256, groesse } = await ablage.lege(inhalt);
-    db.insert(dateien)
-      .values({
-        id,
-        pfad,
-        mimeType: "image/jpeg",
-        groesse,
-        originalName: name,
-        sha256,
-        angelegt: Date.now(),
-      })
-      .run();
-  }
-}
-
-/**
- * Die Galerie, wie sie das Tablet braucht: nur die Ids, die es wirklich gibt.
- *
- * Gefiltert gegen den Bestand, nicht nur gerechnet: fehlte ein Bild beim Start, zeigte die
- * Auswahl sonst eine Kachel, die beim Anklicken ins Leere liefe.
- */
-export function leseGalerie(db: Db): string[] {
-  const vorhanden = new Set(
-    db
-      .select({ id: dateien.id })
-      .from(dateien)
-      .where(inArray(dateien.id, galerieIds()))
-      .all()
-      .map((d) => d.id),
-  );
-  return galerieIds().filter((id) => vorhanden.has(id));
 }
 
 /**

@@ -34,6 +34,7 @@ export function pruefeGuid(guid: string): string {
 }
 
 export const TEXTFELDER = [
+  "titel",
   "vorname",
   "nachname",
   "firma",
@@ -50,6 +51,7 @@ type Textfeld = (typeof TEXTFELDER)[number];
 
 export interface BesucherEingabe {
   guid?: string;
+  titel?: string | null;
   vorname: string;
   nachname: string;
   firma?: string | null;

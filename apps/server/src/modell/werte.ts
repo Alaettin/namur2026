@@ -23,7 +23,6 @@ import {
   linkTitel,
   linkUrl,
   visitorFeld,
-  type Personenfeld,
 } from "./felder.js";
 import { ansprechpartnerVonExponat } from "../services/ansprechpartner.js";
 
@@ -92,6 +91,32 @@ export function dateinameFuerSpec(name: string): string {
 }
 
 /**
+ * Der Wert eines Personenfeldes, so wie er hinausgeht.
+ *
+ * **Der Titel bekommt keine eigene propertyId**, sondern wird dem Vornamen vorangestellt:
+ * aus "Dr." und "Anna" wird `FirstName = "Dr. Anna"`. Eine eigene Eigenschaft haette der
+ * Content-Admin in Axon nachmappen muessen, sonst waere der Titel im Viewer unsichtbar
+ * geblieben; so aendert sich das Modell ueberhaupt nicht.
+ *
+ * Gibt `null`, wenn nichts hinausgeht: leere Felder werden ausgelassen, nicht als leerer
+ * Text geliefert, und das Titelfeld selbst geht nie einzeln hinaus.
+ */
+function personenwert(
+  person: Record<string, unknown>,
+  feld: string,
+  id: string | null,
+): string | null {
+  if (id === null) return null;
+  const wert = person[feld];
+  if (typeof wert !== "string" || wert.trim() === "") return null;
+
+  if (feld !== "vorname") return wert;
+  const titel = person["titel"];
+  // Ohne Titel bleibt der Vorname unveraendert, insbesondere **ohne** fuehrendes Leerzeichen.
+  return typeof titel === "string" && titel.trim() !== "" ? `${titel.trim()} ${wert}` : wert;
+}
+
+/**
  * Sammelt alle Rohwerte eines Besuchers.
  *
  * **Vom Exponat kommt nur etwas, wenn der Besucher dort mindestens eine Zuordnung hat**,
@@ -106,16 +131,16 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
   const werte: RohWert[] = [];
 
   for (const { feld, id } of PERSONENFELDER) {
-    const wert = person[feld as Personenfeld];
-    // Leere Felder werden ausgelassen, nicht als leerer Text geliefert.
-    if (typeof wert === "string" && wert.trim() !== "") {
+    const wert = personenwert(person, feld, id);
+    if (wert !== null && id !== null) {
       werte.push({ propertyId: visitorFeld(id), text: wert, dateiId: null });
     }
   }
   /*
-   * **Rueckfall auf den Standard-Avatar.** Seit dem 08.10.2026 laedt niemand mehr ein Foto
-   * hoch; `avatarDateiId` ist deshalb bei allen `null`, und ohne diesen Rueckfall erschiene
-   * im Viewer gar kein Bild. Hat ein Besucher spaeter einen eigenen, gewinnt seiner.
+   * **Rueckfall auf den Standard-Avatar.** Jeder neue Besucher traegt dessen Id seit dem
+   * 08.10.2026 ausdruecklich, und am Tablet kann er sich seit dem 08.10. ein anderes Bild
+   * aussuchen. Der Rueckfall bleibt fuer die Zeilen, bei denen `avatarDateiId` doch `null`
+   * ist, etwa nachdem ein Avatar aus der Galerie geloescht wurde.
    */
   const avatar = avatarFuer(db, person.avatarDateiId);
   if (avatar !== null) {
@@ -190,8 +215,8 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
       for (const c of ansprechpartnerVonExponat(db, exponatId)) {
         if (!kontaktIds.has(c.id)) continue;
         for (const { feld, id } of PERSONENFELDER) {
-          const wert = c[feld as Personenfeld];
-          if (typeof wert === "string" && wert.trim() !== "") {
+          const wert = personenwert(c, feld, id);
+          if (wert !== null && id !== null) {
             werte.push({ propertyId: kontaktFeld(k, c.platz, id), text: wert, dateiId: null });
           }
         }

@@ -78,6 +78,8 @@ export const dateien = sqliteTable("dateien", {
 export const besucher = sqliteTable("besucher", {
   /** Die GUID ist der Schluessel, nicht eine eigene Id: sie ist die `itemId` fuer Axon. */
   guid: text("guid").primaryKey(),
+  /** Akademischer Titel, etwa "Dr." oder "Prof. Dr.". Freitext, weil die Formen zu viele sind. */
+  titel: text("titel"),
   vorname: text("vorname").notNull(),
   nachname: text("nachname").notNull(),
   firma: text("firma"),
@@ -158,6 +160,8 @@ export const exponatLinks = sqliteTable(
  */
 export const ansprechpartner = sqliteTable("ansprechpartner", {
   id: text("id").primaryKey(),
+  /** Siehe `besucher.titel`: dieselbe Feldliste traegt beide. */
+  titel: text("titel"),
   vorname: text("vorname").notNull(),
   nachname: text("nachname").notNull(),
   firma: text("firma"),
@@ -280,4 +284,27 @@ export const konnektorAbrufe = sqliteTable("konnektor_abrufe", {
   dokumente: integer("dokumente").notNull().default(0),
   zuerst: integer("zuerst").notNull().default(jetzt),
   zuletzt: integer("zuletzt").notNull().default(jetzt),
+});
+
+// --- Avatare zur Auswahl am Tablet ----------------------------------------------------
+
+/**
+ * Welche Bilder am Selbstbedienungs-Tablet zur Auswahl stehen, und in welcher Folge.
+ *
+ * **Zeilen statt Dateien im Repo.** Bis zum 09.10.2026 war die Galerie eine feste Liste von
+ * 20 Ids, die der Start bei jedem Fehlen neu anlegte. Sobald ein Admin eines loeschen darf,
+ * ist genau das falsch: der geloeschte Avatar kaeme beim naechsten Neustart zurueck. Die
+ * Erstbefuellung ist deshalb einmalig, siehe `services/avatare.ts`.
+ *
+ * `datei_id` ist der Schluessel: eine Datei ist genau einmal in der Galerie. `cascade`,
+ * damit das Loeschen der Datei die Zeile mitnimmt; die Besucher daran haengen ueber
+ * `on delete set null` und fallen auf den Standard zurueck.
+ */
+export const avatare = sqliteTable("avatare", {
+  dateiId: text("datei_id")
+    .primaryKey()
+    .references(() => dateien.id, { onDelete: "cascade" }),
+  /** Eins-basiert und beim Umsortieren neu vergeben, damit keine Luecken entstehen. */
+  sortierung: integer("sortierung").notNull(),
+  angelegt: integer("angelegt").notNull().default(jetzt),
 });

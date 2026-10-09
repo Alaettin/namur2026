@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { galerieIds } from "../src/services/standardavatar.js";
+
 import { melde, starte, type Pruefstand } from "./hilfe.js";
 
 const ADMIN = { ADMIN_EMAIL: "admin@namur.de", ADMIN_PASSWORT: "startpasswort-123" };
@@ -78,10 +78,13 @@ describe("Entwicklermodus", () => {
      * naechsten Serverstart zurueck; bis dahin antwortete `/api/standard-avatar` mit 404
      * und jeder Besucher erschien ohne Bild.
      *
-     * Gerechnet statt abgetippt: die Zahl der Galeriebilder steht in `galerieIds()`, und
-     * eine feste Zahl hier waere beim naechsten Bild still falsch.
+     * Gezaehlt statt abgetippt: die Galerie steht in der Antwort selbst, und eine feste
+     * Zahl hier waere beim naechsten Bild still falsch.
      */
-    expect(nachher["dateien"], "Standard-Avatar und Galerie").toBe(1 + galerieIds().length);
+    const galerie = (
+      await s.app.inject({ url: "/api/kiosk/avatare", headers: { cookie: keks } })
+    ).json<{ avatare: string[] }>().avatare;
+    expect(nachher["dateien"], "Standard-Avatar und Galerie").toBe(1 + galerie.length);
   });
 
   /**

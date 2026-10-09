@@ -4,6 +4,7 @@ import { ApiFehler, api, useAbruf } from "../lib/api.js";
 import { Feld, Fehlerhinweis, Flaeche, Knopf, Ueberschrift, Zustand } from "../bausteine/basis.js";
 import { Kamera, kameraMoeglich, type Kamerafehler } from "../scan/Kamera.js";
 import type { Ich } from "../lib/ich.js";
+import { GRUPPEN, PERSONENFELDER, felderDerGruppe, mitTitel } from "../lib/personenfelder.js";
 import { Kioskrahmen } from "./Kioskrahmen.js";
 
 /**
@@ -18,21 +19,7 @@ import { Kioskrahmen } from "./Kioskrahmen.js";
  * unterscheiden, ob eine GUID von der Kamera kam oder erfunden wurde.
  */
 
-/** Die zehn Felder, in der Reihenfolge der Maske. `guid` ist nicht dabei. */
-const FELDER = [
-  { schluessel: "vorname", text: "Vorname", pflicht: true },
-  { schluessel: "nachname", text: "Nachname", pflicht: true },
-  { schluessel: "firma", text: "Firma", pflicht: false },
-  { schluessel: "position", text: "Position", pflicht: false },
-  { schluessel: "email", text: "E-Mail", pflicht: false },
-  { schluessel: "strasse", text: "Straße", pflicht: false },
-  { schluessel: "plz", text: "PLZ", pflicht: false },
-  { schluessel: "ort", text: "Ort", pflicht: false },
-  { schluessel: "land", text: "Land", pflicht: false },
-  { schluessel: "website", text: "Website", pflicht: false },
-] as const;
-
-type Feldname = (typeof FELDER)[number]["schluessel"];
+type Feldname = string;
 
 interface Besucher extends Record<Feldname, string | null> {
   guid: string;
@@ -127,7 +114,7 @@ export function KioskMenue({ aufAbmelden }: { aufAbmelden: () => void }) {
               )}
               <div className="flex min-w-0 flex-col">
                 <Ueberschrift>
-                  Hallo {b.vorname} {b.nachname}
+                  Hallo {mitTitel(b.titel, b.vorname ?? "")} {b.nachname}
                 </Ueberschrift>
                 <span className="text-[15px] text-text-hinweis">{b.firma ?? "ohne Firma"}</span>
               </div>
@@ -224,9 +211,7 @@ export function KioskStammdaten({ aufAbmelden }: { aufAbmelden: () => void }) {
    */
   const werte =
     entwurf ??
-    (b === null
-      ? null
-      : Object.fromEntries(FELDER.map((f) => [f.schluessel, b[f.schluessel] ?? ""])));
+    (b === null ? null : Object.fromEntries(PERSONENFELDER.map((f) => [f.name, b[f.name] ?? ""])));
 
   function setze(feld: string, wert: string) {
     setzeEntwurf({ ...(werte ?? {}), [feld]: wert });
@@ -267,21 +252,32 @@ export function KioskStammdaten({ aufAbmelden }: { aufAbmelden: () => void }) {
           <>
             {fehler !== null && <Fehlerhinweis>{fehler}</Fehlerhinweis>}
 
-            <Flaeche className="grid gap-5 p-7 sm:grid-cols-2">
-              {FELDER.map((f) => (
-                <label key={f.schluessel} className="flex flex-col gap-2 text-[14px] font-semibold">
-                  {f.text}
-                  {f.pflicht && <span className="sr-only">Pflichtfeld</span>}
-                  <Feld
-                    className="h-12 text-[16px] font-normal"
-                    value={werte[f.schluessel] ?? ""}
-                    onChange={(ev) => {
-                      setze(f.schluessel, ev.target.value);
-                    }}
-                  />
-                </label>
-              ))}
-            </Flaeche>
+            {/*
+              Je Gruppe eine Fläche. Am Tablet steht jemand dabei und tippt im Stehen; elf
+              Felder am Stück sind dort mehr im Weg als am Schreibtisch.
+            */}
+            {GRUPPEN.map((gruppe) => (
+              <Flaeche key={gruppe} className="flex flex-col gap-5 p-7">
+                <h2 className="text-[11px] font-semibold tracking-[0.08em] text-text-hinweis uppercase">
+                  {gruppe}
+                </h2>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {felderDerGruppe(gruppe).map((f) => (
+                    <label key={f.name} className="flex flex-col gap-2 text-[14px] font-semibold">
+                      {f.text}
+                      {f.pflicht === true && <span className="sr-only">Pflichtfeld</span>}
+                      <Feld
+                        className="h-12 text-[16px] font-normal"
+                        value={werte[f.name] ?? ""}
+                        onChange={(ev) => {
+                          setze(f.name, ev.target.value);
+                        }}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </Flaeche>
+            ))}
 
             <Knopfzeile
               laeuft={laeuft}
