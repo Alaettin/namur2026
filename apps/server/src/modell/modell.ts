@@ -4,6 +4,7 @@ import { exponate } from "../db/schema.js";
 import {
   MAX_DOKUMENTE,
   MAX_KONTAKTE,
+  MAX_RUNDEN_MODELL,
   MAX_LINKS,
   PERSONENFELDER,
   PROPERTY_TYPE,
@@ -18,6 +19,7 @@ import {
   linkUrl,
   platzNr,
   visitorFeld,
+  visitorRunde,
 } from "./felder.js";
 
 /**
@@ -75,6 +77,15 @@ export function baueModell(db: Db): DataModelProperty[] {
     felder.push(eintrag(visitorFeld(id), `Besucher ${name}`, PROPERTY_TYPE.property));
   }
   felder.push(eintrag(VISITOR_AVATAR, "Besucher Foto", PROPERTY_TYPE.document));
+
+  /*
+   * **Die 20 Rundenplaetze, immer alle.** Wie bei Dokumenten und Links: der Content-Admin
+   * mappt vor der Konferenz, gefahren wird waehrenddessen. Enthielte das Modell nur die
+   * gefahrenen Runden, muesste nach jedem Rennen neu gemappt werden.
+   */
+  for (let p = 1; p <= MAX_RUNDEN_MODELL; p++) {
+    felder.push(eintrag(visitorRunde(p), `Besucher Runde ${platzNr(p)}`, PROPERTY_TYPE.property));
+  }
 
   // --- Je Exponat ---------------------------------------------------------------------
   // Nach Kennung sortiert, damit die Liste in Axon stabil bleibt und zwei Abrufe
@@ -137,4 +148,4 @@ export const FELDER_JE_EXPONAT =
   2 + MAX_DOKUMENTE * 3 + MAX_LINKS * 2 + MAX_KONTAKTE * AUSGEGEBENE_PERSONENFELDER;
 
 /** Zahl der Besucherdatenpunkte. */
-export const FELDER_BESUCHER = AUSGEGEBENE_PERSONENFELDER + 1;
+export const FELDER_BESUCHER = AUSGEGEBENE_PERSONENFELDER + 1 + MAX_RUNDEN_MODELL;

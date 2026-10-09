@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { FELDER_BESUCHER } from "../src/modell/modell.js";
 import { melde, starte, type Pruefstand } from "./hilfe.js";
 
 /**
@@ -116,12 +117,17 @@ describe("Das Modell aendert sich durch den Titel nicht", () => {
    * Die Zahl der Datenpunkte speist den ETag des Modells. Haette der Titel eine eigene
    * Eigenschaft, aenderte sie sich, und Axon zoege das Modell neu.
    */
-  it("hat genau die zehn Besucherfelder plus Foto", async () => {
+  it("hat genau die Besucherfelder, die das Modell vorsieht", async () => {
     const { s } = await alsAdmin();
     const felder = await modell(s);
 
+    /*
+     * Gegen `FELDER_BESUCHER` geprueft, nicht gegen eine Zahl: seit dem 09.10.2026 kamen
+     * 20 Rundenplaetze dazu, und eine abgetippte 11 waere dabei still falsch geworden.
+     * Die Konstante speist zugleich die Anzeige auf der Seite Einstellungen.
+     */
     const besucherfelder = felder.filter((f) => f.id.startsWith("Visitor_"));
-    expect(besucherfelder).toHaveLength(11);
+    expect(besucherfelder).toHaveLength(FELDER_BESUCHER);
     expect(besucherfelder.map((f) => f.id)).toContain("Visitor_FirstName");
   });
 });

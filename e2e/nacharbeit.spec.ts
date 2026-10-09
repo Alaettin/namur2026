@@ -68,24 +68,42 @@ test("der Konnektor-Zugang steht auf aus und warnt, eingeschaltet nicht mehr", a
 }) => {
   await page.goto("/api");
 
-  const warnung = page.getByText(/Die Schnittstelle ist ohne Anmeldung erreichbar/);
+  /*
+   * **Im Block des Konnektors**, nicht irgendwo auf der Seite. Seit die Carrera-Bahn einen
+   * eigenen Zugang mit eigenem Schalter hat, stehen Warnung und Knopf zweimal da; ohne die
+   * Eingrenzung träfe der Fall je nach Reihenfolge den falschen Schalter.
+   */
+  const block = page.getByRole("region", { name: "Zugang AXON Connector" });
+
+  const warnung = block.getByText(/Die Schnittstelle ist ohne Anmeldung erreichbar/);
   await expect(warnung).toBeVisible();
-  const schalter = page.getByRole("button", { name: "Einschalten" });
+  const schalter = block.getByRole("button", { name: "Einschalten" });
   await expect(schalter).toBeVisible();
 
   try {
     await schalter.click();
     await expect(warnung).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Ausschalten" })).toBeVisible();
+    await expect(block.getByRole("button", { name: "Ausschalten" })).toBeVisible();
     // Jetzt steht das Verfahren da, das vorher nicht galt.
     // `exact`, sonst trifft es auch den Erklärsatz über dem Schalter.
-    await expect(page.getByText("Basic-Authentifizierung", { exact: true })).toBeVisible();
+    await expect(block.getByText("Basic-Authentifizierung", { exact: true })).toBeVisible();
+
+    /*
+     * **Und der Zugang der Bahn bleibt davon unberührt.** Die beiden Schalter liegen
+     * nebeneinander und auf demselben Baustein; legte einer beide um, fiele es ohne diese
+     * Zeile niemandem auf.
+     */
+    await expect(
+      page
+        .getByRole("region", { name: "Zugang Carrera-Bahn" })
+        .getByText(/Die Schnittstelle ist ohne Anmeldung erreichbar/),
+    ).toBeVisible();
   } finally {
     await request.patch("/api/konnektor/zugang", { data: { anmeldungVerlangt: false } });
   }
 
   await page.reload();
-  await expect(page.getByText(/Die Schnittstelle ist ohne Anmeldung erreichbar/)).toBeVisible();
+  await expect(block.getByText(/Die Schnittstelle ist ohne Anmeldung erreichbar/)).toBeVisible();
 });
 
 test("Exponate, Ansprechpartner und Nutzer blättern zu zehn", async ({ page }) => {

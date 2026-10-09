@@ -23,8 +23,10 @@ import {
   linkTitel,
   linkUrl,
   visitorFeld,
+  visitorRunde,
 } from "./felder.js";
 import { ansprechpartnerVonExponat } from "../services/ansprechpartner.js";
+import { rundeAlsText, rundenVonBesucher } from "../services/runden.js";
 
 /**
  * Was ein Besucher an Werten hat, in der Form der Konnektor-Spezifikation.
@@ -145,6 +147,20 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
   const avatar = avatarFuer(db, person.avatarDateiId);
   if (avatar !== null) {
     werte.push({ propertyId: VISITOR_AVATAR, text: null, dateiId: avatar });
+  }
+
+  /*
+   * **Die gefahrenen Runden, je Platz eine Zeile.** Nicht gefahrene Plaetze fallen aus der
+   * Antwort, wie jedes leere Feld; der Viewer zeigt dann nur, was wirklich gefahren wurde.
+   * Vor den Exponaten, weil der frühe `return` unten sonst die Runden verschluckte, sobald
+   * ein Besucher noch keine Zuordnung hat.
+   */
+  for (const runde of rundenVonBesucher(db, guid)) {
+    werte.push({
+      propertyId: visitorRunde(runde.platz),
+      text: rundeAlsText(runde),
+      dateiId: null,
+    });
   }
 
   const meine = db.select().from(zuordnungen).where(eq(zuordnungen.besucherGuid, guid)).all();

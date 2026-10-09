@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { ApiFehler, api, useAbruf } from "../lib/api.js";
 import {
   Fehlerhinweis,
@@ -20,13 +20,19 @@ import {
  * Connector-Spezifikation 1.0.0 mit ihren neun Endpunkten unter `/connector`.
  */
 
-interface Info {
+/** Die Zugangsangaben einer Schnittstelle. Beide haben denselben Aufbau. */
+interface Zugangsdaten {
   basisUrl: string;
   basicUser: string | null;
   basicGesetzt: boolean;
-  /** Ob /connector eine Basic-Authentifizierung verlangt. Vorgabe auf dem Server: nein. */
+  /** Ob die Schnittstelle eine Basic-Authentifizierung verlangt. Vorgabe: nein. */
   anmeldungVerlangt: boolean;
+}
+
+interface Info extends Zugangsdaten {
   specVersion: string;
+  /** Die Schnittstelle der Carrera-Bahn, mit eigenem Schalter und eigenen Zugangsdaten. */
+  carrera: Zugangsdaten;
   endpunkte: Endpunkt[];
   /** Eine echte GUID aus dem Bestand, als Vorbelegung des Prüfstands. */
   beispielGuid: string | null;
@@ -34,9 +40,12 @@ interface Info {
 
 interface Endpunkt {
   kennung: string;
-  methode: "GET" | "POST";
+  methode: "GET" | "POST" | "DELETE";
   anzeigePfad: string;
+  gruppe: "konnektor" | "carrera";
   guid: boolean;
+  /** Wie die Kennung im Pfad heißt: beim Löschen einer Runde ist es eine `lap_id`. */
+  guidFeld: string;
   rumpfVorschlag: string | null;
 }
 
@@ -55,20 +64,17 @@ export function Api() {
   const [schalterFehler, setzeSchalterFehler] = useState<string | null>(null);
 
   /**
-   * Legt den Schalter um und holt die Auskunft neu.
+   * Legt einen der beiden Schalter um und holt die Auskunft neu.
    *
    * **Kein eigener Zustand für die Stellung.** Sie käme sonst aus zwei Quellen, und nach
    * einem abgelehnten Aufruf stünde in der Oberfläche etwas anderes als auf dem Server.
    * Maßgeblich ist, was `/api/konnektor/info` meldet.
    */
-  async function lege(an: boolean) {
+  async function lege(pfad: string, an: boolean) {
     setzeLaeuft(true);
     setzeSchalterFehler(null);
     try {
-      await api("/api/konnektor/zugang", {
-        method: "PATCH",
-        body: JSON.stringify({ anmeldungVerlangt: an }),
-      });
+      await api(pfad, { method: "PATCH", body: JSON.stringify({ anmeldungVerlangt: an }) });
       neu();
     } catch (ursache) {
       setzeSchalterFehler(
@@ -86,104 +92,209 @@ export function Api() {
       <Zustand laedt={laedt} fehler={fehler}>
         {daten !== null && (
           <>
-            <Flaeche className="flex flex-col gap-5 p-6">
-              <h2 className="text-lg font-semibold">Zugang</h2>
-
-              <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-[12rem_1fr]">
-                <dt className="font-semibold">Basis-Adresse</dt>
-                <dd>
-                  <Monowert wert={daten.basisUrl} />
-                </dd>
-              </dl>
-
-              <div className="flex flex-wrap items-start justify-between gap-4 border-t border-linie pt-5">
-                <div className="flex flex-col gap-1">
-                  <h3 className="flex items-center gap-3 text-[15px] font-semibold">
-                    Anmeldung verlangen
-                    {!daten.anmeldungVerlangt && (
-                      <Markierung text="AUS" farbe="var(--color-fehler)" />
-                    )}
-                  </h3>
-                  <p className="max-w-prose text-sm text-text-zweit">
-                    Steht der Schalter an, verlangt jeder Aufruf unter{" "}
-                    <code className="font-mono text-xs">/connector</code> eine
-                    Basic-Authentifizierung. <code className="font-mono text-xs">/health</code>{" "}
-                    bleibt in beiden Stellungen anonym erreichbar, sonst meldete der Dienst sich
-                    selbst als krank.
-                  </p>
-                </div>
-                <Knopf
-                  art={daten.anmeldungVerlangt ? "rand" : "primaer"}
-                  aria-pressed={daten.anmeldungVerlangt}
-                  disabled={laeuft}
-                  onClick={() => {
-                    void lege(!daten.anmeldungVerlangt);
-                  }}
-                >
-                  {daten.anmeldungVerlangt ? "Ausschalten" : "Einschalten"}
-                </Knopf>
-              </div>
-
-              {schalterFehler !== null && <Fehlerhinweis>{schalterFehler}</Fehlerhinweis>}
-
-              {daten.anmeldungVerlangt ? (
-                <>
-                  <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-[12rem_1fr]">
-                    <dt className="font-semibold">Verfahren</dt>
-                    <dd className="text-text-zweit">Basic-Authentifizierung</dd>
-                    <dt className="font-semibold">Benutzer</dt>
-                    <dd className="font-mono text-xs">{daten.basicUser ?? "nicht gesetzt"}</dd>
-                    <dt className="font-semibold">Passwort</dt>
-                    <dd className="text-text-zweit">
-                      {/*
-                        Das Passwort wird **nicht angezeigt**, auch nicht hinter der Anmeldung.
-                        Eine Seite, die ein Geheimnis ausgibt, ist eine Seite, von der man
-                        Bildschirmfotos macht.
-                      */}
-                      {daten.basicGesetzt ? (
-                        <>
-                          steht in der Umgebung unter{" "}
-                          <code className="font-mono text-xs">CONNECTOR_BASIC_PASSWORT</code>
-                        </>
-                      ) : (
-                        <Markierung text="NICHT GESETZT" farbe="var(--color-fehler)" />
-                      )}
-                    </dd>
-                  </dl>
-                  {!daten.basicGesetzt && (
-                    <p className="text-[13px] text-fehler">
-                      Die Anmeldung ist verlangt, aber es sind keine Zugangsdaten gesetzt: damit ist
-                      die Schnittstelle vollständig gesperrt und Axon erreicht nichts. Setze{" "}
-                      <code className="font-mono text-xs">CONNECTOR_BASIC_USER</code> und{" "}
-                      <code className="font-mono text-xs">CONNECTOR_BASIC_PASSWORT</code> in der
-                      Umgebung.
-                    </p>
-                  )}
-                </>
-              ) : (
-                /*
-                 * Der Hinweis steht hier **im Klartext**, nicht als beiläufige Zeile. Die
-                 * Vorgabe ist aus, und wer die Seite aufmacht, soll nicht erst nachrechnen
-                 * müssen, was das bedeutet.
-                 */
-                <p className="max-w-prose text-[13px] text-fehler">
-                  <b>Die Schnittstelle ist ohne Anmeldung erreichbar.</b>
-                </p>
-              )}
-            </Flaeche>
+            <Zugangsblock
+              titel="Zugang AXON Connector"
+              zugang={daten}
+              pfadName="/connector"
+              userVar="CONNECTOR_BASIC_USER"
+              passwortVar="CONNECTOR_BASIC_PASSWORT"
+              laeuft={laeuft}
+              fehler={schalterFehler}
+              aufSchalten={(an) => {
+                void lege("/api/konnektor/zugang", an);
+              }}
+            >
+              <code className="font-mono text-xs">/health</code> bleibt in beiden Stellungen anonym
+              erreichbar, sonst meldete der Dienst sich selbst als krank.
+            </Zugangsblock>
 
             <Flaeche className="flex flex-col gap-3 p-6">
               <h2 className="text-lg font-semibold">Endpunkte AXON Connector</h2>
-              <ul className="flex flex-col divide-y divide-linie border-t border-linie">
-                {daten.endpunkte.map((e) => (
-                  <EndpunktProbe key={e.kennung} endpunkt={e} beispielGuid={daten.beispielGuid} />
-                ))}
-              </ul>
+              <Endpunktliste
+                endpunkte={daten.endpunkte.filter((e) => e.gruppe === "konnektor")}
+                beispielGuid={daten.beispielGuid}
+              />
+            </Flaeche>
+
+            {/*
+              Die Bahn steht als **eigener Abschnitt** darunter, mit eigenem Zugang: es ist ein
+              anderer Partner, und anders als der Konnektor schreibt er.
+            */}
+            <Zugangsblock
+              titel="Zugang Carrera-Bahn"
+              zugang={daten.carrera}
+              pfadName="/carrera"
+              userVar="CARRERA_BASIC_USER"
+              passwortVar="CARRERA_BASIC_PASSWORT"
+              laeuft={laeuft}
+              fehler={schalterFehler}
+              aufSchalten={(an) => {
+                void lege("/api/carrera/zugang", an);
+              }}
+            >
+              Über diese Schnittstelle meldet die Software der Bahn jede gefahrene Runde.
+            </Zugangsblock>
+
+            <Flaeche className="flex flex-col gap-3 p-6">
+              <h2 className="text-lg font-semibold">Endpunkte Carrera-Bahn</h2>
+              <p className="max-w-prose text-sm text-text-zweit">
+                <code className="font-mono text-xs">participant_id</code> ist die gescannte
+                AAS-Item-ID, also die GUID des Besuchers. Ist sie leer, gilt die Runde als anonym
+                und wird nicht gespeichert. Je Besucher werden höchstens {MAX_RUNDEN} Runden
+                aufgezeichnet.
+              </p>
+              <Endpunktliste
+                endpunkte={daten.endpunkte.filter((e) => e.gruppe === "carrera")}
+                beispielGuid={daten.beispielGuid}
+              />
             </Flaeche>
           </>
         )}
       </Zustand>
     </>
+  );
+}
+
+/**
+ * Die Obergrenze, wie sie der Server kennt.
+ *
+ * Steht hier als Zahl, weil die Seite nur davon erzählt; durchgesetzt wird sie in
+ * `services/runden.ts`. Wäre die Zahl hier bindend, gehörte sie in die Antwort des Servers.
+ */
+const MAX_RUNDEN = 20;
+
+/**
+ * Der Zugang einer Schnittstelle: Basis-Adresse, Schalter, Zugangsdaten.
+ *
+ * Ein Baustein für beide, weil beide dieselbe Entscheidung zeigen. Was sich unterscheidet,
+ * sind die Namen der Umgebungsvariablen und ein Satz Erklärung; beides kommt von außen.
+ */
+function Zugangsblock({
+  titel,
+  zugang,
+  pfadName,
+  userVar,
+  passwortVar,
+  laeuft,
+  fehler,
+  aufSchalten,
+  children,
+}: {
+  titel: string;
+  zugang: Zugangsdaten;
+  pfadName: string;
+  userVar: string;
+  passwortVar: string;
+  laeuft: boolean;
+  fehler: string | null;
+  aufSchalten: (an: boolean) => void;
+  children: ReactNode;
+}) {
+  /*
+   * **Ein `<section>` mit Namen, kein nacktes `div`.** Seit es zwei Zugangsblöcke gibt,
+   * stehen „Einschalten" und die Warnung zweimal auf der Seite. Ohne Namen ist weder für
+   * einen Screenreader noch für die Abnahme zu sagen, zu welcher Schnittstelle ein Knopf
+   * gehört, und ein Fall griffe stillschweigend den falschen.
+   */
+  return (
+    <Flaeche className="flex flex-col p-0">
+      <section aria-label={titel} className="flex flex-col gap-5 p-6">
+        <h2 className="text-lg font-semibold">{titel}</h2>
+
+        <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-[12rem_1fr]">
+          <dt className="font-semibold">Basis-Adresse</dt>
+          <dd>
+            <Monowert wert={zugang.basisUrl} />
+          </dd>
+        </dl>
+
+        <div className="flex flex-wrap items-start justify-between gap-4 border-t border-linie pt-5">
+          <div className="flex flex-col gap-1">
+            <h3 className="flex items-center gap-3 text-[15px] font-semibold">
+              Anmeldung verlangen
+              {!zugang.anmeldungVerlangt && <Markierung text="AUS" farbe="var(--color-fehler)" />}
+            </h3>
+            <p className="max-w-prose text-sm text-text-zweit">
+              Steht der Schalter an, verlangt jeder Aufruf unter{" "}
+              <code className="font-mono text-xs">{pfadName}</code> eine Basic-Authentifizierung.{" "}
+              {children}
+            </p>
+          </div>
+          <Knopf
+            art={zugang.anmeldungVerlangt ? "rand" : "primaer"}
+            aria-pressed={zugang.anmeldungVerlangt}
+            disabled={laeuft}
+            onClick={() => {
+              aufSchalten(!zugang.anmeldungVerlangt);
+            }}
+          >
+            {zugang.anmeldungVerlangt ? "Ausschalten" : "Einschalten"}
+          </Knopf>
+        </div>
+
+        {fehler !== null && <Fehlerhinweis>{fehler}</Fehlerhinweis>}
+
+        {zugang.anmeldungVerlangt ? (
+          <>
+            <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-[12rem_1fr]">
+              <dt className="font-semibold">Verfahren</dt>
+              <dd className="text-text-zweit">Basic-Authentifizierung</dd>
+              <dt className="font-semibold">Benutzer</dt>
+              <dd className="font-mono text-xs">{zugang.basicUser ?? "nicht gesetzt"}</dd>
+              <dt className="font-semibold">Passwort</dt>
+              <dd className="text-text-zweit">
+                {/*
+                  Das Passwort wird **nicht angezeigt**, auch nicht hinter der Anmeldung. Eine
+                  Seite, die ein Geheimnis ausgibt, ist eine Seite, von der man Bildschirmfotos
+                  macht.
+                */}
+                {zugang.basicGesetzt ? (
+                  <>
+                    steht in der Umgebung unter{" "}
+                    <code className="font-mono text-xs">{passwortVar}</code>
+                  </>
+                ) : (
+                  <Markierung text="NICHT GESETZT" farbe="var(--color-fehler)" />
+                )}
+              </dd>
+            </dl>
+            {!zugang.basicGesetzt && (
+              <p className="text-[13px] text-fehler">
+                Die Anmeldung ist verlangt, aber es sind keine Zugangsdaten gesetzt: damit ist die
+                Schnittstelle vollständig gesperrt und niemand erreicht sie. Setze{" "}
+                <code className="font-mono text-xs">{userVar}</code> und{" "}
+                <code className="font-mono text-xs">{passwortVar}</code> in der Umgebung.
+              </p>
+            )}
+          </>
+        ) : (
+          /*
+           * Der Hinweis steht hier **im Klartext**, nicht als beiläufige Zeile. Die Vorgabe ist
+           * aus, und wer die Seite aufmacht, soll nicht erst nachrechnen müssen, was das bedeutet.
+           */
+          <p className="max-w-prose text-[13px] text-fehler">
+            <b>Die Schnittstelle ist ohne Anmeldung erreichbar.</b>
+          </p>
+        )}
+      </section>
+    </Flaeche>
+  );
+}
+
+/** Die aufklappbaren Endpunkte einer Gruppe. */
+function Endpunktliste({
+  endpunkte,
+  beispielGuid,
+}: {
+  endpunkte: Endpunkt[];
+  beispielGuid: string | null;
+}) {
+  return (
+    <ul className="flex flex-col divide-y divide-linie border-t border-linie">
+      {endpunkte.map((e) => (
+        <EndpunktProbe key={e.kennung} endpunkt={e} beispielGuid={beispielGuid} />
+      ))}
+    </ul>
   );
 }
 
@@ -204,7 +315,11 @@ function EndpunktProbe({
   endpunkt: Endpunkt;
   beispielGuid: string | null;
 }) {
-  const [guid, setzeGuid] = useState(beispielGuid ?? "");
+  /*
+   * Die Vorbelegung **nur bei einer GUID**: in das Feld `lap_id` gehört sie nicht, und eine
+   * falsche Kennung beim Löschen liefert ein stummes 204, das wie Erfolg aussieht.
+   */
+  const [guid, setzeGuid] = useState(endpunkt.guidFeld === "GUID" ? (beispielGuid ?? "") : "");
   const [rumpf, setzeRumpf] = useState(endpunkt.rumpfVorschlag ?? "");
   const [laeuft, setzeLaeuft] = useState(false);
   const [ergebnis, setzeErgebnis] = useState<Ergebnis | null>(null);
@@ -245,7 +360,7 @@ function EndpunktProbe({
         <div className="flex flex-col gap-3 pb-4">
           {endpunkt.guid && (
             <label className="flex flex-col gap-1.5 text-[13px] font-semibold">
-              GUID
+              {endpunkt.guidFeld}
               <Feld
                 value={guid}
                 onChange={(ev) => {

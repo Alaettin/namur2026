@@ -36,6 +36,13 @@
       "when": 1791536145220,
       "tag": "0004_tough_sunset_bain",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791543689618,
+      "tag": "0005_tough_franklin_storm",
+      "breakpoints": true
     }
   ]
 }

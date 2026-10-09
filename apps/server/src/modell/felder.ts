@@ -16,6 +16,15 @@ export const MAX_DOKUMENTE = 10;
 export const MAX_LINKS = 10;
 export const MAX_KONTAKTE = 5;
 
+/**
+ * Rundenzeiten von der Carrera-Bahn, je Besucher.
+ *
+ * Dieselbe Zahl wie `MAX_RUNDEN` in `services/runden.ts`; sie steht hier, weil das Modell
+ * **alle** Plaetze enthalten muss, auch leere, und dort, weil die Aufnahme sie durchsetzt.
+ * Zwei Stellen, eine Zahl: die Pruefungen halten sie zusammen.
+ */
+export const MAX_RUNDEN_MODELL = 20;
+
 /** Der Typ laut Spec. Ausgegeben wird die Zahl, siehe `PROPERTY_TYPE`. */
 export const PROPERTY_TYPE = { property: 0, document: 1 } as const;
 
@@ -60,6 +69,17 @@ export const VISITOR_AVATAR = "Visitor_Avatar";
 
 export function visitorFeld(id: string): string {
   return `Visitor_${id}`;
+}
+
+/**
+ * `Visitor_Lap01` bis `Visitor_Lap20`.
+ *
+ * Eine Eigenschaft je Runde statt mehrerer je Runde: der Content-Admin mappt von Hand, und
+ * 20 Zeilen sind machbar, 80 Felder waeren es nicht. Der Wert ist eine lesbare Zeile,
+ * siehe `rundeAlsText`.
+ */
+export function visitorRunde(platz: number): string {
+  return `Visitor_Lap${platzNr(platz)}`;
 }
 
 export function exponatName(kennung: string): string {

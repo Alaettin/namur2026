@@ -15,7 +15,9 @@ import { saeAus } from "../services/aussaat.js";
 import { endpunktListe, fuehreProbeAus } from "../services/probe.js";
 import {
   SCHLUESSEL_ANMELDUNG,
+  SCHLUESSEL_CARRERA,
   anmeldungVerlangt,
+  carreraAnmeldungVerlangt,
   setzeSchalter,
 } from "../services/einstellungen.js";
 import { FELDER_BESUCHER, baueModell } from "../modell/modell.js";
@@ -115,6 +117,17 @@ export function dashboardRoutes(app: FastifyInstance, ctx: Kontext): void {
       basicGesetzt: ctx.env.connectorBasic !== null,
       anmeldungVerlangt: anmeldungVerlangt(ctx.db),
       specVersion: "1.0.0",
+      /*
+       * **Die Bahn hat eigene Zugangsdaten und einen eigenen Schalter.** Wer den Konnektor
+       * zumacht, will nicht zwangslaeufig den Partner an der Bahn aussperren, und
+       * umgekehrt. Das Passwort steht auch hier nicht in der Antwort.
+       */
+      carrera: {
+        basisUrl: `${ctx.env.publicBaseUrl ?? ""}/carrera`,
+        basicUser: ctx.env.carreraBasic?.user ?? null,
+        basicGesetzt: ctx.env.carreraBasic !== null,
+        anmeldungVerlangt: carreraAnmeldungVerlangt(ctx.db),
+      },
       endpunkte: endpunktListe(),
       /*
        * Eine echte GUID aus dem Bestand als Vorbelegung des Pruefstands. Ohne sie tippt
@@ -152,6 +165,25 @@ export function dashboardRoutes(app: FastifyInstance, ctx: Kontext): void {
         throw badRequest("felder-fehlen", "Field anmeldungVerlangt must be a boolean.");
       }
       setzeSchalter(ctx.db, SCHLUESSEL_ANMELDUNG, wert);
+      return { anmeldungVerlangt: wert };
+    },
+  );
+
+  /**
+   * Derselbe Schalter fuer die Schnittstelle der Carrera-Bahn.
+   *
+   * Eigene Route statt eines Feldes an der vorhandenen: beide Schalter zusammen in einem
+   * Aufruf hiesse, dass ein unbedacht mitgesendetes Feld den jeweils anderen umlegt.
+   */
+  app.patch<{ Body: { anmeldungVerlangt?: unknown } }>(
+    "/api/carrera/zugang",
+    { preHandler: app.verlangeAdmin },
+    async (req) => {
+      const wert = req.body?.anmeldungVerlangt;
+      if (typeof wert !== "boolean") {
+        throw badRequest("felder-fehlen", "Field anmeldungVerlangt must be a boolean.");
+      }
+      setzeSchalter(ctx.db, SCHLUESSEL_CARRERA, wert);
       return { anmeldungVerlangt: wert };
     },
   );

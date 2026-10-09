@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { ENDPUNKTE } from "../src/services/probe.js";
+import { SCHLUESSEL_CARRERA, setzeSchalter } from "../src/services/einstellungen.js";
 import { melde, starte, verlangeAnmeldung, type Pruefstand } from "./hilfe.js";
 
 /**
  * Der Pruefstand hinter der Seite API.
  *
- * Er fuehrt die neun Konnektor-Endpunkte im Server aus und gibt die Antwort zurueck. Die
- * Pruefungen hier drehen sich um zwei Dinge: dass er **dasselbe** liefert wie ein direkter
- * Aufruf, und dass er **nichts anderes** aufrufen kann als die neun.
+ * Er fuehrt die festen Endpunkte beider Schnittstellen im Server aus und gibt die Antwort
+ * zurueck. Die Pruefungen hier drehen sich um zwei Dinge: dass er **dasselbe** liefert wie
+ * ein direkter Aufruf, und dass er **nichts anderes** aufrufen kann als die eingetragenen.
  */
 
 const ADMIN = { ADMIN_EMAIL: "admin@namur.de", ADMIN_PASSWORT: "startpasswort-123" };
@@ -53,7 +54,7 @@ function probe(s: Pruefstand, keks: string, rumpf: Record<string, unknown>) {
 }
 
 describe("Pruefstand: liefert dasselbe wie ein direkter Aufruf", () => {
-  it("fuer jeden der neun Endpunkte", async () => {
+  it("fuer jeden eingetragenen Endpunkt", async () => {
     const { s, keks } = await alsAdmin();
     const guid = await besucher(s, keks, "PROBE-0001");
 
@@ -64,10 +65,16 @@ describe("Pruefstand: liefert dasselbe wie ein direkter Aufruf", () => {
        * eingetragene 200 verriete nicht, ob der Pruefstand denselben Weg nimmt; aendert
        * sich eine Route, muessen beide Seiten gleich falsch werden, damit es durchgeht.
        */
-      const direkt =
+      /*
+       * **Dieselbe Methode wie der Pruefstand.** Rief die Gegenprobe ueberall GET auf, waere
+       * sie fuer `DELETE` ein Vergleich zweier verschiedener Aufrufe: 204 gegen 404, und das
+       * sah nach einem Fehler im Pruefstand aus, wo keiner war.
+       */
+      const direkt = await s.app.inject(
         e.methode === "POST"
-          ? await s.app.inject({ method: "POST", url: pfad, payload: {} })
-          : await s.app.inject({ method: "GET", url: pfad });
+          ? { method: "POST", url: pfad, payload: {} }
+          : { method: e.methode, url: pfad },
+      );
 
       const ueber = await probe(s, keks, { endpunkt: kennung, guid, rumpf: "{}" });
       expect(ueber.statusCode, kennung).toBe(200);
@@ -107,26 +114,70 @@ describe("Pruefstand: liefert dasselbe wie ein direkter Aufruf", () => {
 
 describe("Pruefstand: die Liste fuer die Oberflaeche", () => {
   /**
-   * Der Anzeigepfad traegt kein `/connector`, der ausfuehrbare schon.
+   * Der Anzeigepfad traegt kein `/connector` und kein `/carrera`, der ausfuehrbare schon.
    *
    * Beides zusammen geprueft, weil genau das die Falle waere: ein Kuerzen, das aus Versehen
    * auch den Aufruf trifft, und die Schnittstelle antwortet 404.
+   *
+   * **Je Gruppe das eigene Praefix.** Beides pauschal gegen `/connector` zu pruefen ginge
+   * fuer die Bahn durch, ohne etwas zu belegen.
    */
-  it("zeigt die Pfade ohne /connector, ruft aber den vollen auf", async () => {
+  it("zeigt die Pfade ohne das Praefix ihrer Gruppe, ruft aber den vollen auf", async () => {
     const { s, keks } = await alsAdmin();
 
     const liste = (
       await s.app.inject({ url: "/api/konnektor/info", headers: { cookie: keks } })
-    ).json<{ endpunkte: { kennung: string; anzeigePfad: string }[] }>().endpunkte;
+    ).json<{ endpunkte: { kennung: string; anzeigePfad: string; gruppe: string }[] }>().endpunkte;
     expect(liste).toHaveLength(Object.keys(ENDPUNKTE).length);
 
+    // Beide Gruppen stehen wirklich in der Liste, sonst prueft die Schleife nur eine.
+    expect(new Set(liste.map((e) => e.gruppe))).toEqual(new Set(["konnektor", "carrera"]));
+
     for (const e of liste) {
-      expect(e.anzeigePfad, e.kennung).not.toContain("/connector");
-      // Und er passt zum echten Pfad, ist also nicht irgendetwas.
-      expect(`/connector${e.anzeigePfad}`, e.kennung).toBe(ENDPUNKTE[e.kennung]?.pfad);
+      const echt = ENDPUNKTE[e.kennung];
+      const praefix = e.gruppe === "carrera" ? "/carrera" : "/connector";
+      expect(e.anzeigePfad, e.kennung).not.toContain(praefix);
+      /*
+       * Und er passt zum echten Pfad, ist also nicht irgendetwas. Der Platzhalter traegt
+       * dabei den Namen des Feldes, beim Loeschen also `{lap_id}` statt `{guid}`.
+       */
+      const erwartet = echt?.pfad.replace("{guid}", `{${(echt.guidFeld ?? "GUID").toLowerCase()}}`);
+      expect(`${praefix}${e.anzeigePfad}`, e.kennung).toBe(erwartet);
     }
 
-    // Die Gegenrichtung: der Aufruf geht weiterhin an /connector und liefert 200.
+    // Beim Loeschen steht wirklich `{lap_id}` da, nicht `{guid}`.
+    const loeschen = liste.find((e) => e.kennung === "lap-loeschen");
+    expect(loeschen?.anzeigePfad).toBe("/runden/{lap_id}");
+
+    // Die Gegenrichtung: der Aufruf geht weiterhin an den vollen Pfad und liefert 200.
+    expect((await probe(s, keks, { endpunkt: "versions" })).json<Ergebnis>().status).toBe(200);
+    expect(
+      (await probe(s, keks, { endpunkt: "lap-lesen", guid: "PROBE-0001" })).json<Ergebnis>().status,
+    ).toBe(200);
+  });
+
+  /**
+   * **Der Pruefstand nimmt die Zugangsdaten der jeweiligen Gruppe.**
+   *
+   * Die Falle ist, dass er ueberall die des Konnektors anhaengt: bei eingeschaltetem
+   * Carrera-Schalter kaeme dann ein 401, das niemand sich erklaeren kann.
+   */
+  it("haengt bei der Bahn die Carrera-Zugangsdaten an, nicht die des Konnektors", async () => {
+    const { s, keks } = await alsAdmin({
+      CARRERA_BASIC_USER: "bahn",
+      CARRERA_BASIC_PASSWORT: "geheim-fuer-die-bahn",
+    });
+    setzeSchalter(s.ctx.db, SCHLUESSEL_CARRERA, true);
+
+    const mit = (
+      await probe(s, keks, { endpunkt: "lap-lesen", guid: "PROBE-0001" })
+    ).json<Ergebnis>();
+    expect(mit.status, "mit eingeschaltetem Schalter abgewiesen").toBe(200);
+
+    /*
+     * Und die Gegenrichtung: der Konnektor-Schalter steht weiterhin aus, der Aufruf dorthin
+     * geht also auch ohne Kopf durch. Beide Schalter sind getrennt.
+     */
     expect((await probe(s, keks, { endpunkt: "versions" })).json<Ergebnis>().status).toBe(200);
   });
 });

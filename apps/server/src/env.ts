@@ -50,6 +50,8 @@ export interface ServerEnv {
    * Abfrage aus Axon.
    */
   readonly connectorBasic: { readonly user: string; readonly passwort: string } | null;
+  /** Zugang der Carrera-Bahn. Wirkt nur, wenn der Schalter in den Einstellungen an ist. */
+  readonly carreraBasic: { readonly user: string; readonly passwort: string } | null;
   /**
    * Die oeffentliche Basis-Adresse ohne abschliessenden Schraegstrich, oder `null`.
    *
@@ -144,6 +146,12 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env): ServerEnv {
     source["CONNECTOR_BASIC_USER"],
     source["CONNECTOR_BASIC_PASSWORT"],
   );
+  const carrera = paar(
+    "CARRERA_BASIC_USER",
+    "CARRERA_BASIC_PASSWORT",
+    source["CARRERA_BASIC_USER"],
+    source["CARRERA_BASIC_PASSWORT"],
+  );
 
   return {
     port: number("PORT", source["PORT"], 3220),
@@ -159,6 +167,7 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env): ServerEnv {
     bootstrapAdmin:
       admin === null ? null : { email: admin.a.trim().toLowerCase(), passwort: admin.b },
     connectorBasic: basic === null ? null : { user: basic.a, passwort: basic.b },
+    carreraBasic: carrera === null ? null : { user: carrera.a, passwort: carrera.b },
     publicBaseUrl: (() => {
       const roh = source["PUBLIC_BASE_URL"]?.trim();
       return roh === undefined || roh === "" ? null : roh.replace(/\/+$/, "");

@@ -19,6 +19,7 @@ import { dashboardRoutes } from "./routes/dashboard.js";
 import { monitoringRoutes } from "./routes/monitoring.js";
 import { kioskRoutes } from "./routes/kiosk.js";
 import { avatarRoutes } from "./routes/avatare.js";
+import { carreraRoutes } from "./routes/carrera.js";
 import { dateiRoutes } from "./routes/dateien.js";
 import { entwicklerRoutes } from "./routes/entwickler.js";
 import { exponatRoutes } from "./routes/exponate.js";
@@ -138,6 +139,7 @@ export async function buildServer(
   monitoringRoutes(app, ctx);
   kioskRoutes(app, ctx);
   avatarRoutes(app, ctx);
+  carreraRoutes(app, ctx);
   entwicklerRoutes(app, ctx);
   /*
    * Die oeffentliche API. Eigener Geltungsbereich mit eigenem Fehlerhandler: sie antwortet

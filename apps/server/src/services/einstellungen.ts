@@ -13,6 +13,9 @@ import { einstellungen } from "../db/schema.js";
 /** Ob die Konnektor-API eine Anmeldung verlangt. Vorgabe: **nein**, siehe unten. */
 export const SCHLUESSEL_ANMELDUNG = "konnektor.anmeldungVerlangt";
 
+/** Ob die Carrera-Schnittstelle eine Anmeldung verlangt. Vorgabe: **nein**, wie beim Konnektor. */
+export const SCHLUESSEL_CARRERA = "carrera.anmeldungVerlangt";
+
 /**
  * Liest einen Schalter. Fehlt der Schluessel, gilt `vorgabe`.
  *
@@ -52,4 +55,15 @@ export function setzeSchalter(db: Db, schluessel: string, an: boolean): void {
  */
 export function anmeldungVerlangt(db: Db): boolean {
   return leseSchalter(db, SCHLUESSEL_ANMELDUNG, false);
+}
+
+/**
+ * Dasselbe fuer die Carrera-Bahn.
+ *
+ * Ein eigener Schalter, kein gemeinsamer: die beiden Schnittstellen gehoeren
+ * verschiedenen Partnern, und wer den Konnektor zumacht, will damit nicht zwangslaeufig
+ * die Bahn aussperren.
+ */
+export function carreraAnmeldungVerlangt(db: Db): boolean {
+  return leseSchalter(db, SCHLUESSEL_CARRERA, false);
 }

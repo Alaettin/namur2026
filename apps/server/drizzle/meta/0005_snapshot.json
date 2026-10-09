@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "6e49cde2-3549-49b3-8ec5-ab64a16593cb",
-  "prevId": "9fa267b9-75f2-4c05-958d-42f3617e2d6e",
+  "id": "acd34fc2-848f-4fb0-bf81-0d70d1056bc5",
+  "prevId": "1c398486-1c66-41fd-a5bd-df4ad9bc4816",
   "tables": {
     "ansprechpartner": {
       "name": "ansprechpartner",
@@ -12,6 +12,13 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
+          "autoincrement": false
+        },
+        "titel": {
+          "name": "titel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "vorname": {
@@ -186,6 +193,48 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "avatare": {
+      "name": "avatare",
+      "columns": {
+        "datei_id": {
+          "name": "datei_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sortierung": {
+          "name": "sortierung",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "angelegt": {
+          "name": "angelegt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "avatare_datei_id_dateien_id_fk": {
+          "name": "avatare_datei_id_dateien_id_fk",
+          "tableFrom": "avatare",
+          "tableTo": "dateien",
+          "columnsFrom": ["datei_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "besucher": {
       "name": "besucher",
       "columns": {
@@ -194,6 +243,13 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
+          "autoincrement": false
+        },
+        "titel": {
+          "name": "titel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "vorname": {
@@ -766,6 +822,164 @@
           "tableFrom": "konnektor_abrufe",
           "tableTo": "besucher",
           "columnsFrom": ["guid"],
+          "columnsTo": ["guid"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "runden": {
+      "name": "runden",
+      "columns": {
+        "lap_id": {
+          "name": "lap_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "besucher_guid": {
+          "name": "besucher_guid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "platz": {
+          "name": "platz",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "race_id": {
+          "name": "race_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "event_name": {
+          "name": "event_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "identity_namespace": {
+          "name": "identity_namespace",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "pseudonym": {
+          "name": "pseudonym",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "installation_label": {
+          "name": "installation_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "is_anonymous": {
+          "name": "is_anonymous",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lane_number": {
+          "name": "lane_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "target_lap_count": {
+          "name": "target_lap_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lap_number": {
+          "name": "lap_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "started_utc_ms": {
+          "name": "started_utc_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "local_date": {
+          "name": "local_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "local_utc_offset_minutes": {
+          "name": "local_utc_offset_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "duration_ms": {
+          "name": "duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "angelegt": {
+          "name": "angelegt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {
+        "runden_besucher_idx": {
+          "name": "runden_besucher_idx",
+          "columns": ["besucher_guid"],
+          "isUnique": false
+        },
+        "runden_platz": {
+          "name": "runden_platz",
+          "columns": ["besucher_guid", "platz"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "runden_besucher_guid_besucher_guid_fk": {
+          "name": "runden_besucher_guid_besucher_guid_fk",
+          "tableFrom": "runden",
+          "tableTo": "besucher",
+          "columnsFrom": ["besucher_guid"],
           "columnsTo": ["guid"],
           "onDelete": "cascade",
           "onUpdate": "no action"

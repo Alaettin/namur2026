@@ -218,7 +218,10 @@ describe("Galerie verwalten", () => {
 
     const { standard, avatare } = antwort.json<{ standard: string; avatare: Zeile[] }>();
     expect(standard).toBe(STANDARD_AVATAR_ID);
-    expect(avatare.map((a) => a.dateiId), "Standardbild in der Galerie").not.toContain(standard);
+    expect(
+      avatare.map((a) => a.dateiId),
+      "Standardbild in der Galerie",
+    ).not.toContain(standard);
   });
 
   it("kennt den Standard-Avatar nicht und loescht ihn nicht", async () => {

@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { badRequest } from "../errors.js";
+import { rundeAlsText, rundenVonBesucher } from "../services/runden.js";
 import type { Kontext } from "../kontext.js";
 import {
   aendereBesucher,
@@ -43,6 +44,20 @@ export function besucherRoutes(app: FastifyInstance, ctx: Kontext): void {
     async (req) => ({
       ...findeBesucher(ctx.db, req.params.guid),
       zuordnungen: zuordnungenVonBesucher(ctx.db, req.params.guid),
+      /*
+       * Die gefahrenen Runden, mit fertiger Anzeigezeile. Die Formatierung steht im
+       * Server, weil dieselbe Zeile auch in die Konnektor-Antwort geht; zwei Fassungen
+       * liefen beim ersten Feinschliff auseinander.
+       */
+      runden: rundenVonBesucher(ctx.db, req.params.guid).map((r) => ({
+        lapId: r.lapId,
+        platz: r.platz,
+        lapNumber: r.lapNumber,
+        laneNumber: r.laneNumber,
+        durationMs: r.durationMs,
+        startedUtcMs: r.startedUtcMs,
+        anzeige: rundeAlsText(r),
+      })),
     }),
   );
 

@@ -42,11 +42,30 @@ function gleich(a: string, b: string): boolean {
  * Teilnehmer ohne Anmeldung abrufbar sind.
  */
 export function pruefeBasic(req: FastifyRequest, env: ServerEnv): void {
-  if (env.connectorBasic === null) throw nichtAngemeldet();
+  pruefeBasicGegen(req, env.connectorBasic, nichtAngemeldet);
+}
+
+/**
+ * Dieselbe Pruefung gegen beliebige Zugangsdaten.
+ *
+ * Herausgezogen, als die Carrera-Bahn einen eigenen Zugang bekam: zwei Kopien derselben
+ * zwanzig Zeilen laufen auseinander, und ausgerechnet hier faellt das nicht auf, weil
+ * beide Fassungen weiterhin "irgendwie" 401 liefern.
+ *
+ * `fehler` statt eines festen Wurfs, weil die beiden Schnittstellen verschiedene
+ * Fehlerkoerper haben: der Konnektor den `Result` der Spezifikation, die Carrera-Routen
+ * unseren eigenen.
+ */
+export function pruefeBasicGegen(
+  req: FastifyRequest,
+  zugang: { readonly user: string; readonly passwort: string } | null,
+  fehler: () => Error,
+): void {
+  if (zugang === null) throw fehler();
 
   const kopf = req.headers.authorization;
   if (typeof kopf !== "string" || !kopf.toLowerCase().startsWith("basic ")) {
-    throw nichtAngemeldet();
+    throw fehler();
   }
 
   const roh = Buffer.from(kopf.slice(6).trim(), "base64").toString("utf8");
@@ -55,7 +74,7 @@ export function pruefeBasic(req: FastifyRequest, env: ServerEnv): void {
    * enthalten, ein Benutzername laut RFC 7617 nicht.
    */
   const trenner = roh.indexOf(":");
-  if (trenner < 0) throw nichtAngemeldet();
+  if (trenner < 0) throw fehler();
 
   const benutzer = roh.slice(0, trenner);
   const passwort = roh.slice(trenner + 1);
@@ -65,7 +84,7 @@ export function pruefeBasic(req: FastifyRequest, env: ServerEnv): void {
    * das Passwort nicht mehr vergleichen, sobald der Benutzername falsch ist, und der
    * Zeitunterschied verriete, wann der Benutzername stimmt.
    */
-  const benutzerStimmt = gleich(benutzer, env.connectorBasic.user);
-  const passwortStimmt = gleich(passwort, env.connectorBasic.passwort);
-  if (!benutzerStimmt || !passwortStimmt) throw nichtAngemeldet();
+  const benutzerStimmt = gleich(benutzer, zugang.user);
+  const passwortStimmt = gleich(passwort, zugang.passwort);
+  if (!benutzerStimmt || !passwortStimmt) throw fehler();
 }

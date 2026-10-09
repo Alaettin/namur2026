@@ -22,6 +22,34 @@ import type { Ich } from "../lib/ich.js";
  * Varianten existiert und deshalb nirgends lesbar ist.
  */
 
+/** Eine gefahrene Runde, wie der Server sie liefert. */
+interface Runde {
+  lapId: string;
+  platz: number;
+  lapNumber: number | null;
+  laneNumber: number | null;
+  durationMs: number;
+  startedUtcMs: number | null;
+  anzeige: string;
+}
+
+/** Die schnellste Runde, lesbar. Gleiche Schreibweise wie der Server: Komma, drei Stellen. */
+function besteRunde(runden: Runde[]): string {
+  if (runden.length === 0) return "–";
+  const ms = Math.min(...runden.map((r) => r.durationMs));
+  return `${(ms / 1000).toFixed(3).replace(".", ",")} s`;
+}
+
+/** Datum und Uhrzeit ohne Jahr; die Veranstaltung dauert drei Tage. */
+function zeitpunkt(ms: number): string {
+  return new Date(ms).toLocaleString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 type Werte = Record<string, string>;
 
 /**
@@ -43,6 +71,7 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
   const abruf = useAbruf<
     BesucherDaten & {
       zuordnungen: { id: string; art: string; zielId: string; exponatId: string }[];
+      runden: Runde[];
     }
   >(neu ? null : `/api/besucher/${String(guid)}`);
 
@@ -191,6 +220,44 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
             <Flaeche className="flex flex-col gap-4 p-6">
               <h2 className="text-lg font-semibold">Foto</h2>
               <Avatarbild dateiId={abruf.daten?.avatarDateiId ?? null} />
+            </Flaeche>
+
+            {/*
+              Die Runden von der Carrera-Bahn. Die Anzeigezeile kommt fertig vom Server:
+              dieselbe Zeile geht in die Konnektor-Antwort, und zwei Fassungen liefen beim
+              ersten Feinschliff auseinander.
+            */}
+            <Flaeche className="flex flex-col gap-4 p-6">
+              <h2 className="text-lg font-semibold">Runden ({abruf.daten?.runden.length ?? 0})</h2>
+              {abruf.daten !== null && abruf.daten.runden.length === 0 ? (
+                <p className="text-sm text-text-hinweis">
+                  Noch keine Runde gefahren. Die Carrera-Bahn meldet sie nach jeder Runde.
+                </p>
+              ) : (
+                <>
+                  <p className="text-[13px] text-text-hinweis">
+                    Beste Runde: <b>{besteRunde(abruf.daten?.runden ?? [])}</b>
+                  </p>
+                  <ul className="flex flex-col">
+                    {(abruf.daten?.runden ?? []).map((r) => (
+                      <li
+                        key={r.lapId}
+                        className="flex flex-wrap items-center justify-between gap-3 border-b border-linie py-2.5 text-sm last:border-b-0"
+                      >
+                        <span className="flex items-center gap-3">
+                          <code className="shrink-0 font-mono text-xs text-text-hinweis">
+                            {String(r.platz).padStart(2, "0")}
+                          </code>
+                          <span className="font-medium">{r.anzeige}</span>
+                        </span>
+                        <span className="text-xs text-text-hinweis">
+                          {r.startedUtcMs === null ? "" : zeitpunkt(r.startedUtcMs)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </Flaeche>
 
             <Flaeche className="flex flex-col gap-4 p-6">

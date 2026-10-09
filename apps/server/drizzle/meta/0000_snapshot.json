@@ -54,9 +54,7 @@
       "indexes": {
         "abrufe_zeitpunkt_idx": {
           "name": "abrufe_zeitpunkt_idx",
-          "columns": [
-            "zeitpunkt"
-          ],
+          "columns": ["zeitpunkt"],
           "isUnique": false
         }
       },
@@ -233,16 +231,12 @@
       "indexes": {
         "app_nutzer_email_unique": {
           "name": "app_nutzer_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         },
         "app_nutzer_email_idx": {
           "name": "app_nutzer_email_idx",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": false
         }
       },
@@ -361,12 +355,8 @@
           "name": "besucher_avatar_datei_id_dateien_id_fk",
           "tableFrom": "besucher",
           "tableTo": "dateien",
-          "columnsFrom": [
-            "avatar_datei_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["avatar_datei_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -463,25 +453,17 @@
       "indexes": {
         "exponat_ansprechpartner_person_idx": {
           "name": "exponat_ansprechpartner_person_idx",
-          "columns": [
-            "ansprechpartner_id"
-          ],
+          "columns": ["ansprechpartner_id"],
           "isUnique": false
         },
         "exponat_ansprechpartner_platz": {
           "name": "exponat_ansprechpartner_platz",
-          "columns": [
-            "exponat_id",
-            "platz"
-          ],
+          "columns": ["exponat_id", "platz"],
           "isUnique": true
         },
         "exponat_ansprechpartner_paar": {
           "name": "exponat_ansprechpartner_paar",
-          "columns": [
-            "exponat_id",
-            "ansprechpartner_id"
-          ],
+          "columns": ["exponat_id", "ansprechpartner_id"],
           "isUnique": true
         }
       },
@@ -490,12 +472,8 @@
           "name": "exponat_ansprechpartner_exponat_id_exponate_id_fk",
           "tableFrom": "exponat_ansprechpartner",
           "tableTo": "exponate",
-          "columnsFrom": [
-            "exponat_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exponat_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -503,12 +481,8 @@
           "name": "exponat_ansprechpartner_ansprechpartner_id_ansprechpartner_id_fk",
           "tableFrom": "exponat_ansprechpartner",
           "tableTo": "ansprechpartner",
-          "columnsFrom": [
-            "ansprechpartner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ansprechpartner_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -538,17 +512,12 @@
       "indexes": {
         "exponat_betreuer_nutzer_idx": {
           "name": "exponat_betreuer_nutzer_idx",
-          "columns": [
-            "app_nutzer_id"
-          ],
+          "columns": ["app_nutzer_id"],
           "isUnique": false
         },
         "exponat_betreuer_paar": {
           "name": "exponat_betreuer_paar",
-          "columns": [
-            "exponat_id",
-            "app_nutzer_id"
-          ],
+          "columns": ["exponat_id", "app_nutzer_id"],
           "isUnique": true
         }
       },
@@ -557,12 +526,8 @@
           "name": "exponat_betreuer_exponat_id_exponate_id_fk",
           "tableFrom": "exponat_betreuer",
           "tableTo": "exponate",
-          "columnsFrom": [
-            "exponat_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exponat_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -570,12 +535,8 @@
           "name": "exponat_betreuer_app_nutzer_id_app_nutzer_id_fk",
           "tableFrom": "exponat_betreuer",
           "tableTo": "app_nutzer",
-          "columnsFrom": [
-            "app_nutzer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["app_nutzer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -633,10 +594,7 @@
       "indexes": {
         "exponat_dokumente_platz": {
           "name": "exponat_dokumente_platz",
-          "columns": [
-            "exponat_id",
-            "platz"
-          ],
+          "columns": ["exponat_id", "platz"],
           "isUnique": true
         }
       },
@@ -645,12 +603,8 @@
           "name": "exponat_dokumente_exponat_id_exponate_id_fk",
           "tableFrom": "exponat_dokumente",
           "tableTo": "exponate",
-          "columnsFrom": [
-            "exponat_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exponat_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -658,12 +612,8 @@
           "name": "exponat_dokumente_datei_id_dateien_id_fk",
           "tableFrom": "exponat_dokumente",
           "tableTo": "dateien",
-          "columnsFrom": [
-            "datei_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["datei_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -714,10 +664,7 @@
       "indexes": {
         "exponat_links_platz": {
           "name": "exponat_links_platz",
-          "columns": [
-            "exponat_id",
-            "platz"
-          ],
+          "columns": ["exponat_id", "platz"],
           "isUnique": true
         }
       },
@@ -726,12 +673,8 @@
           "name": "exponat_links_exponat_id_exponate_id_fk",
           "tableFrom": "exponat_links",
           "tableTo": "exponate",
-          "columnsFrom": [
-            "exponat_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exponat_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -783,9 +726,7 @@
       "indexes": {
         "exponate_kennung_unique": {
           "name": "exponate_kennung_unique",
-          "columns": [
-            "kennung"
-          ],
+          "columns": ["kennung"],
           "isUnique": true
         }
       },
@@ -851,25 +792,17 @@
       "indexes": {
         "zuordnungen_besucher_idx": {
           "name": "zuordnungen_besucher_idx",
-          "columns": [
-            "besucher_guid"
-          ],
+          "columns": ["besucher_guid"],
           "isUnique": false
         },
         "zuordnungen_exponat_idx": {
           "name": "zuordnungen_exponat_idx",
-          "columns": [
-            "exponat_id"
-          ],
+          "columns": ["exponat_id"],
           "isUnique": false
         },
         "zuordnungen_eindeutig": {
           "name": "zuordnungen_eindeutig",
-          "columns": [
-            "besucher_guid",
-            "art",
-            "ziel_id"
-          ],
+          "columns": ["besucher_guid", "art", "ziel_id"],
           "isUnique": true
         }
       },
@@ -878,12 +811,8 @@
           "name": "zuordnungen_besucher_guid_besucher_guid_fk",
           "tableFrom": "zuordnungen",
           "tableTo": "besucher",
-          "columnsFrom": [
-            "besucher_guid"
-          ],
-          "columnsTo": [
-            "guid"
-          ],
+          "columnsFrom": ["besucher_guid"],
+          "columnsTo": ["guid"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -891,12 +820,8 @@
           "name": "zuordnungen_exponat_id_exponate_id_fk",
           "tableFrom": "zuordnungen",
           "tableTo": "exponate",
-          "columnsFrom": [
-            "exponat_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exponat_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -904,12 +829,8 @@
           "name": "zuordnungen_app_nutzer_id_app_nutzer_id_fk",
           "tableFrom": "zuordnungen",
           "tableTo": "app_nutzer",
-          "columnsFrom": [
-            "app_nutzer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["app_nutzer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

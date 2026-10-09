@@ -308,3 +308,60 @@ export const avatare = sqliteTable("avatare", {
   sortierung: integer("sortierung").notNull(),
   angelegt: integer("angelegt").notNull().default(jetzt),
 });
+
+// --- Rundenzeiten von der Carrera-Bahn ------------------------------------------------
+
+/**
+ * Eine gefahrene Runde, gemeldet von der Software der Carrera-Bahn.
+ *
+ * **`lap_id` ist seine UUID, nicht unsere.** Er erzeugt sie, und er nennt sie beim
+ * Zuruecknehmen einer Runde; eine eigene Id daneben waere eine zweite Wahrheit.
+ *
+ * **`besucher_guid` ist sein `participant_id`.** Laut seiner Mail ist das die gescannte
+ * AAS-Item-ID, also genau unsere GUID. Die Zuordnung Runde -> Besucher ist damit gegeben,
+ * ohne dass jemand etwas abgleichen muss. Anonyme Runden tragen dort `null` und werden
+ * nicht gespeichert, siehe `services/runden.ts`.
+ *
+ * **Nur aktive Runden.** `deleted_utc_ms` und `deletion_reason` aus seinem Schema bekommen
+ * hier keine Spalte: kommt eine Meldung mit gesetztem `deleted_utc_ms`, wird die Runde
+ * geloescht statt markiert. Eine Tabelle, in der die Haelfte nicht gilt, muesste an jeder
+ * Abfrage gefiltert werden, und genau das wird einmal vergessen.
+ *
+ * Die uebrigen Spalten sind sein Datensatz, auch die, die er als "nicht relevant"
+ * markiert. Was ankommt, wird aufgehoben; was wir wegwerfen, ist weg.
+ */
+export const runden = sqliteTable(
+  "runden",
+  {
+    lapId: text("lap_id").primaryKey(),
+    besucherGuid: text("besucher_guid")
+      .notNull()
+      .references(() => besucher.guid, { onDelete: "cascade" }),
+    /** 1 bis 20, der Platz im Konnektor-Modell. Kleinste freie Nummer, wie bei Dokumenten. */
+    platz: integer("platz").notNull(),
+
+    raceId: text("race_id"),
+    eventId: text("event_id"),
+    eventName: text("event_name"),
+    identityNamespace: text("identity_namespace"),
+    pseudonym: text("pseudonym"),
+    installationLabel: text("installation_label"),
+
+    isAnonymous: integer("is_anonymous"),
+    laneNumber: integer("lane_number"),
+    targetLapCount: integer("target_lap_count"),
+    lapNumber: integer("lap_number"),
+
+    startedUtcMs: integer("started_utc_ms"),
+    localDate: text("local_date"),
+    localUtcOffsetMinutes: integer("local_utc_offset_minutes"),
+    /** Die Rundenzeit in Millisekunden. Das einzige Pflichtmass. */
+    durationMs: integer("duration_ms").notNull(),
+
+    angelegt: integer("angelegt").notNull().default(jetzt),
+  },
+  (t) => [
+    unique("runden_platz").on(t.besucherGuid, t.platz),
+    index("runden_besucher_idx").on(t.besucherGuid),
+  ],
+);
