@@ -64,14 +64,48 @@ async function avatarAusWerten(s: Pruefstand, guid: string): Promise<Buffer> {
   return roh;
 }
 
-/** Die Farbe der linken oberen Ecke. Dort liegt der Rahmen, wenn es einen gibt. */
-function ecke(jpeg: Buffer) {
-  const bild = decode(jpeg, { useTArray: true });
-  return { r: bild.data[0] ?? 0, g: bild.data[1] ?? 0, b: bild.data[2] ?? 0 };
+interface Punkt {
+  r: number;
+  g: number;
+  b: number;
 }
 
-function abstand(a: { r: number; g: number; b: number }, b: { r: number; g: number; b: number }) {
+function abstand(a: Punkt, b: Punkt): number {
   return Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b);
+}
+
+/**
+ * Welchen Rang ein Bild traegt, oder `null` fuer keinen.
+ *
+ * **Gemessen wird mitten im linken Rand**, nicht in der Ecke: dort liegt seit dem
+ * Metallrahmen die dunkle Aussenlinie, und die traegt absichtlich nicht die reine
+ * Rangfarbe. Verglichen wird der **Farbton**, also auf gleiche Helligkeit gebracht; sonst
+ * wandert aufgehelltes Bronze rechnerisch zu Gold.
+ */
+function rangVonBild(jpeg: Buffer): 1 | 2 | 3 | null {
+  const bild = decode(jpeg, { useTArray: true });
+  const rand = Math.round(Math.min(bild.width, bild.height) * 0.06);
+  const i = (Math.floor(bild.height / 2) * bild.width + Math.floor(rand / 2)) * 4;
+  const p: Punkt = { r: bild.data[i] ?? 0, g: bild.data[i + 1] ?? 0, b: bild.data[i + 2] ?? 0 };
+
+  let bester: 1 | 2 | 3 = 1;
+  let kleinster = Infinity;
+  for (const rang of [1, 2, 3] as const) {
+    const ziel = RANGFARBEN[rang];
+    const f = (ziel.r + ziel.g + ziel.b) / (p.r + p.g + p.b || 1);
+    const d = abstand({ r: p.r * f, g: p.g * f, b: p.b * f }, ziel);
+    if (d < kleinster) {
+      kleinster = d;
+      bester = rang;
+    }
+  }
+
+  /*
+   * **Ein ungerahmtes Bild kommt irgendeiner Farbe am naechsten**, das sagt fuer sich
+   * genommen nichts. Deshalb zusaetzlich die Schranke: nur wer nah genug dran ist, traegt
+   * wirklich einen Rahmen.
+   */
+  return kleinster < 60 ? bester : null;
 }
 
 describe("Der Rahmen folgt der Bestenliste", () => {
@@ -83,17 +117,13 @@ describe("Der Rahmen folgt der Bestenliste", () => {
     await fahrer(s, keks, "RAHM-D", 9500);
 
     // Ausgangslage: A Gold, D ohne Rahmen.
-    expect(abstand(ecke(await avatarAusWerten(s, "RAHM-A")), RANGFARBEN[1])).toBeLessThan(40);
-    expect(abstand(ecke(await avatarAusWerten(s, "RAHM-B")), RANGFARBEN[2])).toBeLessThan(40);
-    expect(abstand(ecke(await avatarAusWerten(s, "RAHM-C")), RANGFARBEN[3])).toBeLessThan(40);
-
-    const ohne = await avatarAusWerten(s, "RAHM-D");
-    const eckeOhne = ecke(ohne);
-    for (const rang of [1, 2, 3] as const) {
-      expect(abstand(eckeOhne, RANGFARBEN[rang]), `Platz 4 traegt Farbe ${String(rang)}`).toBeGreaterThan(
-        40,
-      );
-    }
+    expect(rangVonBild(await avatarAusWerten(s, "RAHM-A")), "A nicht Gold").toBe(1);
+    expect(rangVonBild(await avatarAusWerten(s, "RAHM-B")), "B nicht Silber").toBe(2);
+    expect(rangVonBild(await avatarAusWerten(s, "RAHM-C")), "C nicht Bronze").toBe(3);
+    expect(
+      rangVonBild(await avatarAusWerten(s, "RAHM-D")),
+      "Platz 4 traegt einen Rahmen",
+    ).toBeNull();
 
     /*
      * **Jetzt faehrt D die schnellste Runde.** Kein Neustart, kein erneutes Laden: derselbe
@@ -101,21 +131,15 @@ describe("Der Rahmen folgt der Bestenliste", () => {
      */
     await fahrer(s, keks, "RAHM-D", 4000, 2);
 
-    expect(abstand(ecke(await avatarAusWerten(s, "RAHM-D")), RANGFARBEN[1]), "D nicht Gold").toBeLessThan(
-      40,
-    );
-    expect(abstand(ecke(await avatarAusWerten(s, "RAHM-A")), RANGFARBEN[2]), "A nicht Silber").toBeLessThan(
-      40,
-    );
-    expect(abstand(ecke(await avatarAusWerten(s, "RAHM-B")), RANGFARBEN[3]), "B nicht Bronze").toBeLessThan(
-      40,
-    );
+    expect(rangVonBild(await avatarAusWerten(s, "RAHM-D")), "D nicht Gold").toBe(1);
+    expect(rangVonBild(await avatarAusWerten(s, "RAHM-A")), "A nicht Silber").toBe(2);
+    expect(rangVonBild(await avatarAusWerten(s, "RAHM-B")), "B nicht Bronze").toBe(3);
 
-    // Und C ist vom Podest gefallen: keine der drei Farben mehr.
-    const eckeC = ecke(await avatarAusWerten(s, "RAHM-C"));
-    for (const rang of [1, 2, 3] as const) {
-      expect(abstand(eckeC, RANGFARBEN[rang]), "C steht noch auf dem Podest").toBeGreaterThan(40);
-    }
+    // Und C ist vom Podest gefallen.
+    expect(
+      rangVonBild(await avatarAusWerten(s, "RAHM-C")),
+      "C steht noch auf dem Podest",
+    ).toBeNull();
   });
 
   /**

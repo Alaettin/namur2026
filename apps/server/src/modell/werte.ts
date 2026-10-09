@@ -10,7 +10,7 @@ import {
 } from "../db/schema.js";
 import type { Dateiablage } from "../ablage/dateien.js";
 import { leseInhalt } from "../services/dateien.js";
-import { RANGFARBEN, zeichneRahmen } from "../services/rahmen.js";
+import { zeichneRahmen } from "../services/rahmen.js";
 import { istInlineBild } from "../services/mime.js";
 import { avatarFuer } from "../services/standardavatar.js";
 import {
@@ -371,7 +371,7 @@ export async function nachAussen(
       let hinaus = inhalt;
       const rang = wert.rang ?? null;
       if (rang !== null) {
-        const gerahmt = zeichneRahmen(inhalt, RANGFARBEN[rang]);
+        const gerahmt = zeichneRahmen(inhalt, rang);
         if (gerahmt !== null) hinaus = gerahmt;
       }
 
