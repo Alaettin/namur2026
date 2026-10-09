@@ -283,3 +283,81 @@ test("niemand steht zweimal in der Bestenliste", async ({ page, request }) => {
     "4,100 s",
   );
 });
+
+/**
+ * **Der Viewer-Link je Zeile.**
+ *
+ * Geprüft wird die Adresse, nicht nur die Sichtbarkeit: ein Symbol, das auf die falsche
+ * GUID zeigt, sieht genauso aus wie eines, das stimmt.
+ */
+test("jede Zeile des Rankings führt in den Viewer", async ({ page, request }) => {
+  const guid = `POD-E-${String(Date.now()).slice(-6)}`;
+  expect(
+    (
+      await request.post("/api/besucher", { data: { guid, vorname: "Link", nachname: "Pruefer" } })
+    ).status(),
+  ).toBe(201);
+  merkeBesucher(guid);
+  expect(
+    (
+      await request.post("/carrera/runden", { data: meldung(`${guid}-l1`, guid, 1, 3999) })
+    ).status(),
+  ).toBe(200);
+
+  const ich = await (await request.get("/api/auth/ich")).json();
+  await page.goto("/carrera");
+
+  const link = page.getByRole("link", { name: /Link Pruefer im Viewer öffnen/ });
+  await expect(link).toHaveAttribute("href", `${ich.viewerBaseUrl}${guid}`);
+  await expect(link).toHaveAttribute("target", "_blank");
+});
+
+/**
+ * **Der Rahmen für die ersten drei, im Bild aus der Konnektor-API.**
+ *
+ * Der schnellste Fahrer bekommt andere Bytes als die gespeicherte Datei, ein Nichtplatzierter
+ * genau dieselben. Beide Hälften: nur "anders" liesse offen, ob einfach jedes Bild
+ * umgeschrieben wird.
+ */
+test("das Bild des Erstplatzierten trägt einen Rahmen, das eines anderen nicht", async ({
+  request,
+}) => {
+  const schnell = `POD-F-${String(Date.now()).slice(-6)}`;
+  const langsam = `POD-G-${String(Date.now()).slice(-6)}`;
+  for (const [guid, dauer] of [
+    [schnell, 1234],
+    [langsam, 99999],
+  ] as const) {
+    expect(
+      (
+        await request.post("/api/besucher", { data: { guid, vorname: "Rahmen", nachname: guid } })
+      ).status(),
+    ).toBe(201);
+    merkeBesucher(guid);
+    expect(
+      (
+        await request.post("/carrera/runden", { data: meldung(`${guid}-l1`, guid, 1, dauer) })
+      ).status(),
+    ).toBe(200);
+  }
+
+  async function avatar(guid: string) {
+    const werte = await (
+      await request.post(`/connector/product/${guid}/values`, { data: {} })
+    ).json();
+    const w = werte.find((x: { propertyId: string }) => x.propertyId === "Visitor_Avatar");
+    expect(w, "kein Avatar in der Antwort").toBeTruthy();
+    return { bytes: Buffer.from(w.value, "base64"), size: w.size as number };
+  }
+
+  const ersterPlatz = await avatar(schnell);
+  const ohnePlatz = await avatar(langsam);
+
+  // Die gemeldete Groesse passt in beiden Faellen zu den gesendeten Bytes.
+  expect(ersterPlatz.size).toBe(ersterPlatz.bytes.length);
+  expect(ohnePlatz.size).toBe(ohnePlatz.bytes.length);
+
+  expect(ersterPlatz.bytes.equals(ohnePlatz.bytes), "beide Bilder gleich").toBe(false);
+  // Beides bleibt ein JPEG.
+  expect(ersterPlatz.bytes.subarray(0, 2).toString("hex")).toBe("ffd8");
+});

@@ -306,3 +306,17 @@ export function rundenzahlen(db: Db): Rundenzahlen {
     bestMs: zeile?.bestMs ?? null,
   };
 }
+
+/**
+ * Auf welchem Podestplatz ein Besucher gerade steht: 1, 2, 3 oder `null`.
+ *
+ * **Bei jedem Aufruf frisch abgefragt.** Die Reihenfolge aendert sich waehrend der Messe mit
+ * jeder gemeldeten Runde; ein beim Start berechneter oder zwischengespeicherter Rang waere
+ * nach der naechsten schnellen Runde falsch, ohne dass es jemand bemerkt.
+ */
+export function rangVon(db: Db, guid: string): 1 | 2 | 3 | null {
+  const vorne = bestenliste(db, 3);
+  const platz = vorne.findIndex((p) => p.guid === guid);
+  if (platz < 0) return null;
+  return (platz + 1) as 1 | 2 | 3;
+}

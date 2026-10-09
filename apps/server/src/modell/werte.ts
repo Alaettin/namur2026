@@ -10,6 +10,7 @@ import {
 } from "../db/schema.js";
 import type { Dateiablage } from "../ablage/dateien.js";
 import { leseInhalt } from "../services/dateien.js";
+import { RANGFARBEN, zeichneRahmen } from "../services/rahmen.js";
 import { istInlineBild } from "../services/mime.js";
 import { avatarFuer } from "../services/standardavatar.js";
 import {
@@ -27,7 +28,7 @@ import {
   visitorRunde,
 } from "./felder.js";
 import { ansprechpartnerVonExponat } from "../services/ansprechpartner.js";
-import { rundeAlsText, rundenVonBesucher } from "../services/runden.js";
+import { rangVon, rundeAlsText, rundenVonBesucher } from "../services/runden.js";
 
 /**
  * Was ein Besucher an Werten hat, in der Form der Konnektor-Spezifikation.
@@ -60,6 +61,13 @@ interface RohWert {
   propertyId: string;
   text: string | null;
   dateiId: string | null;
+  /**
+   * Podestplatz des Besuchers, nur am Avatar gesetzt.
+   *
+   * Steht hier und nicht in `nachAussen`, weil dort nur noch Dateien und keine Personen
+   * mehr bekannt sind. `null` heisst: kein Rahmen, Bild unveraendert.
+   */
+  rang?: 1 | 2 | 3 | null;
 }
 
 /**
@@ -147,7 +155,17 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
    */
   const avatar = avatarFuer(db, person.avatarDateiId);
   if (avatar !== null) {
-    werte.push({ propertyId: VISITOR_AVATAR, text: null, dateiId: avatar });
+    /*
+     * **Der Rang wird hier gelesen, bei jedem Abruf.** Steht der Besucher gerade auf einem
+     * der drei Podestplaetze, bekommt sein Bild weiter unten den Rahmen in Gold, Silber
+     * oder Bronze.
+     */
+    werte.push({
+      propertyId: VISITOR_AVATAR,
+      text: null,
+      dateiId: avatar,
+      rang: rangVon(db, guid),
+    });
   }
 
   /*
@@ -344,12 +362,30 @@ export async function nachAussen(
     if (bild) {
       const inhalt = await leseInhalt(ablage, datei.pfad);
       if (inhalt === null) continue;
+
+      /*
+       * **Der Siegerrahmen, gezeichnet im Moment des Abrufs.** Nur fuer die ersten drei der
+       * Carrera-Bestenliste und nur auf dem Avatar. Ist die Datei kein lesbares JPEG, gibt
+       * `zeichneRahmen` `null` und das Bild geht unveraendert hinaus.
+       */
+      let hinaus = inhalt;
+      const rang = wert.rang ?? null;
+      if (rang !== null) {
+        const gerahmt = zeichneRahmen(inhalt, RANGFARBEN[rang]);
+        if (gerahmt !== null) hinaus = gerahmt;
+      }
+
       ergebnis.push({
         propertyId: wert.propertyId,
-        value: inhalt.toString("base64"),
+        value: hinaus.toString("base64"),
         mimeType: datei.mimeType,
         filename,
-        size: datei.groesse,
+        /*
+         * **Die Groesse des Gesendeten, nicht die der Ablage.** Mit Rahmen sind es andere
+         * Bytes; eine Gegenseite, die nach `size` puffert, bekaeme sonst eine Zahl, die
+         * nicht stimmt.
+         */
+        size: hinaus.length,
         needsResolve: false,
       });
       continue;

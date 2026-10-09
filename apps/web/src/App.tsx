@@ -127,7 +127,7 @@ export function App() {
             <Route path="/ansprechpartner" element={<Ansprechpartner />} />
             <Route path="/nutzer" element={<Nutzer />} />
             <Route path="/api" element={<Api />} />
-            <Route path="/carrera" element={<Carrera />} />
+            <Route path="/carrera" element={<Carrera ich={ich} />} />
             <Route path="/monitoring" element={<Monitoring />} />
             <Route path="/einstellungen" element={<Einstellungen ich={ich} />} />
             <Route path="*" element={<Navigate to="/" replace />} />

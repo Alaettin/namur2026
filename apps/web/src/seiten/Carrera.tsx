@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { useAbruf } from "../lib/api.js";
+import type { Ich } from "../lib/ich.js";
 import {
   Flaeche,
   Knopf,
@@ -44,6 +45,32 @@ interface Stand {
 /** Sekunden mit Komma, wie überall sonst: 4.827 liest mancher als viertausend. */
 function alsZeit(ms: number): string {
   return `${(ms / 1000).toFixed(3).replace(".", ",")} s`;
+}
+
+/**
+ * Pfeil aus dem Kasten heraus, fuer „im Viewer oeffnen".
+ *
+ * Inline wie die uebrigen Symbole im Projekt. Der Link traegt ein `aria-label`: sein Inhalt
+ * ist nur ein Bild, und ohne Namen liest ein Screenreader die Adresse vor.
+ */
+function Hinaus() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <path d="M15 3h6v6" />
+      <path d="M10 14 21 3" />
+    </svg>
+  );
 }
 
 function Kachel({ titel, wert, hinweis }: { titel: string; wert: string; hinweis?: string }) {
@@ -138,7 +165,7 @@ function Podest({ plaetze }: { plaetze: Platz[] }) {
   );
 }
 
-export function Carrera() {
+export function Carrera({ ich }: { ich: Ich }) {
   const abruf = useAbruf<Stand>("/api/carrera/bestenliste");
   const daten = abruf.daten;
   const plaetze = daten?.plaetze ?? [];
@@ -185,6 +212,10 @@ export function Carrera() {
                       <Kopfzelle>Firma</Kopfzelle>
                       <Kopfzelle>Beste Runde</Kopfzelle>
                       <Kopfzelle>Runden</Kopfzelle>
+                      {/* Ohne Beschriftung: die Spalte traegt nur ein Symbol je Zeile. */}
+                      <Kopfzelle>
+                        <span className="sr-only">Viewer</span>
+                      </Kopfzelle>
                     </tr>
                   </thead>
                   <tbody className="max-sm:block">
@@ -206,6 +237,17 @@ export function Carrera() {
                         </Zelle>
                         <Zelle titel="Runden" className="text-text-zweit">
                           {p.runden}
+                        </Zelle>
+                        <Zelle titel="Viewer">
+                          <a
+                            href={`${ich.viewerBaseUrl}${encodeURIComponent(p.guid)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`${p.name} im Viewer öffnen`}
+                            className="inline-flex text-primaer-dunkel"
+                          >
+                            <Hinaus />
+                          </a>
                         </Zelle>
                       </Reihe>
                     ))}
