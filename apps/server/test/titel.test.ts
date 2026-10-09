@@ -36,6 +36,25 @@ async function alsAdmin() {
   return { s: stand, keks: await melde(stand, "admin@namur.de", "startpasswort-123") };
 }
 
+/** Ein Exponat mit einem Link, damit `{K}_Link01_Title` im Modell auftaucht. */
+async function legeExponatMitInhalt(s: Pruefstand, keks: string): Promise<void> {
+  const exponat = (
+    await s.app.inject({
+      method: "POST",
+      url: "/api/exponate",
+      headers: { cookie: keks },
+      payload: { name: "Mit Link" },
+    })
+  ).json<{ id: string }>();
+
+  await s.app.inject({
+    method: "POST",
+    url: `/api/exponate/${exponat.id}/links`,
+    headers: { cookie: keks },
+    payload: { url: "https://www.namur.net/", titel: "NAMUR" },
+  });
+}
+
 async function modell(s: Pruefstand): Promise<Eigenschaft[]> {
   const antwort = await s.app.inject({ url: "/connector/model" });
   expect(antwort.statusCode).toBe(200);
@@ -69,16 +88,28 @@ describe("Das Modell aendert sich durch den Titel nicht", () => {
   /**
    * **Die wichtigste Pruefung dieser Runde.** Gaebe es `Visitor_Title`, haenge daran eine
    * Abstimmung mit Axon, von der niemand wuesste, bis am Stand ein Feld fehlt.
+   *
+   * **Genau diese beiden Formen, nicht alles mit "Title".** Der erste Anlauf suchte
+   * `/title/i` ueber alle Eigenschaften und ging durch, weil der Pruefstand gar keine
+   * Exponate hatte. Am Betriebsdienst traf dieselbe Suche 200 Eigenschaften, naemlich die
+   * Dokument- und Linktitel, die es laengst gibt. Ein Kriterium, das bei richtigem Aufbau
+   * rot wird, taugt nicht; deshalb legt dieser Fall ausdruecklich ein Exponat mit Link an,
+   * damit die harmlosen Treffer ueberhaupt vorkommen.
    */
-  it("kennt keine Eigenschaft mit Title", async () => {
-    const { s } = await alsAdmin();
+  it("kennt weder Visitor_Title noch Contact-Title, wohl aber Dokumenttitel", async () => {
+    const { s, keks } = await alsAdmin();
+    await legeExponatMitInhalt(s, keks);
     const felder = await modell(s);
+    const ids = felder.map((f) => f.id);
 
-    const titelartige = felder.filter((f) => /title/i.test(f.id));
+    expect(ids, "eigene Eigenschaft fuer den Titel").not.toContain("Visitor_Title");
     expect(
-      titelartige.map((f) => f.id),
-      "neue Eigenschaft im Modell",
+      ids.filter((i) => /_Contact\d+_Title$/.test(i)),
+      "Titel am Ansprechpartner",
     ).toEqual([]);
+
+    // Gegenprobe im selben Fall: die harmlosen Titel sind da, die Suche greift also.
+    expect(ids.filter((i) => /_Link\d+_Title$/.test(i)).length).toBeGreaterThan(0);
   });
 
   /**
