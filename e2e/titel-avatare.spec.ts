@@ -57,9 +57,67 @@ test("ein Titel lässt sich setzen und geht am Vornamen hinaus", async ({ page, 
   ).toEqual([]);
 });
 
-test("Avatare lassen sich sortieren und entfernen", async ({ page, request }) => {
+/** Der Abschnitt ist zu, bis jemand ihn aufklappt. */
+test("der Avatar-Abschnitt ist eingeklappt", async ({ page }) => {
   await page.goto("/einstellungen");
-  await expect(page.getByRole("heading", { name: "Avatare für das Tablet" })).toBeVisible();
+  const titel = page.getByRole("heading", { name: "Avatare", exact: true });
+  await expect(titel).toBeVisible();
+
+  // Zugeklappt: die Bilder sind im DOM, aber nicht sichtbar.
+  await expect(page.getByRole("button", { name: /Avatar 1 entfernen/ })).toBeHidden();
+
+  await titel.click();
+  await expect(page.getByRole("button", { name: /Avatar 1 entfernen/ })).toBeVisible();
+});
+
+/**
+ * **Das Standardbild steht in der Reihe, hat aber keine Knöpfe.**
+ *
+ * Geprüft werden beide Seiten: es ist da, und es ist nicht bedienbar. Nur eines von beiden
+ * ließe offen, ob es versehentlich wie ein Galerieeintrag behandelt wird.
+ */
+test("das Standardbild ist sichtbar, aber nicht löschbar und nicht verschiebbar", async ({
+  page,
+}) => {
+  await page.goto("/einstellungen");
+  await page.getByRole("heading", { name: "Avatare", exact: true }).click();
+
+  await expect(page.getByRole("img", { name: "Standardbild" })).toBeVisible();
+  await expect(page.getByText("Standard", { exact: true })).toBeVisible();
+
+  /*
+   * Die Zählung der Knöpfe folgt der Galerie, nicht der Anzeige: stünde das Standardbild
+   * mit in der Liste, gäbe es einen Knopf mehr als Galerieeinträge.
+   */
+  const anzahl = (await (await page.request.get("/api/avatare")).json()).avatare.length;
+  await expect(page.getByRole("button", { name: /entfernen$/ })).toHaveCount(anzahl);
+
+  // Und der erste Pfeil gehört zum ersten **Galeriebild**, nicht zum Standard.
+  await expect(page.getByRole("button", { name: "Avatar 1 nach vorn" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: `Avatar ${String(anzahl)} nach hinten` }),
+  ).toBeDisabled();
+});
+
+test("Löschen fragt nach, und Abbrechen ändert nichts", async ({ page, request }) => {
+  await page.goto("/einstellungen");
+  await page.getByRole("heading", { name: "Avatare", exact: true }).click();
+
+  const vorher = (await (await request.get("/api/avatare")).json()).avatare.length;
+
+  await page.getByRole("button", { name: "Avatar 1 entfernen" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Abbrechen" }).click();
+
+  // **Am Server nachgesehen**, nicht am Bildschirm: der zeigt auch einen Entwurf.
+  const nachher = (await (await request.get("/api/avatare")).json()).avatare.length;
+  expect(nachher, "Abbrechen hat gelöscht").toBe(vorher);
+});
+
+test("Avatare lassen sich sortieren und wirklich entfernen", async ({ page, request }) => {
+  await page.goto("/einstellungen");
+  await page.getByRole("heading", { name: "Avatare", exact: true }).click();
 
   const vorher = (await (await request.get("/api/avatare")).json()).avatare as {
     dateiId: string;
@@ -72,8 +130,9 @@ test("Avatare lassen sich sortieren und entfernen", async ({ page, request }) =>
     .poll(async () => (await (await request.get("/api/avatare")).json()).avatare[0].dateiId)
     .toBe(vorher[1]?.dateiId);
 
-  // Und eines entfernen: die Zahl fällt um genau eins.
+  // Und eines entfernen, diesmal bestätigt.
   await page.getByRole("button", { name: "Avatar 1 entfernen" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Entfernen" }).click();
   await expect
     .poll(async () => (await (await request.get("/api/avatare")).json()).avatare.length)
     .toBe(vorher.length - 1);

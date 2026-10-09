@@ -8,6 +8,7 @@ import {
   loescheAvatar,
   setzeReihenfolge,
 } from "../services/avatare.js";
+import { STANDARD_AVATAR_ID } from "../services/standardavatar.js";
 
 /**
  * Die Avatare, die am Selbstbedienungs-Tablet zur Auswahl stehen. **Nur Admins.**
@@ -17,7 +18,16 @@ import {
  * nicht aendern.
  */
 export function avatarRoutes(app: FastifyInstance, ctx: Kontext): void {
+  /**
+   * Die Galerie, dazu das Standardbild.
+   *
+   * **Das Standardbild steht getrennt daneben**, nicht in der Liste: die Verwaltung soll es
+   * zeigen, aber es ist kein Galerieeintrag. Es laesst sich nicht loeschen und nicht
+   * verschieben, und genau das soll man sehen statt es zu vermuten. In einer gemeinsamen
+   * Liste muesste jede Stelle den Sonderfall selbst kennen.
+   */
   app.get("/api/avatare", { preHandler: app.verlangeAdmin }, () => ({
+    standard: STANDARD_AVATAR_ID,
     avatare: leseGalerie(ctx.db),
     hoechstgroesse: HOECHSTGROESSE,
   }));

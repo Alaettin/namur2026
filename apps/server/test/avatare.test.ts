@@ -206,6 +206,21 @@ describe("Galerie verwalten", () => {
     expect(avatar, "kein Avatar in den Werten").toBeDefined();
   });
 
+  /**
+   * **Beide Haelften.** Dass die Antwort das Standardbild nennt, belegt nicht, dass es
+   * nicht zugleich in der Galerie steht; und umgekehrt. Die Verwaltung zeigt es, kann es
+   * aber nicht loeschen oder verschieben, und genau diese Trennung haengt hier dran.
+   */
+  it("nennt das Standardbild getrennt von der Galerie", async () => {
+    const { s, keks } = await alsAdmin();
+    const antwort = await s.app.inject({ url: "/api/avatare", headers: { cookie: keks } });
+    expect(antwort.statusCode).toBe(200);
+
+    const { standard, avatare } = antwort.json<{ standard: string; avatare: Zeile[] }>();
+    expect(standard).toBe(STANDARD_AVATAR_ID);
+    expect(avatare.map((a) => a.dateiId), "Standardbild in der Galerie").not.toContain(standard);
+  });
+
   it("kennt den Standard-Avatar nicht und loescht ihn nicht", async () => {
     const { s, keks } = await alsAdmin();
     expect((await galerie(s, keks)).map((a) => a.dateiId)).not.toContain(STANDARD_AVATAR_ID);
