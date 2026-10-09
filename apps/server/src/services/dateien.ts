@@ -60,3 +60,23 @@ export async function loescheDatei(db: Db, ablage: Dateiablage, id: string): Pro
   db.delete(dateien).where(eq(dateien.id, id)).run();
   await ablage.loesche(reihe.pfad);
 }
+
+/**
+ * Liest eine abgelegte Datei vollstaendig in den Speicher.
+ *
+ * **Gibt `null` statt zu werfen**, wenn sie auf der Platte fehlt: ein fehlendes Foto darf
+ * nicht dazu fuehren, dass eine ganze Antwort mit 500 abbricht und der Besucher im Viewer
+ * ueberhaupt nichts sieht. Wer die Unterscheidung braucht, prueft auf `null`.
+ *
+ * Nur fuer Dateien, die als Ganzes in eine Antwort gehen, also Bilder und Dokumente der
+ * Konnektor-API. Zum Ausliefern an den Browser bleibt der Strom aus `ablage.lies` richtig.
+ */
+export async function leseInhalt(ablage: Dateiablage, pfad: string): Promise<Buffer | null> {
+  try {
+    const stuecke: Buffer[] = [];
+    for await (const stueck of ablage.lies(pfad)) stuecke.push(stueck as Buffer);
+    return Buffer.concat(stuecke);
+  } catch {
+    return null;
+  }
+}

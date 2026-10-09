@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { unauthorized } from "../errors.js";
 import type { Kontext } from "../kontext.js";
 import { pruefeBasicGegen } from "../konnektorapi/basic.js";
+import { fahrerdaten } from "../services/besucher.js";
 import { carreraAnmeldungVerlangt } from "../services/einstellungen.js";
 import {
   loescheRunde,
@@ -57,6 +58,18 @@ export function carreraRoutes(app: FastifyInstance, ctx: Kontext): void {
     loescheRunde(ctx.db, req.params.lapId);
     void reply.code(204);
     return null;
+  });
+
+  /**
+   * Name und Bild zu einer GUID, fuer den Bildschirm an der Bahn.
+   *
+   * Nach dem Scan kennt die Bahn nur die GUID. **Das Bild kommt eingebettet**, weil
+   * `/api/dateien/:id` an einer Sitzung haengt, die sie nicht hat. Ein Aufruf je gescanntem
+   * Besucher, nicht je Runde.
+   */
+  app.get<{ Params: { guid: string } }>("/carrera/besucher/:guid", async (req) => {
+    pruefeZugang(req);
+    return await fahrerdaten(ctx.db, ctx.ablage, req.params.guid);
   });
 
   /** Was zu einem Besucher gespeichert ist, zum Gegenpruefen von seiner Seite aus. */

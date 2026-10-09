@@ -143,6 +143,11 @@ export function Api() {
                 und wird nicht gespeichert. Je Besucher werden höchstens {MAX_RUNDEN} Runden
                 aufgezeichnet.
               </p>
+              <p className="max-w-prose text-sm text-text-zweit">
+                <code className="font-mono text-xs">/besucher/{"{guid}"}</code> liefert Name und
+                Bild für den Bildschirm an der Bahn. Das Bild steht als Base64 in derselben Antwort,
+                die damit rund 60 KB groß ist.
+              </p>
               <Endpunktliste
                 endpunkte={daten.endpunkte.filter((e) => e.gruppe === "carrera")}
                 beispielGuid={daten.beispielGuid}

@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import { and, asc, eq, like, or, sql } from "drizzle-orm";
 import type { Db } from "../db/client.js";
 import { besucher, zuordnungen } from "../db/schema.js";
+import type { Dateiablage } from "../ablage/dateien.js";
 import { badRequest, conflict, notFound } from "../errors.js";
+import { findeDatei, leseInhalt } from "./dateien.js";
 import { avatarFuer } from "./standardavatar.js";
 
 /**
@@ -222,4 +224,61 @@ function leseTextfelder(
     vorname: (eingabe.vorname ?? "").trim(),
     nachname: (eingabe.nachname ?? "").trim(),
   };
+}
+
+/** Das Bild, wie es die Carrera-Bahn bekommt: eingebettet, nicht als Adresse. */
+export interface Fahrerbild {
+  mimeType: string;
+  size: number;
+  base64: string;
+}
+
+export interface Fahrerdaten {
+  guid: string;
+  titel: string | null;
+  vorname: string;
+  nachname: string;
+  bild: Fahrerbild | null;
+}
+
+/**
+ * Name und Bild eines Besuchers, fuer den Bildschirm an der Carrera-Bahn.
+ *
+ * **Das Bild geht eingebettet hinaus, nicht als Adresse.** `/api/dateien/:id` haengt an
+ * `verlangeAnmeldung`, und die Software der Bahn hat keine Sitzung. Ein Avatar ist ein JPEG
+ * von rund 45 KB, als Base64 etwa 61 KB; das faellt einmal je gescanntem Besucher an und
+ * nicht je Runde.
+ *
+ * Wirft `notFound`, wenn die GUID unbekannt ist. **`bild` ist `null`**, wenn die Datei nicht
+ * lesbar ist: ein fehlendes Foto darf nicht dazu fuehren, dass auch der Name nicht ankommt.
+ */
+export async function fahrerdaten(db: Db, ablage: Dateiablage, guid: string): Promise<Fahrerdaten> {
+  const person = findeBesucher(db, guid);
+
+  /*
+   * Ueber `avatarFuer`, nicht ueber `person.avatarDateiId`: der Rueckfall auf das
+   * Standardbild liegt dort, und eine zweite Stelle, die ihn kennt, laeuft frueher oder
+   * spaeter auseinander.
+   */
+  const dateiId = avatarFuer(db, person.avatarDateiId);
+
+  return {
+    guid: person.guid,
+    titel: person.titel,
+    vorname: person.vorname,
+    nachname: person.nachname,
+    bild: dateiId === null ? null : await lies(db, ablage, dateiId),
+  };
+}
+
+async function lies(db: Db, ablage: Dateiablage, dateiId: string): Promise<Fahrerbild | null> {
+  const datei = findeDatei(db, dateiId);
+  const inhalt = await leseInhalt(ablage, datei.pfad);
+  if (inhalt === null) return null;
+  /*
+   * **Die Groesse kommt aus dem Gelesenen, nicht aus der Tabelle.** Beides sollte gleich
+   * sein; weicht es ab, ist die Zahl in der Antwort die, zu der das Base64 wirklich passt.
+   * Eine Gegenseite, die danach puffert, bekaeme sonst eine Groesse, die nicht stimmt.
+   */
+  return { mimeType: datei.mimeType, size: inhalt.length, base64: inhalt.toString("base64") };
 }

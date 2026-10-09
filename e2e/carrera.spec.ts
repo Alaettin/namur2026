@@ -131,6 +131,30 @@ test("die Seite API zeigt beide Blöcke, und der Prüfstand ruft die Bahn auf", 
 });
 
 /**
+ * **Name und Bild fuer den Bildschirm an der Bahn.**
+ *
+ * Über die echte Route, ohne Anmeldung: genau so ruft die Software der Bahn auf. Geprüft
+ * wird nicht nur, dass ein Feld `base64` da ist, sondern dass es sich zu einem Bild der
+ * gemeldeten Größe dekodieren lässt.
+ */
+test("der Fahrer-Aufruf liefert Namen und ein vollständiges Bild", async ({ request }) => {
+  const guid = `CAR-${String(Date.now()).slice(-8)}`;
+  await besucherMitRunden(request, guid);
+
+  const antwort = await request.get(`/carrera/besucher/${guid}`);
+  expect(antwort.status()).toBe(200);
+  const fahrer = await antwort.json();
+
+  expect(fahrer.vorname).toBe("Renn");
+  expect(fahrer.nachname).toBe("Fahrer");
+
+  const roh = Buffer.from(fahrer.bild.base64, "base64");
+  expect(roh.length, "Base64 passt nicht zur gemeldeten Größe").toBe(fahrer.bild.size);
+  // JPEG-Kennbytes am Anfang, damit nicht irgendein Puffer durchgeht.
+  expect(roh.subarray(0, 2).toString("hex")).toBe("ffd8");
+});
+
+/**
  * **Beim Löschen steht dort eine `lap_id`, keine GUID.**
  *
  * Die Beschriftung ist nicht Kosmetik: wer hier die GUID einträgt, bekommt ein 204, das wie
@@ -144,4 +168,23 @@ test("das Feld des Löschendpunkts heißt lap_id und ist nicht vorbelegt", async
   await expect(loeschen.getByLabel("lap_id")).toBeVisible();
   await expect(loeschen.getByLabel("lap_id")).toHaveValue("");
   await expect(loeschen.getByLabel("GUID", { exact: true })).toHaveCount(0);
+});
+
+/** Der vierte Endpunkt der Bahn steht im Block und läuft im Prüfstand. */
+test("der Fahrer-Endpunkt steht auf der Seite API und antwortet", async ({ page, request }) => {
+  const guid = `CAR-${String(Date.now()).slice(-8)}`;
+  await besucherMitRunden(request, guid);
+
+  await page.goto("/api");
+  /*
+   * **Am Anfang des Pfades verankert.** „/besucher/{guid}" steckt auch in
+   * „/runden/besucher/{guid}"; ein Textvergleich träfe beide Einträge.
+   */
+  const eintrag = page.locator("li", { hasText: /GET\/besucher\/\{guid\}/ });
+  await eintrag.locator("summary").click();
+  await eintrag.getByLabel("GUID").fill(guid);
+  await eintrag.getByRole("button", { name: "Senden" }).click();
+
+  await expect(eintrag.getByText("HTTP 200")).toBeVisible();
+  await expect(eintrag.locator("pre")).toContainText("Fahrer");
 });

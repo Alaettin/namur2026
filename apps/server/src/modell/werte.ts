@@ -9,6 +9,7 @@ import {
   zuordnungen,
 } from "../db/schema.js";
 import type { Dateiablage } from "../ablage/dateien.js";
+import { leseInhalt } from "../services/dateien.js";
 import { istInlineBild } from "../services/mime.js";
 import { avatarFuer } from "../services/standardavatar.js";
 import {
@@ -391,21 +392,4 @@ export async function nachAussen(
   }
 
   return ergebnis;
-}
-
-/**
- * Liest eine abgelegte Datei vollstaendig.
- *
- * Fehlt sie auf der Platte, wird der Wert ausgelassen statt die ganze Antwort mit 500
- * abzubrechen: ein fehlendes Foto darf nicht dazu fuehren, dass ein Besucher im Viewer
- * ueberhaupt nichts sieht.
- */
-async function leseInhalt(ablage: Dateiablage, pfad: string): Promise<Buffer | null> {
-  try {
-    const stuecke: Buffer[] = [];
-    for await (const stueck of ablage.lies(pfad)) stuecke.push(stueck as Buffer);
-    return Buffer.concat(stuecke);
-  } catch {
-    return null;
-  }
 }

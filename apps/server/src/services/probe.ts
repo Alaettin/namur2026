@@ -169,6 +169,13 @@ export const ENDPUNKTE: Readonly<Record<string, Endpunkt>> = {
     guid: true,
     rumpfVorschlag: null,
   },
+  "fahrer-lesen": {
+    gruppe: "carrera",
+    methode: "GET",
+    pfad: `/carrera/besucher/${GUID_PLATZ}`,
+    guid: true,
+    rumpfVorschlag: null,
+  },
 };
 
 /**
