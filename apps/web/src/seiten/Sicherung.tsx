@@ -106,16 +106,10 @@ export function Sicherung() {
 
       <Flaeche className="flex flex-col gap-4 p-6">
         <h2 className="text-lg font-semibold">Sicherung</h2>
-        <p className="max-w-prose text-sm text-text-zweit">
-          Eine ZIP-Datei mit dem gesamten Bestand: Besucher, Exponate, Zuordnungen, Rundenzeiten,
-          Anmeldungen samt Passwörtern und alle hochgeladenen Dateien. Einspielen ersetzt den
-          gesamten Bestand durch den Stand der Sicherung. Die Datei enthält personenbezogene Daten
-          und gehört nicht in fremde Hände.
-        </p>
         <div className="flex flex-wrap gap-3">
           {/* Ein echter Link: der Browser lädt die Datei selbst und zeigt den Fortschritt. */}
           <a href="/api/sicherung" download className={knopfKlassen("primaer")}>
-            Sicherung herunterladen
+            Export
           </a>
           <label
             className={knopfKlassen(
@@ -123,7 +117,7 @@ export function Sicherung() {
               laeuft ? "pointer-events-none opacity-50" : "cursor-pointer",
             )}
           >
-            Sicherung einspielen …
+            Import
             <input
               type="file"
               accept=".zip,application/zip"
@@ -137,13 +131,9 @@ export function Sicherung() {
 
       <Flaeche className="flex flex-col gap-4 p-6">
         <h2 className="text-lg font-semibold">Auswertung</h2>
-        <p className="max-w-prose text-sm text-text-zweit">
-          Eine CSV-Datei für Excel: je Besucher eine Zeile mit allen Stammdaten, dahinter eine
-          Spalte je Exponat mit einem x, wenn der Besucher dort etwas bekommen hat.
-        </p>
         <div>
           <Knopf art="rand" onClick={() => void auswertung()}>
-            Besuche als CSV
+            Download CSV
           </Knopf>
         </div>
       </Flaeche>

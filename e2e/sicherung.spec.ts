@@ -44,24 +44,36 @@ test("im Besucherdetail lässt sich ein Exponat ganz und einzeln zuweisen", asyn
     ).find((e) => e.id === exponat.id)?.links;
   expect((await zugeordnet())?.every((l) => l.zugeordnet)).toBe(true);
 
+  /*
+   * **Zu als Vorgabe**: die einzelnen Links sind unsichtbar, das ganze Exponat ließ sich
+   * trotzdem eben anhaken. Erst aufklappen, dann einzeln.
+   */
+  await expect(page.getByRole("checkbox", { name: /Zweiter Link/ })).toHaveCount(0);
+  const klappe = page.getByRole("button", { name: new RegExp(exponat.kennung) });
+  await expect(klappe).toHaveAttribute("aria-expanded", "false");
+  await klappe.click();
+  await expect(klappe).toHaveAttribute("aria-expanded", "true");
+  await expect(klappe).toContainText("2 von 2");
+
   // Einen Link einzeln abwählen: das Exponat steht danach auf "teilweise".
   await page.getByRole("checkbox", { name: /Zweiter Link/ }).click();
   await expect(page.getByRole("checkbox", { name: /Zweiter Link/ })).not.toBeChecked();
   expect((await zugeordnet())?.map((l) => l.zugeordnet)).toEqual([true, false]);
   expect(await ganz.evaluate((e) => (e as HTMLInputElement).indeterminate)).toBe(true);
+  await expect(klappe).toContainText("1 von 2");
 });
 
 test("die Auswertung kommt als CSV mit BOM und einer Spalte je Exponat", async ({ page }) => {
   await page.goto("/einstellungen");
   const laden = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Besuche als CSV" }).click();
+  await page.getByRole("button", { name: "Download CSV" }).click();
   const datei = await laden;
   expect(datei.suggestedFilename()).toMatch(/^namur-hv-2026-besuche-\d{4}-\d{2}-\d{2}\.csv$/);
   const inhalt = readFileSync(await datei.path(), "utf8");
   expect(inhalt.startsWith("\uFEFFGUID;Titel;Vorname;Nachname;Alias;")).toBe(true);
 });
 
-test("Sicherung herunterladen und wieder einspielen lässt den Bestand stehen", async ({
+test("Export und Import derselben Sicherung lassen den Bestand stehen", async ({
   page,
   request,
 }) => {
@@ -69,7 +81,7 @@ test("Sicherung herunterladen und wieder einspielen lässt den Bestand stehen", 
 
   await page.goto("/einstellungen");
   const laden = page.waitForEvent("download");
-  await page.getByRole("link", { name: "Sicherung herunterladen" }).click();
+  await page.getByRole("link", { name: "Export" }).click();
   const zip = await laden;
   expect(zip.suggestedFilename()).toMatch(/^namur-hv-2026-sicherung-.*\.zip$/);
   const pfad = await zip.path();
@@ -78,7 +90,7 @@ test("Sicherung herunterladen und wieder einspielen lässt den Bestand stehen", 
   expect(roh.subarray(0, 4).toString("hex")).toBe("504b0304");
   expect(roh.includes(Buffer.from("namur.db"))).toBe(true);
 
-  await page.getByLabel("Sicherung einspielen …").setInputFiles(pfad);
+  await page.getByLabel("Import").setInputFiles(pfad);
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("Sicherung einspielen?")).toBeVisible();
   await expect(dialog.getByRole("cell", { name: "Besucher" })).toBeVisible();
