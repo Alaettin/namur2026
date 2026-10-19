@@ -219,14 +219,20 @@ describe("Ansprechpartner in der Konnektor-API", () => {
 
     const inhalte = (
       await s.app.inject({ url: `/api/exponate/${erstes!.id}`, headers: { cookie: keks } })
-    ).json<{ kontakte: { id: string; platz: number; vorname: string }[] }>();
+    ).json<{
+      kontakte: { id: string; platz: number; vorname: string }[];
+      links: { id: string }[];
+    }>();
 
     // Zwei Ansprechpartner je Exponat: der eigene und der gemeinsame.
     expect(inhalte.kontakte).toHaveLength(2);
     const gemeinsam = inhalte.kontakte.find((c) => c.vorname === "Hendrik");
     expect(gemeinsam).toBeDefined();
 
-    // Einem Besucher zuordnen und in values nachsehen.
+    /*
+     * Einem Besucher **einen Link** zuordnen: Ansprechpartner kommen seit dem 19.10.2026 mit
+     * dem Exponat und werden nicht mehr einzeln zugeordnet.
+     */
     const besucher = (
       await s.app.inject({
         method: "POST",
@@ -243,7 +249,7 @@ describe("Ansprechpartner in der Konnektor-API", () => {
       payload: {
         guid: besucher.guid,
         exponatId: erstes!.id,
-        elemente: [{ art: "kontakt", zielId: gemeinsam!.id }],
+        elemente: [{ art: "link", zielId: inhalte.links[0]!.id }],
       },
     });
 

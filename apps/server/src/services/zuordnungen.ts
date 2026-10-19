@@ -14,10 +14,15 @@ import { inhalteVonExponat } from "./exponate.js";
  * der Betreuer ihm nicht gegeben hat, und eine Korrektur soll trotzdem ankommen.
  */
 
+/**
+ * `kontakt` steht nur noch fuer den Bestand: seit dem 19.10.2026 kommen Ansprechpartner mit
+ * dem Exponat und werden nicht mehr einzeln zugeordnet. Alte Zeilen bleiben gueltig und
+ * zaehlen weiter als "an diesem Exponat etwas bekommen".
+ */
 export type Art = "dokument" | "link" | "kontakt";
 
 export interface ZuOrdnend {
-  art: Art;
+  art: "dokument" | "link";
   zielId: string;
 }
 
@@ -29,8 +34,14 @@ export function leseElemente(wert: unknown): ZuOrdnend[] {
     const o = (typeof roh === "object" && roh !== null ? roh : {}) as Record<string, unknown>;
     const art = o["art"];
     const zielId = o["zielId"];
-    if (art !== "dokument" && art !== "link" && art !== "kontakt") {
-      throw badRequest("art-ungueltig", 'Field art must be "dokument", "link" or "kontakt".');
+    if (art === "kontakt") {
+      throw badRequest(
+        "kontakt-automatisch",
+        "Contacts are not assigned individually; they come with the exhibit.",
+      );
+    }
+    if (art !== "dokument" && art !== "link") {
+      throw badRequest("art-ungueltig", 'Field art must be "dokument" or "link".');
     }
     if (typeof zielId !== "string" || zielId === "") {
       throw badRequest("feld-fehlt", "Field zielId is required.");
@@ -79,10 +90,9 @@ export function ordneZu(
    * und der Betreuer dieses Exponats haette es nie freigegeben.
    */
   const inhalte = inhalteVonExponat(db, eingabe.exponatId);
-  const erlaubt = new Map<Art, Set<string>>([
+  const erlaubt = new Map<ZuOrdnend["art"], Set<string>>([
     ["dokument", new Set(inhalte.dokumente.map((d) => d.id))],
     ["link", new Set(inhalte.links.map((l) => l.id))],
-    ["kontakt", new Set(inhalte.kontakte.map((c) => c.id))],
   ]);
   for (const el of eingabe.elemente) {
     if (!erlaubt.get(el.art)?.has(el.zielId)) {

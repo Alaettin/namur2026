@@ -452,7 +452,6 @@ export async function saeAus(
           { art: "dokument" as const, zielId: ziel.dokumente[0] ?? "" },
           { art: "dokument" as const, zielId: ziel.dokumente[1] ?? "" },
           { art: "link" as const, zielId: ziel.links[0] ?? "" },
-          { art: "kontakt" as const, zielId: ziel.kontakte[0] ?? "" },
         ].filter((el) => el.zielId !== "");
         const { neu } = ordneZu(db, { guid: person.guid, exponatId: ziel.id, elemente, nutzerId });
         ergebnis.zuordnungen += neu;

@@ -207,6 +207,15 @@ describe("Der Titel geht am Vornamen hinaus", () => {
       headers: { cookie: keks },
       payload: { ansprechpartnerId: person.id },
     });
+    // Ansprechpartner kommen mit dem Exponat, sobald etwas zugeordnet ist; also ein Link.
+    const link = (
+      await s.app.inject({
+        method: "POST",
+        url: `/api/exponate/${exponat.id}/links`,
+        headers: { cookie: keks },
+        payload: { url: "https://www.namur.net/", titel: "NAMUR" },
+      })
+    ).json<{ id: string }>();
 
     await s.app.inject({
       method: "POST",
@@ -221,7 +230,7 @@ describe("Der Titel geht am Vornamen hinaus", () => {
       payload: {
         guid: "TITEL-0004",
         exponatId: exponat.id,
-        elemente: [{ art: "kontakt", zielId: person.id }],
+        elemente: [{ art: "link", zielId: link.id }],
       },
     });
 

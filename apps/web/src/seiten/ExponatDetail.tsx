@@ -324,8 +324,9 @@ export function ExponatDetail({ ich }: { ich: Ich }) {
               <Flaeche className="flex flex-col gap-2 p-6">
                 <h2 className="text-lg font-semibold">Noch nichts zum Zuordnen</h2>
                 <p className="text-sm text-text-zweit">
-                  Solange dieses Exponat keine Dokumente, Links oder Ansprechpartner hat, bleibt das
-                  Scannen gesperrt: ein Betreuer könnte einem Besucher nichts geben.
+                  Solange dieses Exponat keine Dokumente oder Links hat, bleibt das Scannen
+                  gesperrt: ein Betreuer könnte einem Besucher nichts geben. Ansprechpartner kommen
+                  nur mit, sobald etwas zugeordnet ist.
                 </p>
               </Flaeche>
             )}
@@ -518,7 +519,13 @@ export function ExponatDetail({ ich }: { ich: Ich }) {
         }}
       >
         <p>
-          {zuLoeschen !== null && zuLoeschen.betroffene > 0 ? (
+          {zuLoeschen !== null && zuLoeschen.betroffene > 0 && zuLoeschen.art === "kontakt" ? (
+            <>
+              <b>{zuLoeschen.betroffene} Besucher</b> haben an diesem Exponat etwas bekommen und
+              sehen diesen Ansprechpartner. Er verschwindet bei ihnen unter diesem Exponat aus dem
+              Viewer.
+            </>
+          ) : zuLoeschen !== null && zuLoeschen.betroffene > 0 ? (
             <>
               <b>{zuLoeschen.betroffene} Besucher</b> haben diesen Inhalt bereits zugeordnet
               bekommen. Er verschwindet auch bei ihnen aus dem Viewer.

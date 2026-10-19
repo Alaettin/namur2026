@@ -185,7 +185,14 @@ export function exponatRoutes(app: FastifyInstance, ctx: Kontext): void {
     { preHandler: app.verlangeAdmin },
     async (req) => {
       verlangeExponatBearbeiten(ctx, req, req.params.id);
-      return { betroffene: betroffeneBesucher(ctx.db, alsArt(req.params.art), req.params.zielId) };
+      return {
+        betroffene: betroffeneBesucher(
+          ctx.db,
+          req.params.id,
+          alsArt(req.params.art),
+          req.params.zielId,
+        ),
+      };
     },
   );
 

@@ -44,10 +44,12 @@ export function scanRoutes(app: FastifyInstance, ctx: Kontext): void {
 
       const dokumente = markiere("dokument", inhalte.dokumente);
       const links = markiere("link", inhalte.links);
-      const kontakte = markiere("kontakt", inhalte.kontakte);
-      const offen = [...dokumente, ...links, ...kontakte].filter(
-        (e) => !e.bereitsZugeordnet,
-      ).length;
+      /*
+       * Ansprechpartner nur zur Anzeige, ohne `bereitsZugeordnet`: sie kommen seit dem
+       * 19.10.2026 mit dem Exponat und lassen sich nicht anhaken.
+       */
+      const kontakte = inhalte.kontakte;
+      const offen = [...dokumente, ...links].filter((e) => !e.bereitsZugeordnet).length;
 
       return {
         besucher: person,

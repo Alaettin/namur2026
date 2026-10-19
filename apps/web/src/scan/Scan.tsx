@@ -30,7 +30,8 @@ interface Element {
   url?: string;
   vorname?: string;
   nachname?: string;
-  bereitsZugeordnet: boolean;
+  /** Fehlt bei Ansprechpartnern: sie lassen sich nicht anhaken. */
+  bereitsZugeordnet?: boolean;
 }
 
 interface Treffer {
@@ -326,13 +327,16 @@ function TrefferAnsicht({
   const [laeuft, setzeLaeuft] = useState(false);
   const vorbelegt = useRef(false);
 
-  const alle: { art: "dokument" | "link" | "kontakt"; e: Element }[] =
+  /*
+   * **Nur Dokumente und Links sind wählbar.** Ansprechpartner kommen seit dem 19.10.2026 mit
+   * dem Exponat, sobald etwas zugeordnet ist; sie stehen unten nur als Hinweis.
+   */
+  const alle: { art: "dokument" | "link"; e: Element }[] =
     abruf.daten === null
       ? []
       : [
           ...abruf.daten.dokumente.map((e) => ({ art: "dokument" as const, e })),
           ...abruf.daten.links.map((e) => ({ art: "link" as const, e })),
-          ...abruf.daten.kontakte.map((e) => ({ art: "kontakt" as const, e })),
         ];
 
   /*
@@ -348,7 +352,6 @@ function TrefferAnsicht({
         [
           ...abruf.daten.dokumente.map((e) => ({ art: "dokument", e })),
           ...abruf.daten.links.map((e) => ({ art: "link", e })),
-          ...abruf.daten.kontakte.map((e) => ({ art: "kontakt", e })),
         ]
           .filter((x) => !x.e.bereitsZugeordnet)
           .map((x) => `${x.art}:${x.e.id}`),
@@ -367,12 +370,12 @@ function TrefferAnsicht({
   }
 
   const b = abruf.daten.besucher;
+  const kontakte = abruf.daten.kontakte;
   const offen = alle.filter((x) => !x.e.bereitsZugeordnet);
   const gewaehlt = offen.filter((x) => auswahl.has(`${x.art}:${x.e.id}`));
   const alleAn = offen.length > 0 && gewaehlt.length === offen.length;
 
-  function beschrifte(art: string, e: Element): string {
-    if (art === "kontakt") return `${e.vorname ?? ""} ${e.nachname ?? ""}`.trim();
+  function beschrifte(e: Element): string {
     return e.titel ?? "";
   }
 
@@ -447,7 +450,6 @@ function TrefferAnsicht({
           [
             ["Dokumente", "dokument"],
             ["Links", "link"],
-            ["Ansprechpartner", "kontakt"],
           ] as const
         ).map(([titel, art]) => {
           const gruppe = alle.filter((x) => x.art === art);
@@ -468,8 +470,8 @@ function TrefferAnsicht({
                       <input
                         type="checkbox"
                         className="size-6 shrink-0 accent-primaer"
-                        checked={e.bereitsZugeordnet || auswahl.has(schluessel)}
-                        disabled={e.bereitsZugeordnet}
+                        checked={e.bereitsZugeordnet === true || auswahl.has(schluessel)}
+                        disabled={e.bereitsZugeordnet === true}
                         onChange={(ev) => {
                           const neu = new Set(auswahl);
                           if (ev.target.checked) neu.add(schluessel);
@@ -478,7 +480,7 @@ function TrefferAnsicht({
                         }}
                       />
                       <span className="min-w-0 flex-1 text-[15px] leading-tight font-semibold">
-                        {beschrifte(art, e)}
+                        {beschrifte(e)}
                       </span>
                       {e.bereitsZugeordnet && (
                         <Markierung text="BEREITS ZUGEORDNET" farbe="var(--color-text-hinweis)" />
@@ -490,6 +492,27 @@ function TrefferAnsicht({
             </section>
           );
         })}
+
+        {kontakte.length > 0 && (
+          <section aria-label="Ansprechpartner" className="flex flex-col gap-2">
+            <h2 className="mx-0.5 text-[11px] font-semibold tracking-[0.08em] text-text-hinweis uppercase">
+              Ansprechpartner
+            </h2>
+            <p className="mx-0.5 text-sm text-text-zweit">
+              Kommen automatisch mit, sobald etwas zugeordnet ist.
+            </p>
+            <ul className="flex flex-col bg-flaeche shadow-flaeche">
+              {kontakte.map((c) => (
+                <li
+                  key={c.id}
+                  className="flex min-h-[48px] items-center border-b border-linie px-4 py-2 text-[15px] leading-tight font-semibold last:border-b-0"
+                >
+                  {`${c.vorname ?? ""} ${c.nachname ?? ""}`.trim()}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
 
       <div className="flex shrink-0 justify-end border-t border-linie bg-flaeche px-4 pt-3.5 pb-5">

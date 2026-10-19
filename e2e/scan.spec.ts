@@ -2,7 +2,9 @@ import { expect, test, type APIRequestContext } from "@playwright/test";
 import {
   legeExponatAn,
   merkeBesucher,
+  merkeAnsprechpartner,
   merkeDatei,
+  raeumeAnsprechpartnerAuf,
   raeumeBesucherAuf,
   raeumeExponateAuf,
 } from "./exponate.js";
@@ -56,6 +58,7 @@ async function bestand(request: APIRequestContext) {
 test.afterEach(async ({ request }) => {
   await raeumeBesucherAuf(request);
   await raeumeExponateAuf(request);
+  await raeumeAnsprechpartnerAuf(request);
 });
 
 test("der Ablauf führt von der GUID bis zur Zuordnung", async ({ page, request }) => {
@@ -210,4 +213,40 @@ test("die CSP lässt den blob:-Worker des Scanners zu", async ({ page, request }
     ...(await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp)),
   );
   expect(verletzungen, "die Seite meldet CSP-Verletzungen").toEqual([]);
+});
+
+/**
+ * **Ansprechpartner kommen mit dem Exponat**, seit dem 19.10.2026: im Scan ohne Kästchen,
+ * nicht in "Zuordnen (n)", und nach dem Zuordnen trotzdem im Konnektor.
+ */
+test("Ansprechpartner stehen ohne Kästchen da und kommen trotzdem mit", async ({
+  page,
+  request,
+}) => {
+  const { exponatId, guid } = await bestand(request);
+  const nachname = `Mitkommer${String(Date.now()).slice(-6)}`;
+  const person = await (
+    await request.post("/api/ansprechpartner", { data: { vorname: "Ines", nachname } })
+  ).json();
+  merkeAnsprechpartner(person.id as string);
+  await request.post(`/api/exponate/${exponatId}/ansprechpartner`, {
+    data: { ansprechpartnerId: person.id },
+  });
+
+  await page.goto(`/exponate/${exponatId}/scan`);
+  await page.getByRole("button", { name: "GUID von Hand eingeben" }).first().click();
+  await page.getByLabel("GUID vom Pass").fill(guid);
+  await page.getByRole("button", { name: "Weiter" }).click();
+
+  const abschnitt = page.getByRole("region", { name: "Ansprechpartner" });
+  await expect(abschnitt.getByText(`Ines ${nachname}`)).toBeVisible();
+  await expect(abschnitt.getByRole("checkbox")).toHaveCount(0);
+  // Dokument und Link, nicht der Ansprechpartner.
+  await page.getByRole("button", { name: "Zuordnen (2)" }).click();
+  await expect(page.getByRole("status")).toContainText("2 zugeordnet");
+
+  const werte = await (
+    await request.post(`/connector/product/${guid}/values`, { data: {} })
+  ).json();
+  expect(JSON.stringify(werte)).toContain(nachname);
 });

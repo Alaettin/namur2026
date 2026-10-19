@@ -216,10 +216,15 @@ export function inhalteVonExponat(db: Db, exponatId: string) {
   };
 }
 
-/** Hat das Exponat ueberhaupt etwas, das sich zuordnen laesst? Sonst ist Scannen gesperrt. */
+/**
+ * Hat das Exponat ueberhaupt etwas, das sich zuordnen laesst? Sonst ist Scannen gesperrt.
+ *
+ * **Nur Dokumente und Links.** Ansprechpartner kommen seit dem 19.10.2026 mit dem Exponat
+ * und lassen sich nicht anhaken; ein Exponat nur mit ihnen haette nichts zum Zuordnen.
+ */
 export function hatInhalte(db: Db, exponatId: string): boolean {
   const i = inhalteVonExponat(db, exponatId);
-  return i.dokumente.length + i.links.length + i.kontakte.length > 0;
+  return i.dokumente.length + i.links.length > 0;
 }
 
 /**
@@ -230,9 +235,15 @@ export function hatInhalte(db: Db, exponatId: string): boolean {
  */
 export function betroffeneBesucher(
   db: Db,
+  exponatId: string,
   art: "dokument" | "link" | "kontakt",
   zielId: string,
 ): number {
+  /*
+   * Ein Ansprechpartner geht an **jeden** Besucher, der an diesem Exponat etwas bekommen
+   * hat; genau die verlieren ihn, wenn die Zuweisung faellt.
+   */
+  if (art === "kontakt") return betroffeneBesucherVonExponat(db, exponatId);
   return db
     .select({ guid: zuordnungen.besucherGuid })
     .from(zuordnungen)
@@ -264,9 +275,16 @@ export function loescheInhalt(
   zielId: string,
 ): void {
   db.transaction((tx) => {
-    tx.delete(zuordnungen)
-      .where(and(eq(zuordnungen.art, art), eq(zuordnungen.zielId, zielId)))
-      .run();
+    /*
+     * Zuordnungen gibt es nur an Dokumenten und Links. Bei einem Ansprechpartner bleiben
+     * sie stehen: alte `kontakt`-Zeilen zaehlen als "an diesem Exponat etwas bekommen", und
+     * ein Loeschen ueber `zielId` traefe auch seine Zeilen an anderen Exponaten.
+     */
+    if (art !== "kontakt") {
+      tx.delete(zuordnungen)
+        .where(and(eq(zuordnungen.art, art), eq(zuordnungen.zielId, zielId)))
+        .run();
+    }
     if (art === "dokument")
       tx.delete(exponatDokumente).where(eq(exponatDokumente.id, zielId)).run();
     else if (art === "link") tx.delete(exponatLinks).where(eq(exponatLinks.id, zielId)).run();

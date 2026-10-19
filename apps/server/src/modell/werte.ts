@@ -264,22 +264,20 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
       }
     }
 
-    const kontaktIds = zielIds("kontakt");
-    if (kontaktIds.size > 0) {
-      /*
-       * Ansprechpartner sind eigenstaendige Stammdaten; der **Platz** kommt aus der
-       * Zuweisung zu diesem Exponat. Derselbe Mensch kann an E01 auf Platz 1 und an E04
-       * auf Platz 3 stehen, und beide Male muss der richtige Datenpunkt entstehen.
-       *
-       * Kein Foto mehr: `{K}_Contact{NN}_Image` gibt es nicht.
-       */
-      for (const c of ansprechpartnerVonExponat(db, exponatId)) {
-        if (!kontaktIds.has(c.id)) continue;
-        for (const { feld, id } of PERSONENFELDER) {
-          const wert = personenwert(c, feld, id);
-          if (wert !== null && id !== null) {
-            werte.push({ propertyId: kontaktFeld(k, c.platz, id), text: wert, dateiId: null });
-          }
+    /*
+     * **Alle Ansprechpartner des Exponats, nicht nur zugeordnete.** Entscheidung vom
+     * 19.10.2026: Ansprechpartner gehoeren zum Exponat und kommen mit, sobald der Besucher
+     * dort irgendetwas bekommen hat. Steht derselbe Mensch an zwei Exponaten, geht er
+     * deshalb zweimal hinaus, je unter dem Platz, den er an diesem Exponat hat: an E01 als
+     * `Contact01`, an E04 als `Contact03`.
+     *
+     * Kein Foto: `{K}_Contact{NN}_Image` gibt es nicht.
+     */
+    for (const c of ansprechpartnerVonExponat(db, exponatId)) {
+      for (const { feld, id } of PERSONENFELDER) {
+        const wert = personenwert(c, feld, id);
+        if (wert !== null && id !== null) {
+          werte.push({ propertyId: kontaktFeld(k, c.platz, id), text: wert, dateiId: null });
         }
       }
     }
