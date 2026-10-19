@@ -25,6 +25,14 @@ export const MAX_KONTAKTE = 5;
  */
 export const MAX_RUNDEN_MODELL = 20;
 
+/**
+ * Die zehn schnellsten Fahrer der Carrera-Bahn, seit dem 19.10.2026.
+ *
+ * **Fuer alle Besucher gleich**: jede `values`-Antwort traegt dieselbe Liste, damit jeder Pass
+ * im Viewer die aktuelle Top 10 zeigt, ohne eigenes Item in Axon.
+ */
+export const MAX_TOP_MODELL = 10;
+
 /** Der Typ laut Spec. Ausgegeben wird die Zahl, siehe `PROPERTY_TYPE`. */
 export const PROPERTY_TYPE = { property: 0, document: 1 } as const;
 
@@ -90,6 +98,22 @@ export function visitorFeld(id: string): string {
  */
 export function visitorRunde(platz: number): string {
   return `Visitor_Lap${platzNr(platz)}`;
+}
+
+/**
+ * `Carrera_Top01_Place` bis `Carrera_Top10_BestLap`, je Platz drei Eigenschaften.
+ *
+ * **Der Fahrer ist nur sein Alias**, Entscheidung des Nutzers: die Liste steht in jedem
+ * oeffentlichen Viewer, und Klarnamen anderer Besucher gehoeren dort nicht hin.
+ */
+export function topPlatz(platz: number): string {
+  return `Carrera_Top${platzNr(platz)}_Place`;
+}
+export function topFahrer(platz: number): string {
+  return `Carrera_Top${platzNr(platz)}_Driver`;
+}
+export function topBestzeit(platz: number): string {
+  return `Carrera_Top${platzNr(platz)}_BestLap`;
 }
 
 export function exponatName(kennung: string): string {

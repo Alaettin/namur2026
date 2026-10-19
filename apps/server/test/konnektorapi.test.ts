@@ -1,5 +1,5 @@
 import { afterAll, afterEach, describe, expect, it } from "vitest";
-import { FELDER_BESUCHER, FELDER_JE_EXPONAT } from "../src/modell/modell.js";
+import { FELDER_BESUCHER, FELDER_JE_EXPONAT, FELDER_TOP } from "../src/modell/modell.js";
 import { melde, starte, verlangeAnmeldung, type Pruefstand } from "./hilfe.js";
 import { arrayValidatorFuer, fehlendeSpec, specVorhanden, validatorFuer } from "./vertrag.js";
 
@@ -187,7 +187,7 @@ describe("Konnektor-API: die neun Endpunkte", () => {
      * je Besucher dazu, und eine feste Zahl haette den Fall rot gemacht, ohne dass etwas
      * kaputt war.
      */
-    expect(felder).toHaveLength(FELDER_BESUCHER + 10 * FELDER_JE_EXPONAT);
+    expect(felder).toHaveLength(FELDER_BESUCHER + FELDER_TOP + 10 * FELDER_JE_EXPONAT);
 
     // Alle Plaetze bis zur Obergrenze, auch leere: Platz 10 gibt es, obwohl die Aussaat
     // nur zwei Dokumente anlegt. Sonst muesste nach jedem Upload neu gemappt werden.
@@ -276,7 +276,11 @@ describe("Konnektor-API: Werte", () => {
         payload: {},
       })
     ).json<{ propertyId: string }[]>();
-    expect(werte.every((w) => w.propertyId.startsWith("Visitor_"))).toBe(true);
+    // Seit dem 19.10.2026 steht auch die Top 10 der Carrera-Bahn bei jedem Besucher.
+    expect(
+      werte.filter((w) => !/^(Visitor_|Carrera_Top\d{2}_)/.test(w.propertyId)),
+      "Exponatinhalt ohne Zuordnung",
+    ).toEqual([]);
   });
 
   /**

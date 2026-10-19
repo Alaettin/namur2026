@@ -231,6 +231,8 @@ export interface Platz {
   rang: number;
   guid: string;
   name: string;
+  /** Fuer die Top 10 im Konnektor, die nur den Alias zeigt. */
+  alias: string | null;
   firma: string | null;
   /** Die **beste** Zeit dieses Fahrers, nicht die letzte. */
   bestMs: number;
@@ -260,6 +262,7 @@ export function bestenliste(db: Db, grenze = BESTENLISTE_LAENGE): Platz[] {
       titel: besucher.titel,
       vorname: besucher.vorname,
       nachname: besucher.nachname,
+      alias: besucher.alias,
       firma: besucher.firma,
       avatarDateiId: besucher.avatarDateiId,
     })
@@ -275,6 +278,7 @@ export function bestenliste(db: Db, grenze = BESTENLISTE_LAENGE): Platz[] {
     guid: z.guid,
     // Der Titel gehoert zum Namen, wie ueberall sonst auch.
     name: [z.titel, z.vorname, z.nachname].filter((t) => t !== null && t !== "").join(" "),
+    alias: z.alias,
     firma: z.firma,
     bestMs: z.bestMs,
     anzeige: dauerAlsText(z.bestMs),
@@ -308,15 +312,16 @@ export function rundenzahlen(db: Db): Rundenzahlen {
 }
 
 /**
- * Auf welchem Podestplatz ein Besucher gerade steht: 1, 2, 3 oder `null`.
+ * Auf welchem Podestplatz ein Besucher steht: 1, 2, 3 oder `null`.
  *
- * **Bei jedem Aufruf frisch abgefragt.** Die Reihenfolge aendert sich waehrend der Messe mit
- * jeder gemeldeten Runde; ein beim Start berechneter oder zwischengespeicherter Rang waere
- * nach der naechsten schnellen Runde falsch, ohne dass es jemand bemerkt.
+ * Aus einer **frisch abgefragten** Bestenliste, die der Aufrufer mitgibt. Die Reihenfolge
+ * aendert sich waehrend der Messe mit jeder gemeldeten Runde; ein beim Start berechneter
+ * oder zwischengespeicherter Rang waere nach der naechsten schnellen Runde falsch, ohne dass
+ * es jemand bemerkt. Mitgegeben statt selbst abgefragt, weil `sammleWerte` dieselbe Liste
+ * ohnehin fuer die Top 10 holt.
  */
-export function rangVon(db: Db, guid: string): 1 | 2 | 3 | null {
-  const vorne = bestenliste(db, 3);
-  const platz = vorne.findIndex((p) => p.guid === guid);
-  if (platz < 0) return null;
+export function podestrang(liste: Platz[], guid: string): 1 | 2 | 3 | null {
+  const platz = liste.findIndex((p) => p.guid === guid);
+  if (platz < 0 || platz > 2) return null;
   return (platz + 1) as 1 | 2 | 3;
 }

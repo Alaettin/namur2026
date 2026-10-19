@@ -25,11 +25,15 @@ import {
   kontaktFeld,
   linkTitel,
   linkUrl,
+  MAX_TOP_MODELL,
+  topBestzeit,
+  topFahrer,
+  topPlatz,
   visitorFeld,
   visitorRunde,
 } from "./felder.js";
 import { ansprechpartnerVonExponat } from "../services/ansprechpartner.js";
-import { rangVon, rundeAlsText, rundenVonBesucher } from "../services/runden.js";
+import { bestenliste, podestrang, rundeAlsText, rundenVonBesucher } from "../services/runden.js";
 
 /**
  * Was ein Besucher an Werten hat, in der Form der Konnektor-Spezifikation.
@@ -141,6 +145,8 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
   if (person === undefined) return [];
 
   const werte: RohWert[] = [];
+  // Einmal je Abruf, frisch: speist den Siegerrahmen **und** die Top 10.
+  const vorne = bestenliste(db, MAX_TOP_MODELL);
 
   for (const { feld, id } of PERSONENFELDER) {
     const wert = personenwert(person, feld, id);
@@ -169,7 +175,7 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
       propertyId: VISITOR_AVATAR,
       text: null,
       dateiId: avatar,
-      rang: rangVon(db, guid),
+      rang: podestrang(vorne, guid),
     });
   }
 
@@ -185,6 +191,21 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
       text: rundeAlsText(runde),
       dateiId: null,
     });
+  }
+
+  /*
+   * **Die Top 10, fuer jeden Besucher dieselbe.** Ebenfalls vor dem fruehen `return`: auch
+   * wer weder faehrt noch etwas zugeordnet bekam, sieht die Liste. Nicht besetzte Plaetze
+   * fallen aus. Der Fahrer ist **nur** sein Alias, ohne Alias "Anonym"; der Klarname eines
+   * anderen Besuchers gehoert nicht in einen oeffentlichen Viewer.
+   */
+  for (const p of vorne) {
+    const alias = p.alias?.trim() ?? "";
+    werte.push(
+      { propertyId: topPlatz(p.rang), text: String(p.rang), dateiId: null },
+      { propertyId: topFahrer(p.rang), text: alias === "" ? "Anonym" : alias, dateiId: null },
+      { propertyId: topBestzeit(p.rang), text: p.anzeige, dateiId: null },
+    );
   }
 
   const meine = db.select().from(zuordnungen).where(eq(zuordnungen.besucherGuid, guid)).all();

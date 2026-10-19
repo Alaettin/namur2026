@@ -5,6 +5,7 @@ import {
   MAX_DOKUMENTE,
   MAX_KONTAKTE,
   MAX_RUNDEN_MODELL,
+  MAX_TOP_MODELL,
   MAX_LINKS,
   PERSONENFELDER,
   PROPERTY_TYPE,
@@ -19,6 +20,9 @@ import {
   linkTitel,
   linkUrl,
   platzNr,
+  topBestzeit,
+  topFahrer,
+  topPlatz,
   visitorFeld,
   visitorRunde,
 } from "./felder.js";
@@ -89,6 +93,16 @@ export function baueModell(db: Db): DataModelProperty[] {
     felder.push(eintrag(visitorRunde(p), `Besucher Runde ${platzNr(p)}`, PROPERTY_TYPE.property));
   }
 
+  // --- Die Top 10 der Carrera-Bahn, fuer alle Besucher dieselbe ----------------------
+  for (let p = 1; p <= MAX_TOP_MODELL; p++) {
+    const nr = platzNr(p);
+    felder.push(
+      eintrag(topPlatz(p), `Carrera Top ${nr} Platzierung`, PROPERTY_TYPE.property),
+      eintrag(topFahrer(p), `Carrera Top ${nr} Fahrer`, PROPERTY_TYPE.property),
+      eintrag(topBestzeit(p), `Carrera Top ${nr} Beste Rundenzeit`, PROPERTY_TYPE.property),
+    );
+  }
+
   // --- Je Exponat ---------------------------------------------------------------------
   // Nach Kennung sortiert, damit die Liste in Axon stabil bleibt und zwei Abrufe
   // dieselbe Reihenfolge liefern.
@@ -151,3 +165,6 @@ export const FELDER_JE_EXPONAT =
 
 /** Zahl der Besucherdatenpunkte: Personenfelder, Alias, Foto und die Rundenplaetze. */
 export const FELDER_BESUCHER = AUSGEGEBENE_PERSONENFELDER + 1 + 1 + MAX_RUNDEN_MODELL;
+
+/** Zahl der Datenpunkte der Top 10: je Platz Platzierung, Fahrer und Bestzeit. */
+export const FELDER_TOP = MAX_TOP_MODELL * 3;
