@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import type { Db } from "../db/client.js";
 import { besucher, exponate, zuordnungen } from "../db/schema.js";
 import { badRequest, notFound } from "../errors.js";
@@ -51,20 +51,13 @@ export function leseElemente(wert: unknown): ZuOrdnend[] {
 }
 
 /**
- * Ordnet zu und meldet, wie viele Zuordnungen **neu** entstanden sind.
- *
- * **Idempotent.** Der Eindeutigkeitsschluessel `(besucher_guid, art, ziel_id)` haelt
- * Doppelte ab; ein zweiter Versuch nach einem Netzfehler legt nichts an und meldet 0.
- * Genau darauf verlaesst sich der Scan-Ablauf: bei `ErrOffline` schickt "Erneut versuchen"
- * denselben Rumpf.
- *
- * Alles in **einer** Transaktion: ein halb zugeordneter Besucher waere ein Zustand, den
- * niemand sieht und den der Betreuer fuer vollstaendig haelt.
+ * Besucher und Exponat muessen existieren, und jedes Element muss zu **diesem** Exponat
+ * gehoeren.
  */
-export function ordneZu(
+function pruefeElemente(
   db: Db,
-  eingabe: { guid: string; exponatId: string; elemente: ZuOrdnend[]; nutzerId: string },
-): { neu: number; bereits: number } {
+  eingabe: { guid: string; exponatId: string; elemente: ZuOrdnend[] },
+): void {
   if (
     db
       .select({ guid: besucher.guid })
@@ -99,6 +92,24 @@ export function ordneZu(
       throw notFound("element-unbekannt", `No ${el.art} with this id at this exhibit.`);
     }
   }
+}
+
+/**
+ * Ordnet zu und meldet, wie viele Zuordnungen **neu** entstanden sind.
+ *
+ * **Idempotent.** Der Eindeutigkeitsschluessel `(besucher_guid, art, ziel_id)` haelt
+ * Doppelte ab; ein zweiter Versuch nach einem Netzfehler legt nichts an und meldet 0.
+ * Genau darauf verlaesst sich der Scan-Ablauf: bei `ErrOffline` schickt "Erneut versuchen"
+ * denselben Rumpf.
+ *
+ * Alles in **einer** Transaktion: ein halb zugeordneter Besucher waere ein Zustand, den
+ * niemand sieht und den der Betreuer fuer vollstaendig haelt.
+ */
+export function ordneZu(
+  db: Db,
+  eingabe: { guid: string; exponatId: string; elemente: ZuOrdnend[]; nutzerId: string },
+): { neu: number; bereits: number } {
+  pruefeElemente(db, eingabe);
 
   const vorhanden = new Set(
     db
@@ -134,20 +145,104 @@ export function ordneZu(
   return { neu: neue.length, bereits };
 }
 
-export function entferneZuordnung(db: Db, guid: string, art: Art, zielId: string): void {
-  const reihe = db
-    .select({ id: zuordnungen.id })
+/**
+ * Setzt die Zuordnungen eines Besuchers an **einem** Exponat auf genau diese Elemente.
+ *
+ * Fuer die Kaestchen im Besucherdetail: was dort angehakt ist, ist der Sollzustand. Fehlende
+ * kommen dazu, alles andere an diesem Exponat geht weg, auch alte `kontakt`-Zeilen aus der
+ * Zeit vor dem 19.10.2026. Eine leere Liste heisst "an diesem Exponat nichts", der Besucher
+ * verliert dort damit auch die Ansprechpartner.
+ *
+ * Eine Transaktion: ein halb gesetztes Exponat waere ein Zustand, den die Oberflaeche nie
+ * gezeigt hat.
+ */
+export function setzeZuordnungen(
+  db: Db,
+  eingabe: { guid: string; exponatId: string; elemente: ZuOrdnend[]; nutzerId: string },
+): { neu: number; entfernt: number } {
+  pruefeElemente(db, eingabe);
+
+  const soll = new Set(eingabe.elemente.map((el) => `${el.art}:${el.zielId}`));
+  const ist = db
+    .select({ id: zuordnungen.id, art: zuordnungen.art, zielId: zuordnungen.zielId })
     .from(zuordnungen)
     .where(
-      and(
-        eq(zuordnungen.besucherGuid, guid),
-        eq(zuordnungen.art, art),
-        eq(zuordnungen.zielId, zielId),
-      ),
+      and(eq(zuordnungen.besucherGuid, eingabe.guid), eq(zuordnungen.exponatId, eingabe.exponatId)),
     )
-    .get();
-  if (reihe === undefined) throw notFound("zuordnung-unbekannt", "No such assignment.");
-  db.delete(zuordnungen).where(eq(zuordnungen.id, reihe.id)).run();
+    .all();
+  const istSchluessel = new Set(ist.map((z) => `${z.art}:${z.zielId}`));
+
+  const weg = ist.filter((z) => !soll.has(`${z.art}:${z.zielId}`));
+  // Doppelt geschickte Elemente einmal, sonst schluege der Eindeutigkeitsschluessel an.
+  const eindeutig = [
+    ...new Map(eingabe.elemente.map((el) => [`${el.art}:${el.zielId}`, el])).values(),
+  ];
+  const dazu = eindeutig.filter((el) => !istSchluessel.has(`${el.art}:${el.zielId}`));
+
+  db.transaction((tx) => {
+    for (const z of weg) tx.delete(zuordnungen).where(eq(zuordnungen.id, z.id)).run();
+    if (dazu.length > 0) {
+      const jetzt = Date.now();
+      tx.insert(zuordnungen)
+        .values(
+          dazu.map((el) => ({
+            id: randomUUID(),
+            besucherGuid: eingabe.guid,
+            exponatId: eingabe.exponatId,
+            art: el.art,
+            zielId: el.zielId,
+            appNutzerId: eingabe.nutzerId,
+            zeitpunkt: jetzt,
+          })),
+        )
+        .run();
+    }
+  });
+
+  return { neu: dazu.length, entfernt: weg.length };
+}
+
+/**
+ * Alle Exponate aus Sicht eines Besuchers, fuer das Besucherdetail.
+ *
+ * Je Exponat seine Dokumente und Links mit dem Vermerk, ob sie zugeordnet sind, und die
+ * Ansprechpartner, die mitkommen. `besucht` heisst: irgendeine Zuordnung an diesem Exponat,
+ * auch eine alte `kontakt`-Zeile; dieselbe Regel wie in `sammleWerte`.
+ */
+export function exponateFuerBesucher(db: Db, guid: string) {
+  const meine = db.select().from(zuordnungen).where(eq(zuordnungen.besucherGuid, guid)).all();
+
+  return db
+    .select()
+    .from(exponate)
+    .orderBy(asc(exponate.kennung))
+    .all()
+    .map((e) => {
+      const hier = meine.filter((z) => z.exponatId === e.id);
+      const hat = (art: Art, id: string) => hier.some((z) => z.art === art && z.zielId === id);
+      const inhalte = inhalteVonExponat(db, e.id);
+      return {
+        id: e.id,
+        kennung: e.kennung,
+        name: e.name,
+        besucht: hier.length > 0,
+        dokumente: inhalte.dokumente.map((d) => ({
+          id: d.id,
+          titel: d.titel,
+          zugeordnet: hat("dokument", d.id),
+        })),
+        links: inhalte.links.map((l) => ({
+          id: l.id,
+          titel: l.titel,
+          url: l.url,
+          zugeordnet: hat("link", l.id),
+        })),
+        kontakte: inhalte.kontakte.map((c) => ({
+          id: c.id,
+          name: [c.titel, c.vorname, c.nachname].filter((t) => t !== null && t !== "").join(" "),
+        })),
+      };
+    });
 }
 
 /** Die letzten Zuordnungen, fuer das Dashboard und den Scan-Bildschirm. */

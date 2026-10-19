@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { badRequest } from "../errors.js";
+import { badRequest, unauthorized } from "../errors.js";
 import { rundeAlsText, rundenVonBesucher } from "../services/runden.js";
 import type { Kontext } from "../kontext.js";
 import {
@@ -11,7 +11,7 @@ import {
   zuordnungenVonBesucher,
   type BesucherEingabe,
 } from "../services/besucher.js";
-import { entferneZuordnung, type Art } from "../services/zuordnungen.js";
+import { exponateFuerBesucher, leseElemente, setzeZuordnungen } from "../services/zuordnungen.js";
 
 /**
  * Besucherverwaltung, nur fuer Admins.
@@ -90,21 +90,34 @@ export function besucherRoutes(app: FastifyInstance, ctx: Kontext): void {
     },
   );
 
-  /** Eine einzelne Zuordnung zuruecknehmen, aus der Detailansicht des Besuchers. */
-  app.delete<{ Params: { guid: string; art: string; zielId: string } }>(
-    "/api/besucher/:guid/zuordnungen/:art/:zielId",
+  /** Alle Exponate aus Sicht dieses Besuchers, fuer die Kaestchen im Besucherdetail. */
+  app.get<{ Params: { guid: string } }>(
+    "/api/besucher/:guid/exponate",
     { preHandler: app.verlangeAdmin },
-    async (req, reply) => {
-      const { art } = req.params;
-      if (art !== "dokument" && art !== "link" && art !== "kontakt") {
-        throw badRequest(
-          "art-ungueltig",
-          'Path segment art must be "dokument", "link" or "kontakt".',
-        );
-      }
-      entferneZuordnung(ctx.db, req.params.guid, art as Art, req.params.zielId);
-      void reply.code(204);
-      return null;
+    async (req) => {
+      findeBesucher(ctx.db, req.params.guid);
+      return exponateFuerBesucher(ctx.db, req.params.guid);
+    },
+  );
+
+  /**
+   * Setzt die Zuordnungen an einem Exponat auf genau die mitgeschickten Elemente.
+   *
+   * Ersetzt das einzelne Entfernen: die Kaestchen im Besucherdetail schicken je Exponat den
+   * ganzen Sollzustand, eine leere Liste nimmt das Exponat weg.
+   */
+  app.put<{ Params: { guid: string; exponatId: string }; Body: { elemente?: unknown } }>(
+    "/api/besucher/:guid/zuordnungen/:exponatId",
+    { preHandler: app.verlangeAdmin },
+    async (req) => {
+      const nutzer = req.nutzer;
+      if (nutzer === null) throw unauthorized();
+      return setzeZuordnungen(ctx.db, {
+        guid: req.params.guid,
+        exponatId: req.params.exponatId,
+        elemente: leseElemente(req.body?.elemente),
+        nutzerId: nutzer.id,
+      });
     },
   );
 }

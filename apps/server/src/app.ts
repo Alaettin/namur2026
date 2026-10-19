@@ -27,6 +27,7 @@ import { healthRoutes } from "./routes/health.js";
 import { importRoutes } from "./routes/import.js";
 import { nutzerRoutes } from "./routes/nutzer.js";
 import { scanRoutes } from "./routes/scan.js";
+import { sicherungRoutes } from "./routes/sicherung.js";
 import { frontendVorhanden, statischeDateien } from "./routes/statisch.js";
 import { bootstrapAdmin } from "./services/bootstrap.js";
 import { installiereSicherheitskopfzeilen } from "./sicherheitskopfzeilen.js";
@@ -75,6 +76,8 @@ export async function buildServer(
     env,
     db,
     ablage: new Dateiablage(env.dateienDir),
+    sqlite,
+    migrationsOrdner,
   };
 
   /*
@@ -141,6 +144,7 @@ export async function buildServer(
   avatarRoutes(app, ctx);
   carreraRoutes(app, ctx);
   entwicklerRoutes(app, ctx);
+  sicherungRoutes(app, ctx);
   /*
    * Die oeffentliche API. Eigener Geltungsbereich mit eigenem Fehlerhandler: sie antwortet
    * mit `Result`, die Verwaltung mit `{code, message}`.

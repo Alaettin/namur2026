@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ApiFehler, api, leseSchalter, setzeSchalter, useAbruf } from "../lib/api.js";
 import { Flaeche, Knopf, Markierung, Ueberschrift, Zustand } from "../bausteine/basis.js";
 import { Avatarverwaltung } from "./Avatarverwaltung.js";
+import { Sicherung } from "./Sicherung.js";
 import { Rueckfrage } from "../bausteine/dialog.js";
 import type { Ich } from "../lib/ich.js";
 
@@ -123,6 +124,8 @@ export function Einstellungen({ ich }: { ich: Ich }) {
       </Flaeche>
 
       <Avatarverwaltung />
+
+      <Sicherung />
 
       <Flaeche className="flex flex-col gap-5 p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">

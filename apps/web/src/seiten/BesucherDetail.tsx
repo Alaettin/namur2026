@@ -13,6 +13,7 @@ import {
 } from "../bausteine/basis.js";
 import { Rueckfrage } from "../bausteine/dialog.js";
 import type { Ich } from "../lib/ich.js";
+import { BesucherExponate } from "./BesucherExponate.js";
 
 /**
  * Die zehn Textfelder, dieselben wie im Konnektor-Modell.
@@ -70,7 +71,7 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
 
   const abruf = useAbruf<
     BesucherDaten & {
-      zuordnungen: { id: string; art: string; zielId: string; exponatId: string }[];
+      zuordnungen: { id: string }[];
       runden: Runde[];
     }
   >(neu ? null : `/api/besucher/${String(guid)}`);
@@ -275,57 +276,7 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
               </div>
             </Flaeche>
 
-            <Flaeche className="flex flex-col gap-4 p-6">
-              <h2 className="text-lg font-semibold">
-                Zugeordnete Inhalte ({abruf.daten?.zuordnungen.length ?? 0})
-              </h2>
-              {abruf.daten !== null && abruf.daten.zuordnungen.length === 0 ? (
-                <p className="text-sm text-text-hinweis">
-                  Noch nichts zugeordnet. Zuordnungen entstehen beim Scannen am Exponat.
-                </p>
-              ) : (
-                <ul className="flex flex-col divide-y divide-linie">
-                  {abruf.daten?.zuordnungen.map((z) => (
-                    <li
-                      key={z.id}
-                      className="flex items-center justify-between gap-4 py-2.5 text-sm"
-                    >
-                      <span className="flex items-center gap-3">
-                        <span className="text-[11px] font-semibold tracking-[0.08em] text-text-hinweis uppercase">
-                          {z.art}
-                        </span>
-                        <Link
-                          to={`/exponate/${z.exponatId}`}
-                          className="font-medium text-primaer-dunkel"
-                        >
-                          Exponat ansehen
-                        </Link>
-                      </span>
-                      <Knopf
-                        art="still"
-                        className="h-8 px-3 text-[13px]"
-                        onClick={() => {
-                          void api(
-                            `/api/besucher/${String(guid)}/zuordnungen/${z.art}/${z.zielId}`,
-                            { method: "DELETE" },
-                          )
-                            .then(() => {
-                              abruf.neu();
-                            })
-                            .catch((u: unknown) => {
-                              setzeFehler(
-                                u instanceof ApiFehler ? u.message : "Entfernen nicht möglich.",
-                              );
-                            });
-                        }}
-                      >
-                        Entfernen
-                      </Knopf>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Flaeche>
+            <BesucherExponate guid={aktuelleGuid} aufFehler={setzeFehler} />
           </>
         )}
       </Zustand>

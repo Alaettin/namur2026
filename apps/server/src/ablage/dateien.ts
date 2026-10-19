@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { mkdir, rm, writeFile } from "node:fs/promises";
-import { dirname, join, resolve, sep } from "node:path";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import type { ReadStream } from "node:fs";
 
 /**
@@ -59,6 +59,46 @@ export class Dateiablage {
    */
   async loesche(pfad: string): Promise<void> {
     await rm(this.absolut(pfad), { force: true });
+  }
+
+  // --- Fuer die Sicherung --------------------------------------------------------------
+
+  /** Liest eine abgelegte Datei ganz, oder `null`, wenn sie fehlt. */
+  async liesGanz(pfad: string): Promise<Buffer | null> {
+    try {
+      return await readFile(this.absolut(pfad));
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Schreibt eine Datei unter einem **vorgegebenen** Pfad, beim Einspielen einer Sicherung.
+   *
+   * Der Pfad kommt hier von aussen, aus der ZIP-Datei. `absolut` haelt ihn in der Ablage;
+   * ein `../` in einem Eintrag wirft, statt neben die Ablage zu schreiben.
+   */
+  async schreibe(pfad: string, inhalt: Uint8Array): Promise<void> {
+    const ziel = this.absolut(pfad);
+    await mkdir(dirname(ziel), { recursive: true });
+    await writeFile(ziel, inhalt);
+  }
+
+  /** Alle abgelegten Dateien, relativ und mit `/` getrennt. Fehlt die Ablage, leer. */
+  async alle(): Promise<string[]> {
+    try {
+      const eintraege = await readdir(this.wurzel, { recursive: true, withFileTypes: true });
+      return eintraege
+        .filter((e) => e.isFile())
+        .map((e) => relative(this.wurzel, join(e.parentPath, e.name)).replaceAll("\\", "/"));
+    } catch {
+      return [];
+    }
+  }
+
+  /** Prueft einen Pfad, ohne etwas zu tun. Wirft wie `absolut`. */
+  pruefe(pfad: string): void {
+    this.absolut(pfad);
   }
 
   /**
