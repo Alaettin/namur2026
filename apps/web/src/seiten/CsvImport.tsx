@@ -23,10 +23,13 @@ import { Rueckfrage } from "../bausteine/dialog.js";
  * korrigieren, bevor etwas passiert; erst Schritt 3 schreibt.
  */
 
+/** Dieselben wie `ZIELFELDER` in `services/csv.ts`; fehlt eines hier, ist es nicht wählbar. */
 const ZIELFELDER = [
   "guid",
+  "titel",
   "vorname",
   "nachname",
+  "alias",
   "firma",
   "position",
   "email",

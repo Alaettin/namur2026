@@ -39,6 +39,7 @@ export const TEXTFELDER = [
   "titel",
   "vorname",
   "nachname",
+  "alias",
   "firma",
   "position",
   "email",
@@ -56,6 +57,7 @@ export interface BesucherEingabe {
   titel?: string | null;
   vorname: string;
   nachname: string;
+  alias?: string | null;
   firma?: string | null;
   position?: string | null;
   email?: string | null;
@@ -144,7 +146,7 @@ export interface Seite {
 /**
  * Liste mit Suche und Seitenumschaltung.
  *
- * Gesucht wird ueber Vorname, Nachname, Firma, E-Mail und GUID. Die Gesamtzahl wird mit
+ * Gesucht wird ueber Vorname, Nachname, Alias, Firma, E-Mail und GUID. Die Gesamtzahl wird mit
  * **demselben** Filter gezaehlt wie die Seite selbst: zwei Abfragen, von denen nur eine
  * den Filter kennt, ergeben eine Seitenumschaltung, die nicht aufgeht, und kein Test
  * schlaegt darauf an.
@@ -157,6 +159,7 @@ export function listeBesucher(db: Db, suche: string, seite: Seite) {
       : or(
           like(besucher.vorname, `%${begriff}%`),
           like(besucher.nachname, `%${begriff}%`),
+          like(besucher.alias, `%${begriff}%`),
           like(besucher.firma, `%${begriff}%`),
           like(besucher.email, `%${begriff}%`),
           like(besucher.guid, `%${begriff}%`),
@@ -199,7 +202,7 @@ export function zaehleZuordnungen(db: Db, guid: string, exponatId: string): numb
 }
 
 /**
- * Die zehn Textfelder, getrimmt. Leeres wird `null`, nicht `""`.
+ * Die Textfelder, getrimmt. Leeres wird `null`, nicht `""`.
  *
  * Vor- und Nachname sind in der Tabelle `not null` und tragen das auch im Typ: `sammleWerte`
  * laesst leere Felder aus, und ein Besucher ohne Namen waere im Viewer eine leere Karte.

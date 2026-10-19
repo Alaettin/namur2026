@@ -15,6 +15,7 @@ import { istInlineBild } from "../services/mime.js";
 import { avatarFuer } from "../services/standardavatar.js";
 import {
   PERSONENFELDER,
+  VISITOR_ALIAS,
   VISITOR_AVATAR,
   dokumentBeschreibung,
   dokumentDatei,
@@ -146,6 +147,10 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
     if (wert !== null && id !== null) {
       werte.push({ propertyId: visitorFeld(id), text: wert, dateiId: null });
     }
+  }
+  // Eigene Eigenschaft, siehe `VISITOR_ALIAS`. Leer faellt aus wie jedes andere Feld.
+  if (person.alias !== null && person.alias.trim() !== "") {
+    werte.push({ propertyId: VISITOR_ALIAS, text: person.alias, dateiId: null });
   }
   /*
    * **Rueckfall auf den Standard-Avatar.** Jeder neue Besucher traegt dessen Id seit dem

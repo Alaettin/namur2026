@@ -1,0 +1,1 @@
+ALTER TABLE `besucher` ADD `alias` text;

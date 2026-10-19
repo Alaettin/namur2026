@@ -67,6 +67,16 @@ export function platzNr(platz: number): string {
 
 export const VISITOR_AVATAR = "Visitor_Avatar";
 
+/**
+ * Der Alias eines Besuchers, seit dem 19.10.2026.
+ *
+ * **Bewusst nicht in `PERSONENFELDER`.** Die Liste traegt auch die Ansprechpartner, und ein
+ * Eintrag dort erzeugte je Exponat fuenf `{K}_Contact{NN}_Alias`, die es nicht gibt. Anders
+ * als der Titel geht der Alias als eigene Eigenschaft hinaus; der Content-Admin muss sie in
+ * Axon nachmappen.
+ */
+export const VISITOR_ALIAS = "Visitor_Alias";
+
 export function visitorFeld(id: string): string {
   return `Visitor_${id}`;
 }

@@ -411,6 +411,8 @@ export async function saeAus(
       guid: `NHV2026-${String(i + 1).padStart(4, "0")}`,
       vorname,
       nachname,
+      // Jeder vierte traegt einen Alias, damit Verwaltung und Viewer beides zeigen.
+      alias: i % 4 === 0 ? `${vorname}${String(i + 1)}` : null,
       firma: FIRMEN[i % FIRMEN.length] ?? "Mueller Prozesstechnik",
       position: i % 3 === 0 ? "Leitung Instandhaltung" : "Fachplanung EMSR",
       // Mit laufender Nummer, sonst waere die Adresse bei gleichem Paar nicht eindeutig.

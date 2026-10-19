@@ -8,6 +8,7 @@ import {
   MAX_LINKS,
   PERSONENFELDER,
   PROPERTY_TYPE,
+  VISITOR_ALIAS,
   VISITOR_AVATAR,
   dokumentBeschreibung,
   dokumentDatei,
@@ -65,7 +66,7 @@ function eintrag(id: string, name: string, type: number): DataModelProperty {
 /**
  * Baut das vollstaendige Modell aus den angelegten Exponaten.
  *
- * Je Exponat 2 + 10*3 + 10*2 + 5*11 = 107 Datenpunkte, dazu 11 fuer den Besucher.
+ * Je Exponat 2 + 10*3 + 10*2 + 5*10 = 102 Datenpunkte, dazu 32 fuer den Besucher.
  */
 export function baueModell(db: Db): DataModelProperty[] {
   const felder: DataModelProperty[] = [];
@@ -76,6 +77,7 @@ export function baueModell(db: Db): DataModelProperty[] {
     if (id === null) continue;
     felder.push(eintrag(visitorFeld(id), `Besucher ${name}`, PROPERTY_TYPE.property));
   }
+  felder.push(eintrag(VISITOR_ALIAS, "Besucher Alias", PROPERTY_TYPE.property));
   felder.push(eintrag(VISITOR_AVATAR, "Besucher Foto", PROPERTY_TYPE.document));
 
   /*
@@ -147,5 +149,5 @@ export function baueModell(db: Db): DataModelProperty[] {
 export const FELDER_JE_EXPONAT =
   2 + MAX_DOKUMENTE * 3 + MAX_LINKS * 2 + MAX_KONTAKTE * AUSGEGEBENE_PERSONENFELDER;
 
-/** Zahl der Besucherdatenpunkte. */
-export const FELDER_BESUCHER = AUSGEGEBENE_PERSONENFELDER + 1 + MAX_RUNDEN_MODELL;
+/** Zahl der Besucherdatenpunkte: Personenfelder, Alias, Foto und die Rundenplaetze. */
+export const FELDER_BESUCHER = AUSGEGEBENE_PERSONENFELDER + 1 + 1 + MAX_RUNDEN_MODELL;

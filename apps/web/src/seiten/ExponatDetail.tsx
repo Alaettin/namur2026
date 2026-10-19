@@ -14,7 +14,7 @@ import {
 import { Rueckfrage, Schaufenster } from "../bausteine/dialog.js";
 import type { Ich } from "../lib/ich.js";
 import { type Person } from "./Ansprechpartner.js";
-import { PERSONENFELDER } from "../lib/personenfelder.js";
+import { ANSPRECHPARTNERFELDER } from "../lib/personenfelder.js";
 
 /** Obergrenzen, dieselben wie im Modell auf dem Server. */
 const MAX = { dokumente: 10, links: 10, kontakte: 5 };
@@ -68,7 +68,7 @@ interface Kontakt {
   ort: string | null;
   land: string | null;
   website: string | null;
-  /** Die Schau liest die Felder ueber `PERSONENFELDER`, also ueber den Namen. */
+  /** Die Schau liest die Felder ueber `ANSPRECHPARTNERFELDER`, also ueber den Namen. */
   [feld: string]: unknown;
 }
 
@@ -476,7 +476,7 @@ export function ExponatDetail({ ich }: { ich: Ich }) {
           <div className="flex flex-col gap-5">
             {/* Kein Foto: Ansprechpartner tragen seit dem 08.10.2026 keines mehr. */}
             <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[8rem_1fr]">
-              {PERSONENFELDER.map((f) => {
+              {ANSPRECHPARTNERFELDER.map((f) => {
                 const wert = kontaktschau[f.name];
                 if (typeof wert !== "string" || wert === "") return null;
                 return (

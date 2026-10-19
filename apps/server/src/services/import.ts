@@ -225,9 +225,15 @@ export function uebernehmeImport(
         .where(eq(besucher.guid, guid))
         .get();
 
+      /*
+       * **Jedes Zielfeld ausser der GUID muss hier stehen.** Bis zum 19.10.2026 fehlte
+       * `titel`: Vorlage und Spaltenerkennung boten ihn an, geschrieben wurde er nie.
+       */
       const felder = {
+        titel: z.werte.titel ?? null,
         vorname: z.werte.vorname ?? "",
         nachname: z.werte.nachname ?? "",
+        alias: z.werte.alias ?? null,
         firma: z.werte.firma ?? null,
         position: z.werte.position ?? null,
         email: z.werte.email ?? null,
@@ -253,7 +259,15 @@ export function uebernehmeImport(
           .run();
         neu++;
       } else {
-        tx.update(besucher).set(felder).where(eq(besucher.guid, guid)).run();
+        /*
+         * **Titel und Alias nur ueberschreiben, wenn die Datei sie mitbringt.** Beide
+         * traegt der Besucher oft selbst am Tablet ein, und die Liste aus dem
+         * Anmeldewerkzeug kennt sie nicht; ein erneuter Import loeschte sie sonst still.
+         */
+        const aenderung: Partial<typeof felder> = { ...felder };
+        if (!zuordnung.includes("titel")) delete aenderung.titel;
+        if (!zuordnung.includes("alias")) delete aenderung.alias;
+        tx.update(besucher).set(aenderung).where(eq(besucher.guid, guid)).run();
         aktualisiert++;
       }
     }

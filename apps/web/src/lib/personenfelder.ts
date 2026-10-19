@@ -18,12 +18,15 @@ export interface Personenfeld {
   gruppe: Feldgruppe;
   pflicht?: boolean;
   typ?: "text" | "email";
+  /** Nur in der Besuchermaske, nicht bei den Ansprechpartnern. */
+  nurBesucher?: boolean;
 }
 
 export const PERSONENFELDER: Personenfeld[] = [
   { name: "titel", text: "Titel", gruppe: "Person" },
   { name: "vorname", text: "Vorname", gruppe: "Person", pflicht: true },
   { name: "nachname", text: "Nachname", gruppe: "Person", pflicht: true },
+  { name: "alias", text: "Alias", gruppe: "Person", nurBesucher: true },
   { name: "firma", text: "Firma", gruppe: "Firma" },
   { name: "position", text: "Position", gruppe: "Firma" },
   { name: "strasse", text: "Straße", gruppe: "Anschrift" },
@@ -37,9 +40,20 @@ export const PERSONENFELDER: Personenfeld[] = [
 /** In Anzeigereihenfolge, damit keine Maske eine eigene Folge erfindet. */
 export const GRUPPEN: Feldgruppe[] = ["Person", "Firma", "Anschrift", "Kontakt"];
 
+/**
+ * Die Felder eines Ansprechpartners: dieselbe Liste ohne die reinen Besucherfelder.
+ *
+ * Der Alias hat dort keine Spalte und im Konnektor-Modell keinen Datenpunkt; ein Feld in der
+ * Maske nähme Eingaben an, die der Server still verwirft.
+ */
+export const ANSPRECHPARTNERFELDER: Personenfeld[] = PERSONENFELDER.filter((f) => !f.nurBesucher);
+
 /** Die Felder einer Gruppe, in der Reihenfolge der Liste oben. */
-export function felderDerGruppe(gruppe: Feldgruppe): Personenfeld[] {
-  return PERSONENFELDER.filter((f) => f.gruppe === gruppe);
+export function felderDerGruppe(
+  gruppe: Feldgruppe,
+  liste: Personenfeld[] = PERSONENFELDER,
+): Personenfeld[] {
+  return liste.filter((f) => f.gruppe === gruppe);
 }
 
 /**

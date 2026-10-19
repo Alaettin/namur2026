@@ -66,6 +66,7 @@ test("Stammdaten lassen sich ändern und das Abbrechen ändert nichts", async ({
   await page.goto(`/kiosk/${guid}/stammdaten`);
   await page.getByLabel("Firma").fill("Neu GmbH");
   await page.getByLabel("Ort").fill("Mannheim");
+  await page.getByLabel("Alias").fill("Tabi");
   await page.getByRole("button", { name: "Speichern" }).click();
   await expect(page.getByRole("heading", { name: /^Hallo/ })).toBeVisible();
 
@@ -73,6 +74,7 @@ test("Stammdaten lassen sich ändern und das Abbrechen ändert nichts", async ({
   const nachher = await (await request.get(`/api/besucher/${guid}`)).json();
   expect(nachher.firma).toBe("Neu GmbH");
   expect(nachher.ort).toBe("Mannheim");
+  expect(nachher.alias).toBe("Tabi");
   expect(nachher.guid, "die GUID hat sich geändert").toBe(guid);
 
   await raeumeAuf(request, guid);

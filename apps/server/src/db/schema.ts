@@ -82,6 +82,11 @@ export const besucher = sqliteTable("besucher", {
   titel: text("titel"),
   vorname: text("vorname").notNull(),
   nachname: text("nachname").notNull(),
+  /**
+   * Freitext, optional, nicht eindeutig. **Nur beim Besucher**, nicht bei den
+   * Ansprechpartnern; geht als eigene Eigenschaft `Visitor_Alias` an Axon.
+   */
+  alias: text("alias"),
   firma: text("firma"),
   position: text("position"),
   email: text("email"),

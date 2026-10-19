@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ApiFehler, api, useAbruf } from "../lib/api.js";
-import { GRUPPEN, PERSONENFELDER, felderDerGruppe } from "../lib/personenfelder.js";
+import { ANSPRECHPARTNERFELDER, GRUPPEN, felderDerGruppe } from "../lib/personenfelder.js";
 import { Blaetterleiste, useBlaettern, useSprungZuEintrag } from "../bausteine/blaettern.js";
 import {
   Feld,
@@ -37,7 +37,7 @@ export interface Person {
   land: string | null;
   website: string | null;
   exponate: string[];
-  /** Die Masken lesen die Felder ueber `PERSONENFELDER`, also ueber den Namen. */
+  /** Die Masken lesen die Felder ueber `ANSPRECHPARTNERFELDER`, also ueber den Namen. */
   [feld: string]: unknown;
 }
 
@@ -213,7 +213,7 @@ function PersonFormular({
       return;
     }
     const vorbelegt: Record<string, string> = {};
-    for (const f of PERSONENFELDER) {
+    for (const f of ANSPRECHPARTNERFELDER) {
       const wert = person[f.name];
       vorbelegt[f.name] = typeof wert === "string" ? wert : "";
     }
@@ -274,7 +274,7 @@ function PersonFormular({
               <legend className="col-span-full pt-2 text-[11px] font-semibold tracking-[0.08em] text-text-hinweis uppercase">
                 {gruppe}
               </legend>
-              {felderDerGruppe(gruppe).map((f) => (
+              {felderDerGruppe(gruppe, ANSPRECHPARTNERFELDER).map((f) => (
                 <label key={f.name} className="flex flex-col gap-2 text-[13px] font-semibold">
                   {f.text}
                   <Feld
