@@ -81,6 +81,18 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
   const [fehler, setzeFehler] = useState<string | null>(null);
   const [laeuft, setzeLaeuft] = useState(false);
   const [loeschen, setzeLoeschen] = useState(false);
+  const [gespeichert, setzeGespeichert] = useState(false);
+
+  // Die Rückmeldung steht drei Sekunden, dann ist sie wieder weg; Muster wie `Monowert`.
+  useEffect(() => {
+    if (!gespeichert) return;
+    const t = setTimeout(() => {
+      setzeGespeichert(false);
+    }, 3000);
+    return () => {
+      clearTimeout(t);
+    };
+  }, [gespeichert]);
 
   /*
    * Das Formular ist der **einzige** Ort, an dem die Eingaben stehen. Sie werden einmal
@@ -97,6 +109,7 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
   async function speichern() {
     setzeLaeuft(true);
     setzeFehler(null);
+    setzeGespeichert(false);
     try {
       if (neu) {
         const angelegt = await api<{ guid: string }>("/api/besucher", {
@@ -105,11 +118,20 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
         });
         void navigate(`/besucher/${angelegt.guid}`, { replace: true });
       } else {
-        await api(`/api/besucher/${String(guid)}`, {
+        /*
+         * **Nicht neu laden.** `abruf.neu()` setzte die ganze Seite kurz auf „Wird geladen“:
+         * kein sichtbares Ergebnis, nur ein Blinken, und die Exponate klappten wieder zu.
+         * Die Antwort ist der gespeicherte Datensatz; aus ihr kommt das Formular, so stehen
+         * dort die Werte, wie der Server sie abgelegt hat (getrimmt, leer statt `null`).
+         */
+        const neuStand = await api<Record<string, string | null>>(`/api/besucher/${String(guid)}`, {
           method: "PATCH",
           body: JSON.stringify(werte),
         });
-        abruf.neu();
+        const gesetzt: Werte = {};
+        for (const f of PERSONENFELDER) gesetzt[f.name] = neuStand[f.name] ?? "";
+        setzeWerte(gesetzt);
+        setzeGespeichert(true);
       }
     } catch (ursache) {
       setzeFehler(ursache instanceof ApiFehler ? ursache.message : "Speichern nicht möglich.");
@@ -163,6 +185,8 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
                       value={werte[f.name] ?? ""}
                       onChange={(e) => {
                         setzeWerte((w) => ({ ...w, [f.name]: e.target.value }));
+                        // Die Meldung soll nie für ungespeicherte Eingaben stehen.
+                        setzeGespeichert(false);
                       }}
                     />
                   </label>
@@ -198,10 +222,31 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
               </label>
             )}
 
-            <div className="flex flex-wrap gap-3 sm:col-span-2">
+            <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
               <Knopf type="submit" disabled={laeuft}>
                 {laeuft ? "Wird gespeichert …" : "Speichern"}
               </Knopf>
+              {/* `role="status"` liest der Bildschirmleser vor, ohne den Fokus zu nehmen. */}
+              <span role="status" className="order-last text-sm font-semibold sm:order-none">
+                {gespeichert && (
+                  <span className="inline-flex items-center gap-1.5 text-primaer-dunkel">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                    Gespeichert
+                  </span>
+                )}
+              </span>
               {!neu && (
                 <Knopf
                   art="gefahr"

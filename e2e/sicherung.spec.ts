@@ -104,3 +104,43 @@ test("Export und Import derselben Sicherung lassen den Bestand stehen", async ({
   await expect(page.getByRole("heading", { name: "Einstellungen" })).toBeVisible();
   expect(await (await request.get("/api/entwickler/bestand")).json()).toEqual(vorher);
 });
+
+/**
+ * **Speichern gibt Rückmeldung und lädt die Seite nicht neu.** Vorher setzte das Speichern die
+ * ganze Seite kurz auf „Wird geladen“: kein sichtbares Ergebnis, und aufgeklappte Exponate
+ * klappten wieder zu.
+ */
+test("Speichern im Besucherdetail meldet Gespeichert und lässt die Seite stehen", async ({
+  page,
+  request,
+}) => {
+  const exponat = await legeExponatAn(request, `Speichern ${String(Date.now()).slice(-5)}`);
+  await request.post(`/api/exponate/${exponat.id}/links`, {
+    data: { url: "https://www.namur.net/", titel: "Ein Link" },
+  });
+  const guid = `SPE-${String(Date.now()).slice(-8)}`;
+  await request.post("/api/besucher", { data: { guid, vorname: "Sina", nachname: "Speicher" } });
+  merkeBesucher(guid);
+
+  await page.goto(`/besucher/${guid}`);
+  const klappe = page.getByRole("button", { name: new RegExp(exponat.kennung) });
+  await klappe.click();
+  await expect(klappe).toHaveAttribute("aria-expanded", "true");
+
+  const firma = page.getByLabel("Firma", { exact: true });
+  await firma.fill("  Neue Firma GmbH  ");
+  const status = page.getByRole("status").filter({ hasText: "Gespeichert" });
+  await expect(status).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Speichern", exact: true }).click();
+  await expect(status).toBeVisible();
+  await expect(page.getByText("Wird geladen")).toHaveCount(0);
+  await expect(klappe).toHaveAttribute("aria-expanded", "true");
+  // So, wie der Server es abgelegt hat: getrimmt.
+  await expect(firma).toHaveValue("Neue Firma GmbH");
+  expect((await (await request.get(`/api/besucher/${guid}`)).json()).firma).toBe("Neue Firma GmbH");
+
+  // Eine neue Eingabe nimmt die Meldung zurück.
+  await firma.fill("Noch nicht gespeichert");
+  await expect(status).toHaveCount(0);
+});
