@@ -24,7 +24,10 @@ test("die Stammdaten stehen in Gruppen", async ({ page }) => {
   await expect(page.getByLabel("Titel", { exact: true })).toBeVisible();
 });
 
-test("ein Titel lässt sich setzen und geht am Vornamen hinaus", async ({ page, request }) => {
+test("ein Titel lässt sich setzen und geht getrennt vom Vornamen hinaus", async ({
+  page,
+  request,
+}) => {
   const guid = `TIT-${String(Date.now()).slice(-8)}`;
 
   await page.goto("/besucher/neu");
@@ -43,18 +46,15 @@ test("ein Titel lässt sich setzen und geht am Vornamen hinaus", async ({ page, 
   expect(gespeichert.vorname).toBe("Anna");
 
   /*
-   * **Und so, wie Axon es bekommt.** Ohne Anmeldung, wie der Viewer: der Titel steht am
-   * Vornamen, und eine eigene Eigenschaft gibt es nicht.
+   * **Und so, wie Axon es bekommt.** Ohne Anmeldung, wie der Viewer: seit dem 19.10.2026
+   * Titel und Vorname getrennt.
    */
-  const werte = await (
+  const werte = (await (
     await request.post(`/connector/product/${guid}/values`, { data: {} })
-  ).json();
-  const vorname = werte.find((w: { propertyId: string }) => w.propertyId === "Visitor_FirstName");
-  expect(JSON.stringify(vorname)).toContain("Dr. Anna");
-  expect(
-    werte.filter((w: { propertyId: string }) => /title/i.test(w.propertyId)),
-    "neue Eigenschaft im Modell",
-  ).toEqual([]);
+  ).json()) as { propertyId: string; value: string }[];
+  const wert = (id: string) => werte.find((w) => w.propertyId === id)?.value;
+  expect(wert("Visitor_Title")).toBe("Dr.");
+  expect(wert("Visitor_FirstName")).toBe("Anna");
 });
 
 /** Der Abschnitt ist zu, bis jemand ihn aufklappt. */

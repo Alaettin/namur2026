@@ -11,6 +11,7 @@ import {
   PROPERTY_TYPE,
   VISITOR_ALIAS,
   VISITOR_AVATAR,
+  VISITOR_TITLE,
   dokumentBeschreibung,
   dokumentDatei,
   dokumentTitel,
@@ -70,12 +71,13 @@ function eintrag(id: string, name: string, type: number): DataModelProperty {
 /**
  * Baut das vollstaendige Modell aus den angelegten Exponaten.
  *
- * Je Exponat 2 + 10*3 + 10*2 + 5*10 = 102 Datenpunkte, dazu 32 fuer den Besucher.
+ * Je Exponat 2 + 10*3 + 10*2 + 5*10 = 102 Datenpunkte, dazu 33 fuer den Besucher.
  */
 export function baueModell(db: Db): DataModelProperty[] {
   const felder: DataModelProperty[] = [];
 
   // --- Der Besucher -------------------------------------------------------------------
+  felder.push(eintrag(VISITOR_TITLE, "Besucher Titel", PROPERTY_TYPE.property));
   for (const { id, name } of PERSONENFELDER) {
     // `id: null` heisst "geht nicht einzeln hinaus", siehe den Titel in `felder.ts`.
     if (id === null) continue;
@@ -163,8 +165,8 @@ export function baueModell(db: Db): DataModelProperty[] {
 export const FELDER_JE_EXPONAT =
   2 + MAX_DOKUMENTE * 3 + MAX_LINKS * 2 + MAX_KONTAKTE * AUSGEGEBENE_PERSONENFELDER;
 
-/** Zahl der Besucherdatenpunkte: Personenfelder, Alias, Foto und die Rundenplaetze. */
-export const FELDER_BESUCHER = AUSGEGEBENE_PERSONENFELDER + 1 + 1 + MAX_RUNDEN_MODELL;
+/** Zahl der Besucherdatenpunkte: Titel, Personenfelder, Alias, Foto und die Rundenplaetze. */
+export const FELDER_BESUCHER = 1 + AUSGEGEBENE_PERSONENFELDER + 1 + 1 + MAX_RUNDEN_MODELL;
 
 /** Zahl der Datenpunkte der Top 10: je Platz Platzierung, Fahrer und Bestzeit. */
 export const FELDER_TOP = MAX_TOP_MODELL * 3;

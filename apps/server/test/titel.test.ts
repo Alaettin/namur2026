@@ -5,12 +5,9 @@ import { melde, starte, type Pruefstand } from "./hilfe.js";
 /**
  * Der akademische Titel.
  *
- * **Er hat bewusst keine eigene propertyId.** Das Konnektor-Modell hat der Content-Admin in
- * Axon gemappt; eine neue Eigenschaft haette er vor der Messe nachtragen muessen, sonst
- * waere der Titel im Viewer unsichtbar geblieben. Stattdessen geht er dem Vornamen voran.
- *
- * Diese Datei haelt beide Haelften fest: dass er ankommt, **und** dass das Modell sich
- * dabei nicht aendert.
+ * **Beim Besucher getrennt** (`Visitor_Title`), seit dem 19.10.2026; vorher stand er vorn im
+ * Vornamen. **Beim Ansprechpartner weiter im Vornamen**, eine `_Contact*_Title`-Eigenschaft
+ * gibt es nicht. Diese Datei haelt beide Seiten fest.
  */
 
 const ADMIN = { ADMIN_EMAIL: "admin@namur.de", ADMIN_PASSWORT: "startpasswort-123" };
@@ -85,11 +82,8 @@ function text(alle: Wert[], propertyId: string): string | undefined {
   return JSON.stringify(v);
 }
 
-describe("Das Modell aendert sich durch den Titel nicht", () => {
+describe("Der Titel im Modell", () => {
   /**
-   * **Die wichtigste Pruefung dieser Runde.** Gaebe es `Visitor_Title`, haenge daran eine
-   * Abstimmung mit Axon, von der niemand wuesste, bis am Stand ein Feld fehlt.
-   *
    * **Genau diese beiden Formen, nicht alles mit "Title".** Der erste Anlauf suchte
    * `/title/i` ueber alle Eigenschaften und ging durch, weil der Pruefstand gar keine
    * Exponate hatte. Am Betriebsdienst traf dieselbe Suche 200 Eigenschaften, naemlich die
@@ -97,13 +91,13 @@ describe("Das Modell aendert sich durch den Titel nicht", () => {
    * rot wird, taugt nicht; deshalb legt dieser Fall ausdruecklich ein Exponat mit Link an,
    * damit die harmlosen Treffer ueberhaupt vorkommen.
    */
-  it("kennt weder Visitor_Title noch Contact-Title, wohl aber Dokumenttitel", async () => {
+  it("kennt Visitor_Title, aber keinen Contact-Title, und die Dokumenttitel bleiben", async () => {
     const { s, keks } = await alsAdmin();
     await legeExponatMitInhalt(s, keks);
     const felder = await modell(s);
     const ids = felder.map((f) => f.id);
 
-    expect(ids, "eigene Eigenschaft fuer den Titel").not.toContain("Visitor_Title");
+    expect(ids, "eigene Eigenschaft fuer den Titel").toContain("Visitor_Title");
     expect(
       ids.filter((i) => /_Contact\d+_Title$/.test(i)),
       "Titel am Ansprechpartner",
@@ -132,8 +126,8 @@ describe("Das Modell aendert sich durch den Titel nicht", () => {
   });
 });
 
-describe("Der Titel geht am Vornamen hinaus", () => {
-  it("stellt ihn dem Vornamen voran", async () => {
+describe("Der Titel in values", () => {
+  it("liefert ihn beim Besucher getrennt vom Vornamen", async () => {
     const { s, keks } = await alsAdmin();
     await s.app.inject({
       method: "POST",
@@ -143,7 +137,8 @@ describe("Der Titel geht am Vornamen hinaus", () => {
     });
 
     const alle = await werte(s, "TITEL-0001");
-    expect(text(alle, "Visitor_FirstName")).toBe("Dr. Anna");
+    expect(text(alle, "Visitor_Title")).toBe("Dr.");
+    expect(text(alle, "Visitor_FirstName")).toBe("Anna");
     expect(text(alle, "Visitor_LastName")).toBe("Ahrens");
   });
 
@@ -164,9 +159,10 @@ describe("Der Titel geht am Vornamen hinaus", () => {
     const vorname = text(alle, "Visitor_FirstName");
     expect(vorname).toBe("Bernd");
     expect(vorname?.startsWith(" "), "fuehrendes Leerzeichen").toBe(false);
+    expect(text(alle, "Visitor_Title"), "leerer Titel ausgeliefert").toBeUndefined();
   });
 
-  it("gibt den Titel nicht zusaetzlich einzeln aus", async () => {
+  it("nennt den Titel genau einmal und nicht noch im Vornamen", async () => {
     const { s, keks } = await alsAdmin();
     await s.app.inject({
       method: "POST",
@@ -176,11 +172,14 @@ describe("Der Titel geht am Vornamen hinaus", () => {
     });
 
     const alle = await werte(s, "TITEL-0003");
-    expect(alle.filter((w) => /title/i.test(w.propertyId))).toEqual([]);
+    expect(alle.filter((w) => /title/i.test(w.propertyId)).map((w) => w.propertyId)).toEqual([
+      "Visitor_Title",
+    ]);
+    expect(text(alle, "Visitor_FirstName")).toBe("Clara");
   });
 
-  /** Dieselbe Feldliste traegt die Ansprechpartner; also muss es dort genauso laufen. */
-  it("gilt auch fuer einen Ansprechpartner am Exponat", async () => {
+  /** Beim Ansprechpartner bleibt der Titel im Vornamen, Entscheidung vom 19.10.2026. */
+  it("steht beim Ansprechpartner weiter im Vornamen", async () => {
     const { s, keks } = await alsAdmin();
 
     const exponat = (

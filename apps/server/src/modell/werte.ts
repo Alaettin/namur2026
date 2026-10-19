@@ -17,6 +17,7 @@ import {
   PERSONENFELDER,
   VISITOR_ALIAS,
   VISITOR_AVATAR,
+  VISITOR_TITLE,
   dokumentBeschreibung,
   dokumentDatei,
   dokumentTitel,
@@ -109,24 +110,24 @@ export function dateinameFuerSpec(name: string): string {
 /**
  * Der Wert eines Personenfeldes, so wie er hinausgeht.
  *
- * **Der Titel bekommt keine eigene propertyId**, sondern wird dem Vornamen vorangestellt:
- * aus "Dr." und "Anna" wird `FirstName = "Dr. Anna"`. Eine eigene Eigenschaft haette der
- * Content-Admin in Axon nachmappen muessen, sonst waere der Titel im Viewer unsichtbar
- * geblieben; so aendert sich das Modell ueberhaupt nicht.
+ * **Mit `titelImVornamen`** wird der Titel dem Vornamen vorangestellt: aus "Dr." und "Dirk"
+ * wird `FirstName = "Dr. Dirk"`. So bei den Ansprechpartnern. Beim Besucher geht der Titel
+ * seit dem 19.10.2026 getrennt als `Visitor_Title` hinaus, und der Vorname bleibt rein.
  *
  * Gibt `null`, wenn nichts hinausgeht: leere Felder werden ausgelassen, nicht als leerer
- * Text geliefert, und das Titelfeld selbst geht nie einzeln hinaus.
+ * Text geliefert, und das Titelfeld selbst geht ueber diese Funktion nie einzeln hinaus.
  */
 function personenwert(
   person: Record<string, unknown>,
   feld: string,
   id: string | null,
+  titelImVornamen: boolean,
 ): string | null {
   if (id === null) return null;
   const wert = person[feld];
   if (typeof wert !== "string" || wert.trim() === "") return null;
 
-  if (feld !== "vorname") return wert;
+  if (feld !== "vorname" || !titelImVornamen) return wert;
   const titel = person["titel"];
   // Ohne Titel bleibt der Vorname unveraendert, insbesondere **ohne** fuehrendes Leerzeichen.
   return typeof titel === "string" && titel.trim() !== "" ? `${titel.trim()} ${wert}` : wert;
@@ -148,8 +149,11 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
   // Einmal je Abruf, frisch: speist den Siegerrahmen **und** die Top 10.
   const vorne = bestenliste(db, MAX_TOP_MODELL);
 
+  if (person.titel !== null && person.titel.trim() !== "") {
+    werte.push({ propertyId: VISITOR_TITLE, text: person.titel.trim(), dateiId: null });
+  }
   for (const { feld, id } of PERSONENFELDER) {
-    const wert = personenwert(person, feld, id);
+    const wert = personenwert(person, feld, id, false);
     if (wert !== null && id !== null) {
       werte.push({ propertyId: visitorFeld(id), text: wert, dateiId: null });
     }
@@ -275,7 +279,7 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
      */
     for (const c of ansprechpartnerVonExponat(db, exponatId)) {
       for (const { feld, id } of PERSONENFELDER) {
-        const wert = personenwert(c, feld, id);
+        const wert = personenwert(c, feld, id, true);
         if (wert !== null && id !== null) {
           werte.push({ propertyId: kontaktFeld(k, c.platz, id), text: wert, dateiId: null });
         }

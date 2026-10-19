@@ -44,12 +44,12 @@ export const PROPERTY_TYPE = { property: 0, document: 1 } as const;
  */
 export const PERSONENFELDER = [
   /*
-   * **Der Titel hat bewusst keine eigene propertyId.** Er wird in `werte.ts` dem Vornamen
-   * vorangestellt, sodass "Dr. Anna" als `FirstName` hinausgeht. Eine eigene Eigenschaft
-   * haette der Content-Admin in Axon nachmappen muessen, sonst waere der Titel im Viewer
-   * unsichtbar geblieben; so aendert sich das Modell ueberhaupt nicht.
+   * **Der Titel hat hier keine propertyId.** Beim Ansprechpartner wird er in `werte.ts` dem
+   * Vornamen vorangestellt ("Dr. Dirk" als `FirstName`). Beim Besucher geht er seit dem
+   * 19.10.2026 getrennt als `VISITOR_TITLE` hinaus; das steht unten, weil diese Liste auch die
+   * Ansprechpartner traegt.
    *
-   * `id: null` ist deshalb kein Mangel, sondern die Aussage "geht nicht einzeln hinaus".
+   * `id: null` heisst also "geht nicht ueber diese Liste einzeln hinaus".
    */
   { feld: "titel", id: null, name: "Titel" },
   { feld: "vorname", id: "FirstName", name: "Vorname" },
@@ -84,6 +84,15 @@ export const VISITOR_AVATAR = "Visitor_Avatar";
  * Axon nachmappen.
  */
 export const VISITOR_ALIAS = "Visitor_Alias";
+
+/**
+ * Der akademische Titel eines Besuchers, getrennt vom Vornamen, seit dem 19.10.2026.
+ *
+ * Vorher stand er vorn im Vornamen, damit kein neues Mapping noetig war. Der Nutzer will ihn
+ * getrennt; `Visitor_FirstName` traegt seitdem nur noch den Vornamen. **Nur beim Besucher**,
+ * die Ansprechpartner behalten den Titel im Vornamen.
+ */
+export const VISITOR_TITLE = "Visitor_Title";
 
 export function visitorFeld(id: string): string {
   return `Visitor_${id}`;
