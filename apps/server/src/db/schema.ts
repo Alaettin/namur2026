@@ -232,9 +232,12 @@ export const zuordnungen = sqliteTable(
     art: text("art", { enum: ["dokument", "link", "kontakt"] }).notNull(),
     /** Id in `exponat_dokumente`, `exponat_links` oder `exponat_kontakte`, je nach `art`. */
     zielId: text("ziel_id").notNull(),
-    appNutzerId: text("app_nutzer_id")
-      .notNull()
-      .references(() => appNutzer.id),
+    /*
+     * Wer vergeben hat. **Nullable seit dem 20.10.2026**: ein geloeschter Nutzer laesst seine
+     * Zuordnungen stehen, der Besucher behaelt, was er bekommen hat. Vorher verhinderte die
+     * Pflichtspalte ohne `ON DELETE` jedes Loeschen eines Betreuers, der etwas vergeben hatte.
+     */
+    appNutzerId: text("app_nutzer_id").references(() => appNutzer.id, { onDelete: "set null" }),
     zeitpunkt: integer("zeitpunkt").notNull().default(jetzt),
   },
   (t) => [

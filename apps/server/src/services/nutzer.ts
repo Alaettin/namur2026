@@ -164,6 +164,25 @@ export function aendereNutzer(
   return oeffentlich(neu);
 }
 
+/**
+ * Loescht einen Nutzer endgueltig, seit dem 20.10.2026.
+ *
+ * Was er vergeben hat, bleibt beim Besucher: `zuordnungen.app_nutzer_id` wird `NULL`
+ * (`ON DELETE SET NULL`), seine Exponat-Zuweisungen fallen per Kaskade weg. Eine laufende
+ * Sitzung endet bei der naechsten Anfrage, weil `verlangeAnmeldung` die Zeile nicht mehr
+ * findet.
+ *
+ * **Sich selbst loeschen geht nicht.** Damit ist auch der letzte Admin geschuetzt, ohne
+ * eigene Pruefung: loeschen darf nur ein aktiver Admin, und der bleibt immer uebrig.
+ */
+export function loescheNutzer(db: Db, id: string, ausfuehrenderId: string): void {
+  if (id === ausfuehrenderId) {
+    throw conflict("selbst-loeschen", "You cannot delete your own account.");
+  }
+  if (findeNutzerPerId(db, id) === null) throw notFound("nutzer-unbekannt", "Unknown user.");
+  db.delete(appNutzer).where(eq(appNutzer.id, id)).run();
+}
+
 function zaehleAktiveAdmins(db: Db): number {
   return db
     .select({ id: appNutzer.id })

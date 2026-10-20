@@ -57,6 +57,13 @@
       "when": 1792492369305,
       "tag": "0007_eager_the_enforcers",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1792497821266,
+      "tag": "0008_misty_greymalkin",
+      "breakpoints": true
     }
   ]
 }

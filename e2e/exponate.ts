@@ -115,9 +115,9 @@ export function merkeAnsprechpartner(id: string): void {
 /**
  * Gibt die angelegten Ansprechpartner zurück. Gehört neben `raeumeExponateAuf`.
  *
- * **App-Nutzer stehen hier bewusst nicht:** die lassen sich nach Entwurf nicht löschen, nur
- * deaktivieren, damit ein Zurücksetzen niemanden aussperrt. Prüfnutzer sammeln sich deshalb
- * an und müssen von Hand aus dem Bestand genommen werden.
+ * **App-Nutzer stehen hier nicht.** Bis zum 20.10.2026 ließen sie sich gar nicht löschen;
+ * seitdem geht es (`DELETE /api/nutzer/:id`), ältere Prüfnutzer aus früheren Läufen stehen
+ * aber noch im Bestand.
  */
 export async function raeumeAnsprechpartnerAuf(request: APIRequestContext): Promise<void> {
   while (personen.length > 0) {

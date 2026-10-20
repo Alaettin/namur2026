@@ -6,6 +6,7 @@ import {
   exponateVonNutzer,
   legeNutzerAn,
   listeNutzer,
+  loescheNutzer,
   setzeAktiv,
   setzeExponateVonNutzer,
   setzePasswort,
@@ -128,6 +129,17 @@ export function nutzerRoutes(app: FastifyInstance, ctx: Kontext): void {
         throw badRequest("feld-fehlt", "Field aktiv must be a boolean.");
       }
       return setzeAktiv(ctx.db, req.params.id, aktiv);
+    },
+  );
+
+  /** Endgueltig loeschen; die Oberflaeche fragt vorher nach. Siehe `loescheNutzer`. */
+  app.delete<{ Params: { id: string } }>(
+    "/api/nutzer/:id",
+    { preHandler: app.verlangeAdmin },
+    async (req, reply) => {
+      // `verlangeAdmin` hat `req.nutzer` gesetzt; ohne ihn kaeme die Anfrage nicht hierher.
+      loescheNutzer(ctx.db, req.params.id, req.nutzer?.id ?? "");
+      return reply.code(204).send();
     },
   );
 }

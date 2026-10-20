@@ -176,8 +176,7 @@ test("die entfernten Blöcke sind nirgends mehr zu finden", async ({ page }) => 
  * **Der Knopf würfelt nicht mehr sofort.** Vorher setzte ein einziger Klick ein neues
  * Passwort, was einen Betreuer mitten am Stand aussperren konnte.
  *
- * Der Prüfnutzer bleibt im Bestand: App-Nutzer sind nach Entwurf nicht löschbar, nur
- * deaktivierbar, damit ein Zurücksetzen niemanden aussperrt.
+ * Der Prüfnutzer bleibt im Bestand; App-Nutzer ließen sich bis zum 20.10.2026 nicht löschen.
  */
 /*
  * **Laeuft auch bei 390 px.** Bis zum 08.10.2026 war das ausgenommen: Playwright meldete

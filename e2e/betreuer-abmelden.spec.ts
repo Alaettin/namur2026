@@ -13,7 +13,7 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-/** Ein festes Konto, wie beim Tablet: App-Nutzer lassen sich nicht löschen. */
+/** Ein festes Konto, wie beim Tablet; es bleibt über die Läufe stehen. */
 const EMAIL = "betreuer-abnahme@namur.de";
 const PASSWORT = "betreuer-abnahme-2026";
 

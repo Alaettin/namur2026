@@ -136,7 +136,7 @@ export function App() {
             <Route path="/exponate" element={<Exponate ich={ich} />} />
             <Route path="/exponate/:id" element={<ExponatDetail ich={ich} />} />
             <Route path="/ansprechpartner" element={<Ansprechpartner />} />
-            <Route path="/nutzer" element={<Nutzer />} />
+            <Route path="/nutzer" element={<Nutzer ich={ich} />} />
             <Route path="/api" element={<Api />} />
             <Route path="/carrera" element={<Carrera ich={ich} />} />
             <Route path="/globale-daten" element={<GlobaleDaten />} />

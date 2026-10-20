@@ -17,6 +17,7 @@ import {
   cn,
 } from "../bausteine/basis.js";
 import { Rueckfrage, Schaufenster } from "../bausteine/dialog.js";
+import type { Ich } from "../lib/ich.js";
 
 type Rolle = "admin" | "betreuer" | "kiosk";
 
@@ -30,7 +31,7 @@ interface Nutzerzeile {
   exponate: string[];
 }
 
-export function Nutzer() {
+export function Nutzer({ ich }: { ich: Ich }) {
   const abruf = useAbruf<Nutzerzeile[]>("/api/nutzer");
   const { seite, zuSeite, sichtbar, gesamt } = useBlaettern(abruf.daten ?? []);
   const springeZu = useSprungZuEintrag(abruf.daten ?? [], zuSeite);
@@ -49,6 +50,7 @@ export function Nutzer() {
   const [rolle, setzeRolle] = useState<Rolle>("betreuer");
   const [frage, setzeFrage] = useState<Nutzerzeile | null>(null);
   const [zuweisen, setzeZuweisen] = useState<Nutzerzeile | null>(null);
+  const [zuLoeschen, setzeZuLoeschen] = useState<Nutzerzeile | null>(null);
 
   function melde(ursache: unknown, ersatz: string) {
     setzeFehler(ursache instanceof ApiFehler ? ursache.message : ersatz);
@@ -235,6 +237,19 @@ export function Nutzer() {
                       >
                         {n.aktiv ? "Deaktivieren" : "Aktivieren"}
                       </Knopf>
+                      {/* Die eigene Zeile hat keinen Knopf; der Server lehnt es ohnehin ab. */}
+                      {n.id !== ich.id && (
+                        <Knopf
+                          art="still"
+                          className="h-8 px-3 text-[13px] text-fehler"
+                          onClick={() => {
+                            setzeFehler(null);
+                            setzeZuLoeschen(n);
+                          }}
+                        >
+                          Löschen
+                        </Knopf>
+                      )}
                     </span>
                   </Zelle>
                 </Reihe>
@@ -298,6 +313,37 @@ export function Nutzer() {
         <p>
           Der Zugang bleibt bestehen und lässt sich jederzeit wieder aktivieren. Bereits
           vorgenommene Zuordnungen bleiben ihm zugeschrieben.
+        </p>
+      </Rueckfrage>
+
+      <Rueckfrage
+        offen={zuLoeschen !== null}
+        aufOffen={(o) => {
+          if (!o) setzeZuLoeschen(null);
+        }}
+        titel="Nutzer löschen?"
+        bestaetigenText="Löschen"
+        art="gefahr"
+        aufBestaetigen={() => {
+          if (zuLoeschen === null) return;
+          void api(`/api/nutzer/${zuLoeschen.id}`, { method: "DELETE" })
+            .then(() => {
+              setzeZuLoeschen(null);
+              abruf.neu();
+            })
+            .catch((u: unknown) => {
+              melde(u, "Löschen nicht möglich.");
+              setzeZuLoeschen(null);
+            });
+        }}
+      >
+        <p>
+          <b>{zuLoeschen?.name}</b> ({zuLoeschen?.email}) wird endgültig gelöscht und kann sich
+          nicht mehr anmelden. Das lässt sich nicht rückgängig machen.
+        </p>
+        <p>
+          Was dieser Zugang an Besucher vergeben hat, bleibt bei den Besuchern. Soll der Zugang nur
+          vorübergehend ruhen, ist Deaktivieren der umkehrbare Weg.
         </p>
       </Rueckfrage>
     </>
