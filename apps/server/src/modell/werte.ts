@@ -405,8 +405,9 @@ export async function nachAussen(
       if (inhalt === null) continue;
 
       /*
-       * **Der Siegerrahmen, gezeichnet im Moment des Abrufs.** Nur fuer die ersten drei der
-       * Carrera-Bestenliste und nur auf dem Avatar. Ist die Datei kein lesbares JPEG, gibt
+       * **Der Siegerrahmen, aufgelegt im Moment des Abrufs.** Nur fuer die ersten drei der
+       * Carrera-Bestenliste und nur auf dem Avatar, seit dem 20.10.2026 aus den Overlays in
+       * `assets/rahmen`. Ist die Datei kein lesbares JPEG oder fehlt das Overlay, gibt
        * `zeichneRahmen` `null` und das Bild geht unveraendert hinaus.
        */
       let hinaus = inhalt;

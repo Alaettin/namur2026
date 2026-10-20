@@ -1,7 +1,6 @@
-import { decode } from "jpeg-js";
 import { afterEach, describe, expect, it } from "vitest";
-import { RANGFARBEN } from "../src/services/rahmen.js";
 import { melde, starte, type Pruefstand } from "./hilfe.js";
+import { rangVonBild } from "./rahmen-hilfe.js";
 
 /**
  * **Der Rahmen wandert, ohne Neustart.**
@@ -9,7 +8,7 @@ import { melde, starte, type Pruefstand } from "./hilfe.js";
  * Das ist die eigentliche Zusage: die Reihenfolge aendert sich waehrend der Messe mit jeder
  * gemeldeten Runde, und das Bild, das Axon bekommt, muss das sofort zeigen. Geprueft wird
  * deshalb nicht nur, **dass** ein Rahmen da ist, sondern dass er nach einer schnelleren
- * Runde eines anderen **die Farbe wechselt**, im selben Prozess.
+ * Runde eines anderen **das Overlay wechselt**, im selben Prozess.
  */
 
 const ADMIN = { ADMIN_EMAIL: "admin@namur.de", ADMIN_PASSWORT: "startpasswort-123" };
@@ -62,50 +61,6 @@ async function avatarAusWerten(s: Pruefstand, guid: string): Promise<Buffer> {
   // Die gemeldete Groesse muss zu den gesendeten Bytes passen, nicht zur Ablage.
   expect(avatar?.size, "size passt nicht zum Inhalt").toBe(roh.length);
   return roh;
-}
-
-interface Punkt {
-  r: number;
-  g: number;
-  b: number;
-}
-
-function abstand(a: Punkt, b: Punkt): number {
-  return Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b);
-}
-
-/**
- * Welchen Rang ein Bild traegt, oder `null` fuer keinen.
- *
- * **Gemessen wird mitten im linken Rand**, nicht in der Ecke: dort liegt seit dem
- * Metallrahmen die dunkle Aussenlinie, und die traegt absichtlich nicht die reine
- * Rangfarbe. Verglichen wird der **Farbton**, also auf gleiche Helligkeit gebracht; sonst
- * wandert aufgehelltes Bronze rechnerisch zu Gold.
- */
-function rangVonBild(jpeg: Buffer): 1 | 2 | 3 | null {
-  const bild = decode(jpeg, { useTArray: true });
-  const rand = Math.round(Math.min(bild.width, bild.height) * 0.06);
-  const i = (Math.floor(bild.height / 2) * bild.width + Math.floor(rand / 2)) * 4;
-  const p: Punkt = { r: bild.data[i] ?? 0, g: bild.data[i + 1] ?? 0, b: bild.data[i + 2] ?? 0 };
-
-  let bester: 1 | 2 | 3 = 1;
-  let kleinster = Infinity;
-  for (const rang of [1, 2, 3] as const) {
-    const ziel = RANGFARBEN[rang];
-    const f = (ziel.r + ziel.g + ziel.b) / (p.r + p.g + p.b || 1);
-    const d = abstand({ r: p.r * f, g: p.g * f, b: p.b * f }, ziel);
-    if (d < kleinster) {
-      kleinster = d;
-      bester = rang;
-    }
-  }
-
-  /*
-   * **Ein ungerahmtes Bild kommt irgendeiner Farbe am naechsten**, das sagt fuer sich
-   * genommen nichts. Deshalb zusaetzlich die Schranke: nur wer nah genug dran ist, traegt
-   * wirklich einen Rahmen.
-   */
-  return kleinster < 60 ? bester : null;
 }
 
 describe("Der Rahmen folgt der Bestenliste", () => {

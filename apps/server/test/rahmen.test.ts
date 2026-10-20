@@ -1,156 +1,149 @@
 import { decode, encode } from "jpeg-js";
-import { describe, expect, it } from "vitest";
-import { RANGFARBEN, zeichneRahmen } from "../src/services/rahmen.js";
+import type * as Fs from "node:fs";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { zeichneRahmen } from "../src/services/rahmen.js";
+import { abweichung, overlay, rangVonBild } from "./rahmen-hilfe.js";
 
 /**
- * Der Siegerrahmen auf dem Avatarbild.
- *
- * Seit er nach Metall aussieht, ist er **nicht mehr einfarbig**: ein Profil ueber die Breite
- * und ein Lichtstreifen laengs machen ihn heller und dunkler. Ein Kriterium, das einen festen
- * Farbwert erwartet, waere deshalb falsch; gemeint war immer der **Farbton**, und genau der
- * wird hier geprueft.
+ * Der Siegerrahmen auf dem Avatarbild, seit dem 20.10.2026 aus den Overlays des Nutzers
+ * (`assets/rahmen/{gold,silber,bronze}.png`).
  */
 
-const KANTE = 128;
-
 /** Ein einfarbiges JPEG, an dem sich jede Veraenderung ablesen laesst. */
-function testbild(r: number, g: number, b: number): Buffer {
-  const data = new Uint8Array(KANTE * KANTE * 4);
-  for (let i = 0; i < KANTE * KANTE; i++) {
+function testbild(kante: number, r: number, g: number, b: number): Buffer {
+  const data = new Uint8Array(kante * kante * 4);
+  for (let i = 0; i < kante * kante; i++) {
     data[i * 4] = r;
     data[i * 4 + 1] = g;
     data[i * 4 + 2] = b;
     data[i * 4 + 3] = 255;
   }
-  return Buffer.from(encode({ data, width: KANTE, height: KANTE }, 100).data);
+  return Buffer.from(encode({ data, width: kante, height: kante }, 100).data);
 }
 
-interface Punkt {
-  r: number;
-  g: number;
-  b: number;
-}
-
-function punkt(jpeg: Buffer, x: number, y: number): Punkt {
+function punkt(jpeg: Buffer, x: number, y: number): [number, number, number] {
   const bild = decode(jpeg, { useTArray: true });
   const i = (y * bild.width + x) * 4;
-  return { r: bild.data[i] ?? 0, g: bild.data[i + 1] ?? 0, b: bild.data[i + 2] ?? 0 };
-}
-
-function abstand(a: Punkt, b: Punkt): number {
-  return Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b);
+  return [bild.data[i] ?? 0, bild.data[i + 1] ?? 0, bild.data[i + 2] ?? 0];
 }
 
 /**
- * Welcher Rangfarbe ein Punkt am naechsten kommt, **unabhaengig von der Helligkeit**.
- *
- * Dafuer wird er auf dieselbe Summe gebracht wie die Vergleichsfarbe. Ohne diesen Schritt
- * wandert aufgehelltes Bronze rechnerisch zu Gold hinueber, und der Fall ginge aus dem
- * falschen Grund durch.
+ * Ob ein Punkt samt Umgebung (8 px) im Overlay voll durchsichtig ist. Direkt neben der
+ * Rahmenkante verschmiert die JPEG-Kodierung die Farben; das ist kein Uebermalen.
  */
-function naechsterRang(p: Punkt): 1 | 2 | 3 {
-  let bester: 1 | 2 | 3 = 1;
-  let kleinster = Infinity;
-  for (const rang of [1, 2, 3] as const) {
-    const ziel = RANGFARBEN[rang];
-    const summeZiel = ziel.r + ziel.g + ziel.b;
-    const summeP = p.r + p.g + p.b || 1;
-    const f = summeZiel / summeP;
-    const d = abstand({ r: p.r * f, g: p.g * f, b: p.b * f }, ziel);
-    if (d < kleinster) {
-      kleinster = d;
-      bester = rang;
+function frei(o: Uint8Array, i: number): boolean {
+  const x = i % 512;
+  const y = Math.floor(i / 512);
+  for (let dy = -8; dy <= 8; dy++) {
+    for (let dx = -8; dx <= 8; dx++) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= 512 || ny >= 512) continue;
+      if ((o[(ny * 512 + nx) * 4 + 3] ?? 255) !== 0) return false;
     }
   }
-  return bester;
+  return true;
 }
 
-/** Die Breite des Randes, wie `zeichneRahmen` sie rechnet. */
-const RAND = Math.round(KANTE * 0.06);
+afterEach(() => {
+  vi.doUnmock("node:fs");
+  vi.resetModules();
+});
 
 describe("Siegerrahmen", () => {
-  it("faerbt den Rand im Farbton des Rangs und laesst die Mitte in Ruhe", () => {
-    const weiss = { r: 250, g: 250, b: 250 };
-    const original = testbild(weiss.r, weiss.g, weiss.b);
+  it("legt das Overlay des Rangs auf, auf hellem wie auf dunklem Foto", () => {
+    for (const farbe of [250, 20]) {
+      const original = testbild(512, farbe, farbe, farbe);
+      for (const rang of [1, 2, 3] as const) {
+        const gerahmt = zeichneRahmen(original, rang);
+        expect(gerahmt).not.toBeNull();
+        if (gerahmt === null) return;
+        expect(rangVonBild(gerahmt), `Rang ${String(rang)} auf ${String(farbe)}`).toBe(rang);
+      }
+      // Ungerahmt erkennt die Hilfe keinen Rang; sonst bewiese das Obige nichts.
+      expect(rangVonBild(original)).toBeNull();
+    }
+  });
 
+  /**
+   * **Wo das Overlay durchsichtig ist, bleibt das Foto.** Gesucht werden die Punkte, an denen
+   * alle drei Overlays voll transparent sind, also die Mitte und die Ecken.
+   */
+  it("laesst die durchsichtigen Stellen unberuehrt", () => {
+    const original = testbild(512, 30, 140, 220);
+    const vorher = decode(original, { useTArray: true }).data;
     for (const rang of [1, 2, 3] as const) {
       const gerahmt = zeichneRahmen(original, rang);
       expect(gerahmt).not.toBeNull();
       if (gerahmt === null) return;
-
-      // Dieselbe Kantenlaenge, es wird nichts beschnitten.
-      const bild = decode(gerahmt, { useTArray: true });
-      expect([bild.width, bild.height]).toEqual([KANTE, KANTE]);
-
-      // Mitten im linken Rand, auf halber Hoehe: dort liegt keine Medaille.
-      const imRand = punkt(gerahmt, Math.floor(RAND / 2), Math.floor(KANTE / 2));
-      expect(naechsterRang(imRand), `Rang ${String(rang)} im falschen Farbton`).toBe(rang);
-
-      // Und die Bildmitte ist noch das Bild.
-      expect(
-        abstand(punkt(gerahmt, KANTE / 2, KANTE / 2 - 10), weiss),
-        "Mitte uebermalt",
-      ).toBeLessThan(40);
-    }
-  });
-
-  /**
-   * **Der Rahmen ist nicht flach.**
-   *
-   * Das ist der ganze Unterschied zur alten Fassung: dort trug jeder Punkt des Randes
-   * denselben Wert. Geprueft wird quer ueber die Breite, von der dunklen Aussenlinie bis zum
-   * hellen Grat.
-   */
-  it("hat Tiefe statt einer einzigen Farbe", () => {
-    const gerahmt = zeichneRahmen(testbild(250, 250, 250), 1);
-    expect(gerahmt).not.toBeNull();
-    if (gerahmt === null) return;
-
-    const mitte = Math.floor(KANTE / 2);
-    const aussen = punkt(gerahmt, 0, mitte);
-    const grat = punkt(gerahmt, Math.floor(RAND * 0.4), mitte);
-
-    expect(abstand(aussen, grat), "Rand ohne Verlauf").toBeGreaterThan(60);
-    // Und zwar in der richtigen Richtung: aussen liegt im Schatten.
-    expect(aussen.r + aussen.g + aussen.b).toBeLessThan(grat.r + grat.g + grat.b);
-  });
-
-  /**
-   * **Die Medaille traegt die Platzziffer.**
-   *
-   * Geprueft wird nicht die Form der Ziffer, sondern dass auf der Scheibe ueberhaupt etwas
-   * Dunkles steht: ohne Ziffer waere sie gleichmaessig hell, und genau das soll sie nicht
-   * sein. Wie die Ziffern aussehen, entscheidet der Blick auf das Bild, nicht ein Testwert.
-   */
-  it("setzt eine Medaille mit Ziffer in die untere rechte Ecke", () => {
-    const gerahmt = zeichneRahmen(testbild(250, 250, 250), 2);
-    expect(gerahmt).not.toBeNull();
-    if (gerahmt === null) return;
-
-    const bild = decode(gerahmt, { useTArray: true });
-    // Der Bereich der Medaille, grosszuegig abgesteckt.
-    const von = Math.floor(KANTE * 0.68);
-    let dunkelste = 255 * 3;
-    let hellste = 0;
-    for (let y = von; y < KANTE; y++) {
-      for (let x = von; x < KANTE; x++) {
-        const i = (y * bild.width + x) * 4;
-        const summe = (bild.data[i] ?? 0) + (bild.data[i + 1] ?? 0) + (bild.data[i + 2] ?? 0);
-        dunkelste = Math.min(dunkelste, summe);
-        hellste = Math.max(hellste, summe);
+      const nachher = decode(gerahmt, { useTArray: true }).data;
+      const o = overlay(rang).data;
+      let geprueft = 0;
+      let groessteAbweichung = 0;
+      for (let i = 0; i < 512 * 512; i += 53) {
+        if (!frei(o, i)) continue;
+        geprueft++;
+        for (let k = 0; k < 3; k++) {
+          const d = Math.abs((nachher[i * 4 + k] ?? 0) - (vorher[i * 4 + k] ?? 0));
+          groessteAbweichung = Math.max(groessteAbweichung, d);
+        }
       }
+      expect(geprueft, "keine durchsichtigen Punkte gefunden").toBeGreaterThan(500);
+      expect(groessteAbweichung, `Rang ${String(rang)}: Foto uebermalt`).toBeLessThan(8);
+      // Und die Bildmitte im Besonderen.
+      expect(
+        Math.max(...punkt(gerahmt, 256, 256).map((v, k) => Math.abs(v - [30, 140, 220][k]!))),
+      ).toBeLessThan(8);
     }
-    expect(hellste - dunkelste, "die Medaille ist gleichmaessig, also ohne Ziffer").toBeGreaterThan(
-      120,
-    );
+  });
+
+  /** Ein Bild in anderer Groesse bekommt das Overlay passend skaliert, nicht beschnitten. */
+  it("skaliert das Overlay auf andere Bildgroessen", () => {
+    const gerahmt = zeichneRahmen(testbild(200, 250, 250, 250), 1);
+    expect(gerahmt).not.toBeNull();
+    if (gerahmt === null) return;
+    const bild = decode(gerahmt, { useTArray: true });
+    expect([bild.width, bild.height]).toEqual([200, 200]);
+    // Mitte frei, linker Rand auf halber Hoehe golden (Overlay dort fast deckend).
+    expect(Math.max(...punkt(gerahmt, 100, 100).map((v) => Math.abs(v - 250)))).toBeLessThan(8);
+    const o = overlay(1);
+    const oi = (256 * o.width + Math.round((10 / 200) * 512)) * 4;
+    const erwartet = [o.data[oi] ?? 0, o.data[oi + 1] ?? 0, o.data[oi + 2] ?? 0];
+    const ist = punkt(gerahmt, 10, 100);
+    expect(Math.max(...ist.map((v, k) => Math.abs(v - erwartet[k]!)))).toBeLessThan(40);
   });
 
   /** Ein kaputtes oder fremdes Format gibt `null`, statt den ganzen Abruf umzuwerfen. */
   it("gibt null statt zu werfen, wenn es kein JPEG ist", () => {
     expect(zeichneRahmen(Buffer.from("kein bild", "utf8"), 1)).toBeNull();
-    // PNG-Kennbytes, sonst nichts.
     expect(
       zeichneRahmen(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), 2),
     ).toBeNull();
+  });
+
+  /** Fehlt ein Overlay im Container, geht das Bild ungerahmt hinaus statt mit einem Fehler. */
+  it("gibt null, wenn das Overlay fehlt", async () => {
+    vi.resetModules();
+    vi.doMock("node:fs", async (original) => {
+      const echt = await original<typeof Fs>();
+      return {
+        ...echt,
+        readFileSync: (pfad: string, ...rest: unknown[]) => {
+          if (String(pfad).includes("rahmen")) throw new Error("ENOENT");
+          return (echt.readFileSync as (...a: unknown[]) => unknown)(pfad, ...rest);
+        },
+      };
+    });
+    const frisch = await import("../src/services/rahmen.js");
+    expect(frisch.zeichneRahmen(testbild(512, 250, 250, 250), 1)).toBeNull();
+  });
+
+  it("die Hilfe trennt die Raenge deutlich", () => {
+    const gold = zeichneRahmen(testbild(512, 128, 128, 128), 1);
+    expect(gold).not.toBeNull();
+    if (gold === null) return;
+    expect(abweichung(gold, 1)).toBeLessThan(10);
+    expect(abweichung(gold, 2)).toBeGreaterThan(20);
+    expect(abweichung(gold, 3)).toBeGreaterThan(20);
   });
 });
