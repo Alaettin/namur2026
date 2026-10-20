@@ -3,7 +3,7 @@ import { badRequest } from "../errors.js";
 import type { Kontext } from "../kontext.js";
 import { aendereBesucher, findeBesucher, TEXTFELDER } from "../services/besucher.js";
 import { STANDARD_AVATAR_ID } from "../services/standardavatar.js";
-import { galerieIds } from "../services/avatare.js";
+import { galerieIds, pruefeAvatarWahl } from "../services/avatare.js";
 
 /**
  * Das Selbstbedienungs-Tablet am Stand.
@@ -92,24 +92,8 @@ export function kioskRoutes(app: FastifyInstance, ctx: Kontext): void {
     "/api/kiosk/besucher/:guid/avatar",
     { preHandler: app.verlangeKiosk },
     async (req) => {
-      const roh = req.body?.avatarDateiId ?? null;
-      if (roh !== null && typeof roh !== "string") {
-        throw badRequest("avatar-ungueltig", "Field avatarDateiId must be a string or null.");
-      }
-
-      /*
-       * `null` heisst "Standard", und Standard ist eine **echte Id**: `legeBesucherAn`
-       * traegt sie bei jedem neuen Besucher ein. Hier `null` zu speichern funktionierte
-       * zwar ueber den Rueckfall in `avatarFuer`, ergaebe aber zwei Schreibweisen fuer
-       * denselben Zustand.
-       */
-      const wunsch = roh ?? STANDARD_AVATAR_ID;
-
-      // **Nur Galerie oder Standard.** Alles andere waere eine beliebige Datei.
-      if (wunsch !== STANDARD_AVATAR_ID && !galerieIds(ctx.db).includes(wunsch)) {
-        throw badRequest("avatar-unbekannt", "Field avatarDateiId must be one of the gallery.");
-      }
-
+      // Nur Galerie oder Standard, siehe `pruefeAvatarWahl`.
+      const wunsch = pruefeAvatarWahl(ctx.db, req.body?.avatarDateiId ?? null);
       const b = aendereBesucher(ctx.db, req.params.guid, { avatarDateiId: wunsch });
       return { guid: b.guid, avatarDateiId: b.avatarDateiId };
     },

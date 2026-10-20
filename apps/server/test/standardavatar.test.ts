@@ -116,35 +116,28 @@ describe("Standard-Avatar", () => {
       payload: { guid, vorname: "Mit", nachname: "Bild" },
     });
 
-    const grenze = "----namur";
-    const eigenes = Buffer.from(
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-      "base64",
-    );
-    const koerper = Buffer.concat([
-      Buffer.from(
-        `--${grenze}\r\nContent-Disposition: form-data; name="datei"; filename="eigen.png"\r\n` +
-          "Content-Type: application/octet-stream\r\n\r\n",
-        "utf8",
-      ),
-      eigenes,
-      Buffer.from(`\r\n--${grenze}--\r\n`, "utf8"),
-    ]);
-    const datei = (
-      await stand.app.inject({
-        method: "POST",
-        url: "/api/dateien",
-        headers: { cookie: keks, "content-type": `multipart/form-data; boundary=${grenze}` },
-        payload: koerper,
-      })
-    ).json<{ id: string }>();
-
-    await stand.app.inject({
-      method: "PATCH",
-      url: `/api/besucher/${guid}`,
+    /*
+     * **Ein Galeriebild, keine beliebige Datei.** Seit dem 20.10.2026 nimmt auch die
+     * Verwaltung nur Standard oder Galerie an (`pruefeAvatarWahl`); bis dahin setzte dieser
+     * Fall eine frisch hochgeladene Datei, genau das, was jetzt abgewiesen wird.
+     */
+    const galerie = (
+      await stand.app.inject({ url: "/api/avatare", headers: { cookie: keks } })
+    ).json<{ avatare: { dateiId: string }[] }>();
+    const eigen = galerie.avatare[0]?.dateiId;
+    expect(eigen, "Galerie im Pruefstand leer").toBeDefined();
+    const datei = await stand.app.inject({
+      url: `/api/dateien/${String(eigen)}`,
       headers: { cookie: keks },
-      payload: { avatarDateiId: datei.id },
     });
+
+    const gesetzt = await stand.app.inject({
+      method: "PATCH",
+      url: `/api/besucher/${guid}/avatar`,
+      headers: { cookie: keks },
+      payload: { avatarDateiId: eigen },
+    });
+    expect(gesetzt.statusCode).toBe(200);
 
     const antwort = await stand.app.inject({
       method: "POST",
@@ -153,8 +146,12 @@ describe("Standard-Avatar", () => {
       payload: {},
     });
     const avatar = antwort.json<Eigenschaft[]>().find((w) => w.propertyId === "Visitor_Avatar");
-    expect(avatar?.value).toBe(eigenes.toString("base64"));
-    expect(avatar?.mimeType).toBe("image/png");
+    expect(avatar?.value).toBe(datei.rawPayload.toString("base64"));
+    // Und nicht mehr der Standard.
+    const standard = await readFile(
+      resolve(PROJEKT_WURZEL, "apps/server/assets/standard-avatar.jpg"),
+    );
+    expect(avatar?.value).not.toBe(standard.toString("base64"));
   });
 
   it("laesst sich nicht ueber die Datei-Route loeschen", async () => {

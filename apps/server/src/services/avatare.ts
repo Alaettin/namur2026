@@ -8,6 +8,7 @@ import { avatare, dateien, einstellungen } from "../db/schema.js";
 import { PROJEKT_WURZEL } from "../env.js";
 import { badRequest, notFound } from "../errors.js";
 import { mimeAusName } from "./mime.js";
+import { STANDARD_AVATAR_ID } from "./standardavatar.js";
 
 /**
  * Die Avatare, die am Selbstbedienungs-Tablet zur Auswahl stehen.
@@ -116,6 +117,29 @@ export function leseGalerie(db: Db): Avatarzeile[] {
 /** Nur die Ids, fuer die Pruefung am Tablet. */
 export function galerieIds(db: Db): string[] {
   return leseGalerie(db).map((a) => a.dateiId);
+}
+
+/**
+ * Prueft einen gewuenschten Avatar und gibt die Id zurueck, die gespeichert wird.
+ *
+ * **Nur Standard oder Galerie.** Ohne diese Pruefung liesse sich der Avatar eines Besuchers
+ * auf eine beliebige Datei zeigen, etwa auf ein PDF eines Exponats, und das ginge als Base64
+ * in jede `values`-Antwort der Konnektor-API hinaus. Gilt fuer das Tablet und, seit dem
+ * 20.10.2026, ebenso fuer die Verwaltung.
+ *
+ * `null` heisst "Standard", und Standard ist eine **echte Id**: `legeBesucherAn` traegt sie
+ * bei jedem neuen Besucher ein. `null` zu speichern funktionierte ueber den Rueckfall in
+ * `avatarFuer`, ergaebe aber zwei Schreibweisen fuer denselben Zustand.
+ */
+export function pruefeAvatarWahl(db: Db, roh: unknown): string {
+  if (roh !== null && roh !== undefined && typeof roh !== "string") {
+    throw badRequest("avatar-ungueltig", "Field avatarDateiId must be a string or null.");
+  }
+  const wunsch = roh ?? STANDARD_AVATAR_ID;
+  if (wunsch !== STANDARD_AVATAR_ID && !galerieIds(db).includes(wunsch)) {
+    throw badRequest("avatar-unbekannt", "Field avatarDateiId must be one of the gallery.");
+  }
+  return wunsch;
 }
 
 /**

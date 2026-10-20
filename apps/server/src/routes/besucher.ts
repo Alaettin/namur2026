@@ -12,6 +12,18 @@ import {
   type BesucherEingabe,
 } from "../services/besucher.js";
 import { exponateFuerBesucher, leseElemente, setzeZuordnungen } from "../services/zuordnungen.js";
+import { pruefeAvatarWahl } from "../services/avatare.js";
+
+/**
+ * Ein mitgeschicktes `avatarDateiId` geht durch dieselbe Pruefung wie am Tablet.
+ *
+ * Bis zum 20.10.2026 reichten Anlegen und Aendern es ungeprueft durch; ein Avatar haette auf
+ * jede beliebige Datei zeigen koennen, etwa ein PDF, und das ginge in jede `values`-Antwort.
+ */
+function mitGeprueftemAvatar<T extends { avatarDateiId?: unknown }>(ctx: Kontext, koerper: T): T {
+  if (!("avatarDateiId" in koerper)) return koerper;
+  return { ...koerper, avatarDateiId: pruefeAvatarWahl(ctx.db, koerper.avatarDateiId) };
+}
 
 /**
  * Besucherverwaltung, nur fuer Admins.
@@ -70,14 +82,29 @@ export function besucherRoutes(app: FastifyInstance, ctx: Kontext): void {
         throw badRequest("felder-fehlen", "Fields vorname and nachname are required.");
       }
       void reply.code(201);
-      return legeBesucherAn(ctx.db, koerper);
+      return legeBesucherAn(ctx.db, mitGeprueftemAvatar(ctx, koerper));
     },
   );
 
   app.patch<{ Params: { guid: string }; Body: Partial<BesucherEingabe> }>(
     "/api/besucher/:guid",
     { preHandler: app.verlangeAdmin },
-    async (req) => aendereBesucher(ctx.db, req.params.guid, req.body ?? {}),
+    async (req) =>
+      aendereBesucher(ctx.db, req.params.guid, mitGeprueftemAvatar(ctx, req.body ?? {})),
+  );
+
+  /**
+   * Den Avatar aus der Galerie waehlen, aus dem Besucherdetail. `null` ist der Standard.
+   * Dieselbe Pruefung wie am Tablet, siehe `pruefeAvatarWahl`.
+   */
+  app.patch<{ Params: { guid: string }; Body: { avatarDateiId?: unknown } }>(
+    "/api/besucher/:guid/avatar",
+    { preHandler: app.verlangeAdmin },
+    async (req) => {
+      const avatarDateiId = pruefeAvatarWahl(ctx.db, req.body?.avatarDateiId ?? null);
+      const b = aendereBesucher(ctx.db, req.params.guid, { avatarDateiId });
+      return { guid: b.guid, avatarDateiId: b.avatarDateiId };
+    },
   );
 
   app.delete<{ Params: { guid: string } }>(

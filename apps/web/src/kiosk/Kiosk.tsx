@@ -6,6 +6,7 @@ import { Kamera, kameraMoeglich, type Kamerafehler } from "../scan/Kamera.js";
 import type { Ich } from "../lib/ich.js";
 import { GRUPPEN, PERSONENFELDER, felderDerGruppe, mitTitel } from "../lib/personenfelder.js";
 import { Kioskrahmen } from "./Kioskrahmen.js";
+import { Avatarwahl } from "../bausteine/avatarwahl.js";
 
 /**
  * Das Selbstbedienungs-Tablet: Pass scannen, dann Stammdaten oder Avatar ändern.
@@ -342,31 +343,12 @@ export function KioskAvatar({ aufAbmelden }: { aufAbmelden: () => void }) {
           <>
             {fehler !== null && <Fehlerhinweis>{fehler}</Fehlerhinweis>}
 
-            <ul className="grid grid-cols-3 gap-4 sm:grid-cols-5">
-              {[g.standard, ...g.avatare].map((id) => (
-                <li key={id}>
-                  <button
-                    type="button"
-                    aria-pressed={aktuell === id}
-                    aria-label={id === g.standard ? "Standardbild" : "Bild auswählen"}
-                    onClick={() => {
-                      setzeGewaehlt(id);
-                    }}
-                    className={`block w-full overflow-hidden ${
-                      aktuell === id
-                        ? "outline outline-4 outline-offset-2 outline-primaer"
-                        : "outline outline-1 outline-linie"
-                    }`}
-                  >
-                    <img
-                      src={`/api/dateien/${id}`}
-                      alt=""
-                      className="aspect-square w-full object-cover"
-                    />
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <Avatarwahl
+              standard={g.standard}
+              avatare={g.avatare}
+              gewaehlt={aktuell}
+              aufWahl={setzeGewaehlt}
+            />
 
             <Knopfzeile
               laeuft={laeuft}

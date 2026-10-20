@@ -14,6 +14,7 @@ import {
 import { Rueckfrage } from "../bausteine/dialog.js";
 import type { Ich } from "../lib/ich.js";
 import { BesucherExponate } from "./BesucherExponate.js";
+import { Avatarwahl } from "../bausteine/avatarwahl.js";
 
 /**
  * Die zehn Textfelder, dieselben wie im Konnektor-Modell.
@@ -263,10 +264,11 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
 
         {!neu && (
           <>
-            <Flaeche className="flex flex-col gap-4 p-6">
-              <h2 className="text-lg font-semibold">Foto</h2>
-              <Avatarbild dateiId={abruf.daten?.avatarDateiId ?? null} />
-            </Flaeche>
+            <Fotobereich
+              guid={aktuelleGuid}
+              anfang={abruf.daten?.avatarDateiId ?? null}
+              aufFehler={setzeFehler}
+            />
 
             {/*
               Die Runden von der Carrera-Bahn. Die Anzeigezeile kommt fertig vom Server:
@@ -348,11 +350,111 @@ export function BesucherDetail({ ich }: { ich: Ich }) {
 }
 
 /**
- * Das Foto eines Besuchers, **nur zur Anzeige**.
+ * Das Foto und seine Auswahl aus der Galerie, seit dem 20.10.2026.
  *
- * Hochladen gibt es hier seit dem 08.10.2026 nicht mehr: jeder Besucher bekommt denselben
- * Standard-Avatar, den der Server als Rückfall liefert. Eine Funktion zum Ändern ist
- * angekündigt, das Feld `avatarDateiId` bleibt dafür bestehen.
+ * **Nur Galerie oder Standard**, wie am Tablet; ein eigenes Hochladen je Besucher gibt es
+ * nicht. Der Server prüft das selbst (`pruefeAvatarWahl`). Nach dem Übernehmen wechselt das
+ * Bild ohne Neuladen der Seite.
+ */
+function Fotobereich({
+  guid,
+  anfang,
+  aufFehler,
+}: {
+  guid: string;
+  anfang: string | null;
+  aufFehler: (text: string | null) => void;
+}) {
+  const [bild, setzeBild] = useState<string | null>(anfang);
+  const [offen, setzeOffen] = useState(false);
+  const [gewaehlt, setzeGewaehlt] = useState<string | null>(null);
+  const [laeuft, setzeLaeuft] = useState(false);
+  const [gespeichert, setzeGespeichert] = useState(false);
+  // Die Galerie erst laden, wenn jemand auswählen will.
+  const galerie = useAbruf<{ standard: string; avatare: { dateiId: string }[] }>(
+    offen ? "/api/avatare" : null,
+  );
+
+  useEffect(() => {
+    setzeBild(anfang);
+  }, [anfang]);
+
+  useEffect(() => {
+    if (!gespeichert) return;
+    const t = setTimeout(() => {
+      setzeGespeichert(false);
+    }, 3000);
+    return () => {
+      clearTimeout(t);
+    };
+  }, [gespeichert]);
+
+  async function uebernehmen() {
+    const ziel = gewaehlt ?? galerie.daten?.standard ?? null;
+    if (ziel === null) return;
+    setzeLaeuft(true);
+    aufFehler(null);
+    try {
+      const b = await api<{ avatarDateiId: string }>(
+        `/api/besucher/${encodeURIComponent(guid)}/avatar`,
+        { method: "PATCH", body: JSON.stringify({ avatarDateiId: ziel }) },
+      );
+      setzeBild(b.avatarDateiId);
+      setzeOffen(false);
+      setzeGespeichert(true);
+    } catch (ursache) {
+      aufFehler(ursache instanceof ApiFehler ? ursache.message : "Bild nicht übernommen.");
+    } finally {
+      setzeLaeuft(false);
+    }
+  }
+
+  const g = galerie.daten;
+  return (
+    <Flaeche className="flex flex-col gap-4 p-6">
+      <h2 className="text-lg font-semibold">Foto</h2>
+      <Avatarbild dateiId={bild} />
+      <div className="flex flex-wrap items-center gap-3">
+        <Knopf
+          art="rand"
+          onClick={() => {
+            setzeGewaehlt(bild ?? g?.standard ?? null);
+            setzeOffen(true);
+          }}
+        >
+          Bild ändern
+        </Knopf>
+        <span role="status" className="text-sm font-semibold text-primaer-dunkel">
+          {gespeichert && "Bild übernommen"}
+        </span>
+      </div>
+
+      <Rueckfrage
+        offen={offen}
+        aufOffen={setzeOffen}
+        titel="Bild auswählen"
+        bestaetigenText="Übernehmen"
+        laeuft={laeuft}
+        aufBestaetigen={() => void uebernehmen()}
+      >
+        {g === null ? (
+          <p>Wird geladen …</p>
+        ) : (
+          <Avatarwahl
+            standard={g.standard}
+            avatare={g.avatare.map((a) => a.dateiId)}
+            gewaehlt={gewaehlt ?? g.standard}
+            aufWahl={setzeGewaehlt}
+            spalten="grid-cols-3 sm:grid-cols-4"
+          />
+        )}
+      </Rueckfrage>
+    </Flaeche>
+  );
+}
+
+/**
+ * Das Foto eines Besuchers, zur Anzeige.
  *
  * Steht dort nichts, wird trotzdem ein Bild gezeigt: der Server fällt in `values` auf den
  * Standard zurück, und eine Maske, die „kein Foto" behauptet, während der Viewer eines

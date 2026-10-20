@@ -144,3 +144,34 @@ test("Speichern im Besucherdetail meldet Gespeichert und lässt die Seite stehen
   await firma.fill("Noch nicht gespeichert");
   await expect(status).toHaveCount(0);
 });
+
+/** Das Foto lässt sich im Besucherdetail aus der Galerie wählen, seit dem 20.10.2026. */
+test("im Besucherdetail lässt sich das Bild aus der Galerie wählen", async ({ page, request }) => {
+  const guid = `AVB-${String(Date.now()).slice(-8)}`;
+  await request.post("/api/besucher", { data: { guid, vorname: "Bea", nachname: "Bild" } });
+  merkeBesucher(guid);
+  const galerie = (await (await request.get("/api/avatare")).json()) as {
+    avatare: { dateiId: string }[];
+  };
+  const ziel = galerie.avatare[1]?.dateiId;
+  expect(ziel, "Galerie leer").toBeTruthy();
+
+  await page.goto(`/besucher/${guid}`);
+  const foto = page.getByRole("img", { name: "Foto des Besuchers" });
+  await expect(foto).not.toHaveAttribute("src", `/api/dateien/${String(ziel)}`);
+
+  await page.getByRole("button", { name: "Bild ändern" }).click();
+  const dialog = page.getByRole("dialog");
+  // Das zweite Galeriebild: Standard steht vorn, dann die Galerie in ihrer Reihenfolge.
+  await dialog.getByRole("button", { name: "Bild auswählen" }).nth(1).click();
+  await dialog.getByRole("button", { name: "Übernehmen" }).click();
+
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole("status").filter({ hasText: "Bild übernommen" })).toBeVisible();
+  await expect(foto).toHaveAttribute("src", `/api/dateien/${String(ziel)}`);
+  // Sichtbar heißt nicht geladen; die Bildbreite schon.
+  await expect
+    .poll(() => foto.evaluate((b) => (b as HTMLImageElement).naturalWidth))
+    .toBeGreaterThan(0);
+  expect((await (await request.get(`/api/besucher/${guid}`)).json()).avatarDateiId).toBe(ziel);
+});
