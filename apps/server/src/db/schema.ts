@@ -370,3 +370,26 @@ export const runden = sqliteTable(
     index("runden_besucher_idx").on(t.besucherGuid),
   ],
 );
+
+// --- Globale Daten --------------------------------------------------------------------
+
+/**
+ * Datenpunkte, die der Konnektor **jedem** Besucher gleich ausliefert, seit dem 20.10.2026.
+ *
+ * Die propertyId ergibt sich aus `nummer` (`Global01`, `Global02`, ...). **Nummern werden
+ * nicht wiederverwendet**: eine freigewordene Nummer erbte sonst das Axon-Mapping eines
+ * geloeschten Datenpunkts, und dort erschiene ploetzlich etwas anderes. Bei den
+ * Exponatkennungen ist es umgekehrt entschieden; dort ist die Wiederverwendung gewollt.
+ *
+ * `art` legt den Typ im Modell fest: `text` ist eine Property, `datei` ein Document (Bild By
+ * Value, alles andere By Ticket, wie bei den Exponat-Dokumenten).
+ */
+export const globaleDaten = sqliteTable("globale_daten", {
+  id: text("id").primaryKey(),
+  nummer: integer("nummer").notNull().unique(),
+  name: text("name").notNull(),
+  art: text("art", { enum: ["text", "datei"] }).notNull(),
+  text: text("text"),
+  dateiId: text("datei_id").references(() => dateien.id, { onDelete: "set null" }),
+  angelegt: integer("angelegt").notNull().default(jetzt),
+});

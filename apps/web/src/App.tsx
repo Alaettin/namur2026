@@ -7,6 +7,7 @@ import { Anmeldung } from "./seiten/Anmeldung.js";
 import { Ansprechpartner } from "./seiten/Ansprechpartner.js";
 import { Api } from "./seiten/Api.js";
 import { Carrera } from "./seiten/Carrera.js";
+import { GlobaleDaten } from "./seiten/GlobaleDaten.js";
 import { Besucher } from "./seiten/Besucher.js";
 import { BesucherDetail } from "./seiten/BesucherDetail.js";
 import { CsvImport } from "./seiten/CsvImport.js";
@@ -138,6 +139,7 @@ export function App() {
             <Route path="/nutzer" element={<Nutzer />} />
             <Route path="/api" element={<Api />} />
             <Route path="/carrera" element={<Carrera ich={ich} />} />
+            <Route path="/globale-daten" element={<GlobaleDaten />} />
             <Route path="/monitoring" element={<Monitoring />} />
             <Route path="/einstellungen" element={<Einstellungen ich={ich} />} />
             <Route path="*" element={<Navigate to="/" replace />} />

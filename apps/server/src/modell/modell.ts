@@ -1,6 +1,6 @@
 import { asc } from "drizzle-orm";
 import type { Db } from "../db/client.js";
-import { exponate } from "../db/schema.js";
+import { exponate, globaleDaten } from "../db/schema.js";
 import {
   MAX_DOKUMENTE,
   MAX_KONTAKTE,
@@ -22,6 +22,7 @@ import {
   linkUrl,
   platzNr,
   topPosition,
+  globalId,
   visitorFeld,
   visitorRunde,
 } from "./felder.js";
@@ -96,6 +97,21 @@ export function baueModell(db: Db): DataModelProperty[] {
   // --- Die Top 10 der Carrera-Bahn, fuer alle Besucher dieselbe ----------------------
   for (let p = 1; p <= MAX_TOP_MODELL; p++) {
     felder.push(eintrag(topPosition(p), `Carrera Platz ${String(p)}`, PROPERTY_TYPE.property));
+  }
+
+  /*
+   * **Die globalen Daten**, fuer alle Besucher dieselben. Anders als die festen Plaetze nur die
+   * angelegten: sie entstehen erst, wenn ein Admin sie anlegt, und jede Anlage ist ohnehin ein
+   * neues Mapping in Axon.
+   */
+  for (const g of db.select().from(globaleDaten).orderBy(asc(globaleDaten.nummer)).all()) {
+    felder.push(
+      eintrag(
+        globalId(g.nummer),
+        g.name,
+        g.art === "datei" ? PROPERTY_TYPE.document : PROPERTY_TYPE.property,
+      ),
+    );
   }
 
   // --- Je Exponat ---------------------------------------------------------------------

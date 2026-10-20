@@ -28,6 +28,7 @@ import { importRoutes } from "./routes/import.js";
 import { nutzerRoutes } from "./routes/nutzer.js";
 import { scanRoutes } from "./routes/scan.js";
 import { sicherungRoutes } from "./routes/sicherung.js";
+import { globaldatenRoutes } from "./routes/globaldaten.js";
 import { frontendVorhanden, statischeDateien } from "./routes/statisch.js";
 import { bootstrapAdmin } from "./services/bootstrap.js";
 import { installiereSicherheitskopfzeilen } from "./sicherheitskopfzeilen.js";
@@ -145,6 +146,7 @@ export async function buildServer(
   carreraRoutes(app, ctx);
   entwicklerRoutes(app, ctx);
   sicherungRoutes(app, ctx);
+  globaldatenRoutes(app, ctx);
   /*
    * Die oeffentliche API. Eigener Geltungsbereich mit eigenem Fehlerhandler: sie antwortet
    * mit `Result`, die Verwaltung mit `{code, message}`.

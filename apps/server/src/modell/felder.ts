@@ -122,6 +122,14 @@ export function topPosition(platz: number): string {
   return `pos${String(platz)}`;
 }
 
+/**
+ * `Global01` bis `Global99`: Datenpunkte, die jeder Besucher gleich bekommt, seit dem
+ * 20.10.2026. Siehe `services/globaldaten.ts`.
+ */
+export function globalId(nummer: number): string {
+  return `Global${platzNr(nummer)}`;
+}
+
 export function exponatName(kennung: string): string {
   return `${kennung}_Name`;
 }

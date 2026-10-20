@@ -6,6 +6,7 @@ import {
   exponate,
   exponatDokumente,
   exponatLinks,
+  globaleDaten,
   zuordnungen,
 } from "../db/schema.js";
 import type { Dateiablage } from "../ablage/dateien.js";
@@ -28,6 +29,7 @@ import {
   linkUrl,
   MAX_TOP_MODELL,
   topPosition,
+  globalId,
   visitorFeld,
   visitorRunde,
 } from "./felder.js";
@@ -208,6 +210,19 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
       text: `${alias === "" ? "Anonym" : alias} - ${p.anzeige}`,
       dateiId: null,
     });
+  }
+
+  /*
+   * **Die globalen Daten**, fuer jeden Besucher dieselben, seit dem 20.10.2026. Ebenfalls vor
+   * dem fruehen `return`. Eine Datei geht als Rohwert mit `dateiId` hinaus; Bild oder Ticket
+   * entscheidet `nachAussen`, wie bei den Exponat-Dokumenten. Leere fallen aus.
+   */
+  for (const g of db.select().from(globaleDaten).orderBy(asc(globaleDaten.nummer)).all()) {
+    if (g.art === "text" && g.text !== null && g.text.trim() !== "") {
+      werte.push({ propertyId: globalId(g.nummer), text: g.text, dateiId: null });
+    } else if (g.art === "datei" && g.dateiId !== null) {
+      werte.push({ propertyId: globalId(g.nummer), text: null, dateiId: g.dateiId });
+    }
   }
 
   const meine = db.select().from(zuordnungen).where(eq(zuordnungen.besucherGuid, guid)).all();

@@ -24,6 +24,7 @@ const REITER_ADMIN = [
   { pfad: "/ansprechpartner", text: "Ansprechpartner" },
   { pfad: "/nutzer", text: "Nutzer" },
   { pfad: "/carrera", text: "Carrera" },
+  { pfad: "/globale-daten", text: "Globale Daten" },
   { pfad: "/api", text: "API" },
   { pfad: "/monitoring", text: "Monitoring" },
   { pfad: "/einstellungen", text: "Einstellungen" },
