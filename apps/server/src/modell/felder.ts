@@ -110,19 +110,16 @@ export function visitorRunde(platz: number): string {
 }
 
 /**
- * `Carrera_Top01_Place` bis `Carrera_Top10_BestLap`, je Platz drei Eigenschaften.
+ * `pos1` bis `pos10`, je Platz **eine** Eigenschaft mit dem Wert "Alias - Rundenzeit".
+ *
+ * Seit dem 20.10.2026, so vom Nutzer vorgegeben, auch die Schreibweise ohne fuehrende Null.
+ * Vorher drei Eigenschaften je Platz (`Carrera_Top01_Place`, `_Driver`, `_BestLap`).
  *
  * **Der Fahrer ist nur sein Alias**, Entscheidung des Nutzers: die Liste steht in jedem
  * oeffentlichen Viewer, und Klarnamen anderer Besucher gehoeren dort nicht hin.
  */
-export function topPlatz(platz: number): string {
-  return `Carrera_Top${platzNr(platz)}_Place`;
-}
-export function topFahrer(platz: number): string {
-  return `Carrera_Top${platzNr(platz)}_Driver`;
-}
-export function topBestzeit(platz: number): string {
-  return `Carrera_Top${platzNr(platz)}_BestLap`;
+export function topPosition(platz: number): string {
+  return `pos${String(platz)}`;
 }
 
 export function exponatName(kennung: string): string {

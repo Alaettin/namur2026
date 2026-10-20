@@ -4,8 +4,8 @@ import { melde, starte, type Pruefstand } from "./hilfe.js";
 /**
  * Die Top 10 der Carrera-Bahn im Konnektor, seit dem 19.10.2026.
  *
- * Fuer **jeden** Besucher dieselbe Liste, je Platz Platzierung, Fahrer und Bestzeit. Der
- * Fahrer ist nur sein Alias, ohne Alias "Anonym".
+ * Fuer **jeden** Besucher dieselbe Liste, seit dem 20.10.2026 als `pos1` bis `pos10` mit dem
+ * Wert "Alias - Rundenzeit". Der Fahrer ist nur sein Alias, ohne Alias "Anonym".
  */
 
 const ADMIN = { ADMIN_EMAIL: "admin@namur.de", ADMIN_PASSWORT: "startpasswort-123" };
@@ -60,30 +60,30 @@ async function werte(s: Pruefstand, guid: string): Promise<Wert[]> {
   return antwort.json<Wert[]>();
 }
 
-/** Die Top-10-Werte als `{ "01": { Place, Driver, BestLap } }`. */
-function top(alle: Wert[]): Record<string, Record<string, unknown>> {
-  const liste: Record<string, Record<string, unknown>> = {};
-  for (const w of alle) {
-    const m = /^Carrera_Top(\d{2})_(Place|Driver|BestLap)$/.exec(w.propertyId);
-    if (m === null) continue;
-    const [, nr = "", feld = ""] = m;
-    liste[nr] = { ...liste[nr], [feld]: w.value };
-  }
-  return liste;
+/** Die Top-10-Werte als `{ pos1: "Alias - Zeit", ... }`. */
+function top(alle: Wert[]): Record<string, unknown> {
+  return Object.fromEntries(
+    alle.filter((w) => /^pos\d+$/.test(w.propertyId)).map((w) => [w.propertyId, w.value]),
+  );
 }
 
 describe("Top 10 im Modell", () => {
-  it("kuendigt alle 30 Datenpunkte an, auch ohne gefahrene Runde", async () => {
+  it("kuendigt pos1 bis pos10 an, auch ohne gefahrene Runde, und nichts Altes", async () => {
     const { s } = await alsAdmin();
     const felder = (await s.app.inject({ url: "/connector/model" })).json<
       { id: string; type: number }[]
     >();
-    const topFelder = felder.filter((f) => f.id.startsWith("Carrera_Top"));
+    const ids = felder.map((f) => f.id);
+    const topFelder = felder.filter((f) => /^pos\d+$/.test(f.id));
 
-    expect(topFelder).toHaveLength(30);
+    expect(topFelder.map((f) => f.id)).toEqual(
+      Array.from({ length: 10 }, (_, i) => `pos${String(i + 1)}`),
+    );
     expect(topFelder.every((f) => f.type === 0)).toBe(true);
-    expect(topFelder.map((f) => f.id)).toContain("Carrera_Top10_BestLap");
-    expect(topFelder.map((f) => f.id)).not.toContain("Carrera_Top11_Place");
+    expect(
+      ids.filter((i) => i.startsWith("Carrera_Top")),
+      "alte Eigenschaften",
+    ).toEqual([]);
   });
 });
 
@@ -103,9 +103,9 @@ describe("Top 10 in values", () => {
     await runde(s, "TOP-C", 5300);
 
     expect(top(await werte(s, "TOP-ZUSCHAUER"))).toEqual({
-      "01": { Place: "1", Driver: "Turbo", BestLap: "4,827 s" },
-      "02": { Place: "2", Driver: "Blitz", BestLap: "5,100 s" },
-      "03": { Place: "3", Driver: "Anonym", BestLap: "5,300 s" },
+      pos1: "Turbo - 4,827 s",
+      pos2: "Blitz - 5,100 s",
+      pos3: "Anonym - 5,300 s",
     });
   });
 
@@ -114,9 +114,9 @@ describe("Top 10 in values", () => {
     await besucher(s, keks, "TOP-OHNE");
     await runde(s, "TOP-OHNE", 4900);
 
-    const fahrer = Object.values(top(await werte(s, "TOP-OHNE"))).map((p) => p["Driver"]);
-    expect(fahrer).toEqual(["Anonym"]);
-    expect(JSON.stringify(fahrer)).not.toMatch(/Klar|NameTOP/);
+    const liste = top(await werte(s, "TOP-OHNE"));
+    expect(liste).toEqual({ pos1: "Anonym - 4,900 s" });
+    expect(JSON.stringify(liste)).not.toMatch(/Klar|NameTOP/);
   });
 
   it("fuehrt einen Fahrer einmal, mit seiner besten Runde", async () => {
@@ -126,9 +126,7 @@ describe("Top 10 in values", () => {
     await runde(s, "TOP-VIEL", 4830, 2);
     await runde(s, "TOP-VIEL", 5050, 3);
 
-    expect(top(await werte(s, "TOP-VIEL"))).toEqual({
-      "01": { Place: "1", Driver: "Dauerfahrer", BestLap: "4,830 s" },
-    });
+    expect(top(await werte(s, "TOP-VIEL"))).toEqual({ pos1: "Dauerfahrer - 4,830 s" });
   });
 
   it("endet nach dem zehnten Platz", async () => {
@@ -140,19 +138,9 @@ describe("Top 10 in values", () => {
     }
 
     const liste = top(await werte(s, "TOP-01"));
-    expect(Object.keys(liste).sort()).toEqual([
-      "01",
-      "02",
-      "03",
-      "04",
-      "05",
-      "06",
-      "07",
-      "08",
-      "09",
-      "10",
-    ]);
-    expect(liste["10"]).toMatchObject({ Driver: "F10", BestLap: "4,100 s" });
+    expect(Object.keys(liste)).toHaveLength(10);
+    expect(liste["pos10"]).toBe("F10 - 4,100 s");
+    expect(liste).not.toHaveProperty("pos11");
     expect(JSON.stringify(liste)).not.toContain("F11");
   });
 });

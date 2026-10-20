@@ -21,9 +21,7 @@ import {
   linkTitel,
   linkUrl,
   platzNr,
-  topBestzeit,
-  topFahrer,
-  topPlatz,
+  topPosition,
   visitorFeld,
   visitorRunde,
 } from "./felder.js";
@@ -97,12 +95,7 @@ export function baueModell(db: Db): DataModelProperty[] {
 
   // --- Die Top 10 der Carrera-Bahn, fuer alle Besucher dieselbe ----------------------
   for (let p = 1; p <= MAX_TOP_MODELL; p++) {
-    const nr = platzNr(p);
-    felder.push(
-      eintrag(topPlatz(p), `Carrera Top ${nr} Platzierung`, PROPERTY_TYPE.property),
-      eintrag(topFahrer(p), `Carrera Top ${nr} Fahrer`, PROPERTY_TYPE.property),
-      eintrag(topBestzeit(p), `Carrera Top ${nr} Beste Rundenzeit`, PROPERTY_TYPE.property),
-    );
+    felder.push(eintrag(topPosition(p), `Carrera Platz ${String(p)}`, PROPERTY_TYPE.property));
   }
 
   // --- Je Exponat ---------------------------------------------------------------------
@@ -168,5 +161,5 @@ export const FELDER_JE_EXPONAT =
 /** Zahl der Besucherdatenpunkte: Titel, Personenfelder, Alias, Foto und die Rundenplaetze. */
 export const FELDER_BESUCHER = 1 + AUSGEGEBENE_PERSONENFELDER + 1 + 1 + MAX_RUNDEN_MODELL;
 
-/** Zahl der Datenpunkte der Top 10: je Platz Platzierung, Fahrer und Bestzeit. */
-export const FELDER_TOP = MAX_TOP_MODELL * 3;
+/** Zahl der Datenpunkte der Top 10: je Platz einer, "Alias - Rundenzeit". */
+export const FELDER_TOP = MAX_TOP_MODELL;

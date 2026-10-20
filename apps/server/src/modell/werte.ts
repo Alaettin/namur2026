@@ -27,9 +27,7 @@ import {
   linkTitel,
   linkUrl,
   MAX_TOP_MODELL,
-  topBestzeit,
-  topFahrer,
-  topPlatz,
+  topPosition,
   visitorFeld,
   visitorRunde,
 } from "./felder.js";
@@ -205,11 +203,11 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
    */
   for (const p of vorne) {
     const alias = p.alias?.trim() ?? "";
-    werte.push(
-      { propertyId: topPlatz(p.rang), text: String(p.rang), dateiId: null },
-      { propertyId: topFahrer(p.rang), text: alias === "" ? "Anonym" : alias, dateiId: null },
-      { propertyId: topBestzeit(p.rang), text: p.anzeige, dateiId: null },
-    );
+    werte.push({
+      propertyId: topPosition(p.rang),
+      text: `${alias === "" ? "Anonym" : alias} - ${p.anzeige}`,
+      dateiId: null,
+    });
   }
 
   const meine = db.select().from(zuordnungen).where(eq(zuordnungen.besucherGuid, guid)).all();

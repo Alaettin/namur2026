@@ -278,7 +278,7 @@ describe("Konnektor-API: Werte", () => {
     ).json<{ propertyId: string }[]>();
     // Seit dem 19.10.2026 steht auch die Top 10 der Carrera-Bahn bei jedem Besucher.
     expect(
-      werte.filter((w) => !/^(Visitor_|Carrera_Top\d{2}_)/.test(w.propertyId)),
+      werte.filter((w) => !/^(Visitor_|pos\d+$)/.test(w.propertyId)),
       "Exponatinhalt ohne Zuordnung",
     ).toEqual([]);
   });
