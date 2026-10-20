@@ -11,13 +11,14 @@ import type { Ich } from "../lib/ich.js";
  * **Ein Layout, eine Kopfzeile.** In den Entwuerfen ist sie in jede Datei kopiert; das ist
  * ein Artefakt des Werkzeugs und keine Vorgabe.
  *
- * **Zwei Formen derselben Navigation.** Ab `sm` die Reiterzeile, darunter ein Menue hinter
- * drei Strichen. Sieben Reiter passen bei 390 px nicht nebeneinander, und eine waagerecht
+ * **Zwei Formen derselben Navigation.** Ab `lg` die Reiterzeile, darunter ein Menue hinter
+ * drei Strichen (bis zum 20.10.2026 ab `sm`; zwischen 640 und 1024 px passten die Reiter
+ * aber nicht mehr in eine Zeile). Sieben Reiter passen bei 390 px nicht nebeneinander, und eine waagerecht
  * scrollbare Zeile versteckt genau das, was rechts steht: niemand sucht dort. Die Eintraege
  * kommen in beiden Formen aus derselben Liste, damit keine Form einen Punkt verliert.
  */
 
-const REITER_ADMIN = [
+const REITER_HAUPT = [
   { pfad: "/", text: "Dashboard", genau: true },
   { pfad: "/besucher", text: "Besucher" },
   { pfad: "/exponate", text: "Exponate" },
@@ -25,10 +26,20 @@ const REITER_ADMIN = [
   { pfad: "/nutzer", text: "Nutzer" },
   { pfad: "/carrera", text: "Carrera" },
   { pfad: "/globale-daten", text: "Globale Daten" },
+];
+
+/**
+ * Seltener gebraucht, in der Reiterzeile unter „Mehr“, seit dem 20.10.2026. Mit „Globale
+ * Daten“ waren es zehn Reiter, und die Zeile bekam einen Scrollbalken. Im Menü hinter den
+ * drei Strichen stehen sie weiter in einer Liste mit den anderen.
+ */
+const REITER_MEHR = [
   { pfad: "/api", text: "API" },
   { pfad: "/monitoring", text: "Monitoring" },
   { pfad: "/einstellungen", text: "Einstellungen" },
 ];
+
+const REITER_ADMIN = [...REITER_HAUPT, ...REITER_MEHR];
 
 /** Ein Betreuer sieht nur seine Exponate. Von dort geht es in den Scan-Ablauf. */
 const REITER_BETREUER = [{ pfad: "/exponate", text: "Exponate", genau: true }];
@@ -39,9 +50,21 @@ interface Reiter {
   genau?: boolean;
 }
 
+/**
+ * Ob ein Reiter zur aktuellen Seite gehört. **Aus dem Pfad bestimmt**, nicht nachgehalten:
+ * ein zweiter Zustand neben der Adresse könnte abweichen. Dieselbe Regel wie `NavLink end`.
+ */
+function istAktiv(pathname: string, r: Reiter): boolean {
+  return r.genau === true
+    ? pathname === r.pfad
+    : pathname === r.pfad || pathname.startsWith(`${r.pfad}/`);
+}
+
 export function Rahmen({ ich, aufAbmelden }: { ich: Ich; aufAbmelden: () => void }) {
   const navigate = useNavigate();
   const reiter = ich.rolle === "admin" ? REITER_ADMIN : REITER_BETREUER;
+  const leiste = ich.rolle === "admin" ? REITER_HAUPT : REITER_BETREUER;
+  const mehr = ich.rolle === "admin" ? REITER_MEHR : [];
 
   const abmelden = () => {
     void meldeAb().then(() => {
@@ -92,15 +115,16 @@ export function Rahmen({ ich, aufAbmelden }: { ich: Ich; aufAbmelden: () => void
             </Knopf>
           </span>
 
-          {/* Darunter: alles im Menue. */}
-          <span className="ml-auto flex sm:hidden">
+          {/* Unter `lg`: alles im Menue. Ab `sm` steht davor schon Name und Abmelden. */}
+          <span className="ml-auto flex sm:ml-0 lg:hidden">
             <Hauptmenue reiter={reiter} ich={ich} aufAbmelden={abmelden} />
           </span>
         </div>
 
-        <nav aria-label="Hauptnavigation" className="hidden border-b border-linie sm:block">
-          <div className="mx-auto flex max-w-[992px] gap-1 overflow-x-auto px-4">
-            {reiter.map((r) => (
+        <nav aria-label="Hauptnavigation" className="hidden border-b border-linie lg:block">
+          {/* Kein `overflow-x-auto` mehr: die Zeile passt, und ein Scrollbalken versteckt. */}
+          <div className="mx-auto flex max-w-[992px] gap-1 px-4">
+            {leiste.map((r) => (
               <NavLink
                 key={r.pfad}
                 to={r.pfad}
@@ -117,6 +141,7 @@ export function Rahmen({ ich, aufAbmelden }: { ich: Ich; aufAbmelden: () => void
                 {r.text}
               </NavLink>
             ))}
+            {mehr.length > 0 && <MehrMenue reiter={mehr} />}
           </div>
         </nav>
       </header>
@@ -150,11 +175,6 @@ function Hauptmenue({
 }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-
-  const istAktiv = (r: Reiter) =>
-    r.genau === true
-      ? pathname === r.pfad
-      : pathname === r.pfad || pathname.startsWith(`${r.pfad}/`);
 
   return (
     <DropdownMenu.Root>
@@ -196,7 +216,7 @@ function Hauptmenue({
               className={cn(
                 "flex h-11 cursor-pointer items-center px-4 text-sm outline-none select-none",
                 "data-[highlighted]:bg-grund",
-                istAktiv(r)
+                istAktiv(pathname, r)
                   ? "font-semibold text-text shadow-[inset_3px_0_0_var(--color-primaer)]"
                   : "font-medium text-text-hinweis",
               )}
@@ -220,6 +240,65 @@ function Hauptmenue({
           >
             Abmelden
           </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+}
+
+/**
+ * „Mehr ▾“ am Ende der Reiterzeile.
+ *
+ * Sieht aus wie ein Reiter und ist unterstrichen, wenn die aktuelle Seite darin steckt; dann
+ * steht dort deren Name statt „Mehr“, damit man sieht, wo man ist.
+ */
+function MehrMenue({ reiter }: { reiter: Reiter[] }) {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const aktiv = reiter.find((r) => istAktiv(pathname, r));
+
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "flex h-[46px] shrink-0 items-center gap-1.5 px-4 text-sm",
+            aktiv !== undefined
+              ? "font-semibold text-text shadow-[inset_0_-2px_0_var(--color-primaer)]"
+              : "font-medium text-text-hinweis hover:text-text",
+          )}
+        >
+          {aktiv?.text ?? "Mehr"}
+          <span aria-hidden="true" className="text-xs">
+            ▾
+          </span>
+        </button>
+      </DropdownMenu.Trigger>
+
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="end"
+          sideOffset={2}
+          className="z-50 flex min-w-[12rem] flex-col bg-flaeche py-1 shadow-[0_18px_48px_rgba(27,29,38,0.22)]"
+        >
+          {reiter.map((r) => (
+            <DropdownMenu.Item
+              key={r.pfad}
+              onSelect={() => {
+                void navigate(r.pfad);
+              }}
+              className={cn(
+                "flex h-11 cursor-pointer items-center px-4 text-sm outline-none select-none",
+                "data-[highlighted]:bg-grund",
+                istAktiv(pathname, r)
+                  ? "font-semibold text-text shadow-[inset_3px_0_0_var(--color-primaer)]"
+                  : "font-medium text-text-hinweis",
+              )}
+            >
+              {r.text}
+            </DropdownMenu.Item>
+          ))}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>

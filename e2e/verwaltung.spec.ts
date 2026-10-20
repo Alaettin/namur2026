@@ -261,6 +261,32 @@ test.describe("Navigation", () => {
     await expect(page.getByRole("button", { name: "Menü" })).toBeHidden();
     await expect(page.getByRole("button", { name: "Abmelden" })).toBeVisible();
   });
+
+  /**
+   * **„Mehr“ statt Scrollbalken**, seit dem 20.10.2026. Mit zehn Reitern lief die Zeile über
+   * und zeigte einen Scrollbalken. Gemessen wird am Element selbst, nicht am Fenster.
+   */
+  test("am Desktop passt die Reiterzeile, seltene Seiten stehen unter Mehr", async ({
+    page,
+    viewport,
+  }) => {
+    test.skip((viewport?.width ?? 0) < 1024, "gilt nur für die breite Form");
+    await page.goto("/");
+    const zeile = page.getByRole("navigation", { name: "Hauptnavigation" }).locator("> div");
+    const ueberlauf = await zeile.evaluate((e) => e.scrollWidth - e.clientWidth);
+    expect(ueberlauf, "die Reiterzeile läuft über").toBeLessThanOrEqual(0);
+
+    await page.getByRole("button", { name: "Mehr" }).click();
+    await page.getByRole("menuitem", { name: "Monitoring" }).click();
+    await expect(page).toHaveURL(/\/monitoring$/);
+    await expect(page.getByRole("heading", { name: "Monitoring" })).toBeVisible();
+    // Der Auslöser zeigt jetzt, wo man ist.
+    await expect(
+      page
+        .getByRole("navigation", { name: "Hauptnavigation" })
+        .getByRole("button", { name: "Monitoring" }),
+    ).toBeVisible();
+  });
 });
 
 /**
