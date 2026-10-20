@@ -102,7 +102,17 @@ export function App() {
             Der Scan läuft im Vollbild, **außerhalb** des Rahmens: er hat eine eigene
             Kopfzeile, und die Reiter wären am Stand nur im Weg.
           */}
-          <Route path="/exponate/:id/scan" element={<Scan ich={ich} />} />
+          <Route
+            path="/exponate/:id/scan"
+            element={
+              <Scan
+                ich={ich}
+                aufAbmelden={() => {
+                  setzeIch(null);
+                }}
+              />
+            }
+          />
           <Route
             element={
               <Rahmen

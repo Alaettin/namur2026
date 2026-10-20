@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { ApiFehler, api, useAbruf } from "../lib/api.js";
+import { ApiFehler, api, meldeAb, useAbruf } from "../lib/api.js";
 import { Feld, Knopf, Markierung } from "../bausteine/basis.js";
 import { Kamera, kameraMoeglich, type Kamerafehler } from "./Kamera.js";
 import type { Ich } from "../lib/ich.js";
@@ -55,7 +55,7 @@ interface Exponat {
   scanbar: boolean;
 }
 
-export function Scan({ ich }: { ich: Ich }) {
+export function Scan({ ich, aufAbmelden }: { ich: Ich; aufAbmelden: () => void }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const exponat = useAbruf<Exponat>(`/api/exponate/${String(id)}`);
@@ -104,6 +104,22 @@ export function Scan({ ich }: { ich: Ich }) {
           {schritt.art === "treffer" ? "Pass erkannt" : (exponat.daten?.name ?? "Scannen")}
         </span>
         <span className="font-mono text-[13px]">{kennung}</span>
+        {/*
+          **Abmelden auch hier.** Der Scan läuft ohne Rahmen, und ein Betreuer mit einem
+          Exponat lebt in ihm; bis zum 20.10.2026 kam er von hier nirgends zum Abmelden.
+        */}
+        <button
+          type="button"
+          className="ml-1 flex min-h-12 items-center px-2 text-[13px] font-semibold text-primaer-dunkel"
+          onClick={() => {
+            void meldeAb().then(() => {
+              aufAbmelden();
+              void navigate("/anmeldung");
+            });
+          }}
+        >
+          Abmelden
+        </button>
       </header>
 
       {exponat.daten !== null && !exponat.daten.scanbar ? (

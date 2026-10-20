@@ -141,3 +141,17 @@ export function setzeSchalter(name: string, an: boolean): void {
     // etwas beruht.
   }
 }
+
+/**
+ * Meldet am Server ab. Fehler werden geschluckt: abgemeldet wird die Oberflaeche in jedem
+ * Fall, und eine Sitzung, die der Server nicht mehr kennt, ist ohnehin keine.
+ *
+ * Eine Stelle fuer den Rahmen und die Scan-Kopfzeile, seit dem 20.10.2026.
+ */
+export async function meldeAb(): Promise<void> {
+  try {
+    await api("/api/auth/abmelden", { method: "POST" });
+  } catch {
+    // absichtlich still, siehe oben
+  }
+}

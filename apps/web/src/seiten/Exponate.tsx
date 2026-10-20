@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { ApiFehler, api, useAbruf } from "../lib/api.js";
 import { Blaetterleiste, useBlaettern } from "../bausteine/blaettern.js";
@@ -27,25 +27,34 @@ interface Exponatzeile {
   scanbar: boolean;
 }
 
+/**
+ * Für wen die Weiterleitung in den Scan schon geschah, **je Anmeldung**.
+ *
+ * Bis zum 20.10.2026 ein `useRef`: der lebt nur so lange wie die eingehängte Seite. „Scannen
+ * beenden“ führt Betreuer hierher, die Seite wird neu eingehängt, der Merker ist wieder leer,
+ * und es geht zurück in den Scan. Eine Schleife ohne Ausgang, also auch ohne Abmelden. An
+ * die Id gebunden, damit der nächste Betreuer am selben Gerät wieder direkt im Scan landet.
+ */
+let weitergeleitetFuer: string | null = null;
+
 export function Exponate({ ich }: { ich: Ich }) {
   const navigate = useNavigate();
   const { daten, laedt, fehler } = useAbruf<Exponatzeile[]>("/api/exponate");
   const { seite, zuSeite, sichtbar, gesamt } = useBlaettern(daten ?? []);
-  const weitergeleitet = useRef(false);
 
   /*
    * **Ein Betreuer mit genau einem Exponat landet direkt im Scan-Ablauf.** So steht es in
    * der Uebergabe: am Stand soll niemand erst eine Liste mit einem Eintrag durchklicken.
    *
-   * Nur einmal je Aufruf, sonst kommt er aus dem Scan nie wieder in die Liste zurueck.
+   * Nur einmal je Anmeldung, sonst kommt er aus dem Scan nie wieder in die Liste zurueck.
    */
   useEffect(() => {
-    if (weitergeleitet.current || daten === null || ich.rolle === "admin") return;
+    if (weitergeleitetFuer === ich.id || daten === null || ich.rolle === "admin") return;
     if (daten.length === 1 && daten[0]?.scanbar === true) {
-      weitergeleitet.current = true;
+      weitergeleitetFuer = ich.id;
       void navigate(`/exponate/${daten[0].id}/scan`, { replace: true });
     }
-  }, [daten, ich.rolle, navigate]);
+  }, [daten, ich.id, ich.rolle, navigate]);
 
   const [anlegen, setzeAnlegen] = useState(false);
   const [name, setzeName] = useState("");

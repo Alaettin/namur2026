@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { DropdownMenu } from "radix-ui";
-import { api } from "../lib/api.js";
+import { meldeAb } from "../lib/api.js";
 import { Knopf, cn } from "../bausteine/basis.js";
 import { Logoreihe } from "../bausteine/logos.js";
 import type { Ich } from "../lib/ich.js";
@@ -43,7 +43,7 @@ export function Rahmen({ ich, aufAbmelden }: { ich: Ich; aufAbmelden: () => void
   const reiter = ich.rolle === "admin" ? REITER_ADMIN : REITER_BETREUER;
 
   const abmelden = () => {
-    void api("/api/auth/abmelden", { method: "POST" }).finally(() => {
+    void meldeAb().then(() => {
       aufAbmelden();
       void navigate("/anmeldung");
     });
