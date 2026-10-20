@@ -26,6 +26,7 @@ interface Bestand {
   zuordnungen: number;
   dateien: number;
   abrufe: number;
+  globaleDaten: number;
   appNutzer: number;
 }
 
@@ -258,6 +259,9 @@ export function Einstellungen({ ich }: { ich: Ich }) {
           </li>
           <li>
             die Abrufzähler für <b>{b?.abrufe ?? 0}</b> GUIDs
+          </li>
+          <li>
+            <b>{b?.globaleDaten ?? 0}</b> globale Datenpunkte
           </li>
         </ul>
         <p>

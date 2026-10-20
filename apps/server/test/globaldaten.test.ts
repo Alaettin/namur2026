@@ -69,7 +69,7 @@ async function aufbau() {
   await ruf("POST", "/api/besucher", { guid: "GL-1", vorname: "Gina", nachname: "Global" });
   await ruf("POST", "/api/besucher", { guid: "GL-2", vorname: "Gero", nachname: "Global" });
 
-  return { s, ruf, lege, hochladen };
+  return { s, keks, ruf, lege, hochladen };
 }
 
 async function werte(s: Pruefstand, guid: string): Promise<Wert[]> {
@@ -199,5 +199,79 @@ describe("Globale Daten im Konnektor", () => {
     // Das Loeschen gelingt sauber, statt an der Datei zu scheitern.
     expect((await ruf("DELETE", `/api/globale-daten/${g.id}`)).statusCode).toBe(204);
     expect((await ruf("GET", `/api/dateien/${dateiId}`)).statusCode).toBe(200);
+  });
+});
+
+describe("Globale Daten in Sicherung und Zuruecksetzen", () => {
+  /**
+   * **Sicherung mit Zaehler.** Vor dem Export wird `Global03` angelegt und wieder geloescht:
+   * in der Tabelle stehen dann nur 01 und 02, der Zaehler steht auf 3. Kommt nach dem
+   * Einspielen `Global04`, ist der Zaehler mitgesichert; ohne ihn kaeme wieder 03.
+   */
+  it("sichert Datenpunkte, Datei und Nummernzaehler und spielt sie wieder ein", async () => {
+    const { s, keks, ruf, lege, hochladen } = await aufbau();
+    const text = await lege("Programm", "text");
+    const bild = await lege("Logo", "datei");
+    await ruf("PATCH", `/api/globale-daten/${text.id}`, { text: "Beginn 9 Uhr" });
+    await ruf("PATCH", `/api/globale-daten/${bild.id}`, {
+      dateiId: await hochladen("logo.png", PNG),
+    });
+    const weg = await lege("Weg", "text");
+    await ruf("DELETE", `/api/globale-daten/${weg.id}`);
+
+    const zip = new Uint8Array((await ruf("GET", "/api/sicherung")).rawPayload);
+
+    // Den Bestand umbauen: beide weg, ein anderer dazu.
+    await ruf("DELETE", `/api/globale-daten/${text.id}`);
+    await ruf("DELETE", `/api/globale-daten/${bild.id}`);
+    await lege("Spaeter", "text");
+
+    const g = "----namurglobalsicherung";
+    const eingespielt = await s.app.inject({
+      method: "POST",
+      url: "/api/sicherung",
+      headers: {
+        cookie: keks,
+        "content-type": `multipart/form-data; boundary=${g}`,
+      },
+      payload: Buffer.concat([
+        Buffer.from(
+          `--${g}\r\nContent-Disposition: form-data; name="datei"; filename="s.zip"\r\n` +
+            "Content-Type: application/zip\r\n\r\n",
+        ),
+        Buffer.from(zip),
+        Buffer.from(`\r\n--${g}--\r\n`),
+      ]),
+    });
+    expect(eingespielt.statusCode, eingespielt.body).toBe(200);
+    expect(eingespielt.json<{ bestand: { globaleDaten: number } }>().bestand.globaleDaten).toBe(2);
+
+    const liste = (await ruf("GET", "/api/globale-daten")).json<Global[]>();
+    expect(liste.map((x) => x.propertyId)).toEqual(["Global01", "Global02"]);
+    const w = await werte(s, "GL-1");
+    expect(w.find((x) => x.propertyId === "Global01")?.value).toBe("Beginn 9 Uhr");
+    expect(w.find((x) => x.propertyId === "Global02")?.value).toBe(PNG.toString("base64"));
+
+    expect((await lege("Neu", "text")).propertyId).toBe("Global04");
+  });
+
+  it("raeumt beim Zuruecksetzen alles weg, vergibt danach aber keine alte Nummer", async () => {
+    const { s, ruf, lege, hochladen } = await aufbau();
+    await lege("Programm", "text");
+    const bild = await lege("Logo", "datei");
+    await ruf("PATCH", `/api/globale-daten/${bild.id}`, {
+      dateiId: await hochladen("logo.png", PNG),
+    });
+
+    const zurueck = await ruf("POST", "/api/entwickler/zuruecksetzen", {
+      bestaetigung: "ZURUECKSETZEN",
+    });
+    expect(zurueck.statusCode, zurueck.body).toBe(200);
+    expect(zurueck.json<{ geloescht: { globaleDaten: number } }>().geloescht.globaleDaten).toBe(2);
+
+    expect((await ruf("GET", "/api/globale-daten")).json<Global[]>()).toEqual([]);
+    const modell = (await s.app.inject({ url: "/connector/model" })).json<{ id: string }[]>();
+    expect(modell.filter((m) => m.id.startsWith("Global"))).toEqual([]);
+    expect((await lege("Neu", "text")).propertyId).toBe("Global03");
   });
 });

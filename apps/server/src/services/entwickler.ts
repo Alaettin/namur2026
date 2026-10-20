@@ -15,6 +15,7 @@ import {
   exponatAnsprechpartner,
   einstellungen,
   exponatLinks,
+  globaleDaten,
   konnektorAbrufe,
   runden,
   zuordnungen,
@@ -40,6 +41,8 @@ export interface Bestand {
   abrufe: number;
   /** Gemeldete Rundenzeiten der Carrera-Bahn. */
   runden: number;
+  /** Datenpunkte, die jeder Besucher gleich bekommt, seit dem 20.10.2026. */
+  globaleDaten: number;
   /** Bleiben beim Zuruecksetzen erhalten. Nur zur Anzeige im Rueckfragedialog. */
   appNutzer: number;
 }
@@ -63,6 +66,7 @@ export function leseBestand(db: Db): Bestand {
     dateien: n(db.select({ n: sql<number>`count(*)` }).from(dateien)),
     abrufe: n(db.select({ n: sql<number>`count(*)` }).from(konnektorAbrufe)),
     runden: n(db.select({ n: sql<number>`count(*)` }).from(runden)),
+    globaleDaten: n(db.select({ n: sql<number>`count(*)` }).from(globaleDaten)),
     appNutzer: n(db.select({ n: sql<number>`count(*)` }).from(appNutzer)),
   };
 }
@@ -118,6 +122,12 @@ export async function setzeZurueck(db: Db, ablage: Dateiablage): Promise<Bestand
     tx.delete(exponatBetreuer).run();
     tx.delete(exponate).run();
     tx.delete(besucher).run();
+    /*
+     * **Die globalen Daten gehen mit**, seit dem 20.10.2026; vorher blieben sie stehen und
+     * verloren nur ihre Datei. **Ihr Nummernzaehler in `einstellungen` bleibt**: sonst bekaeme
+     * der naechste wieder `Global01` und erbte das Axon-Mapping eines geloeschten.
+     */
+    tx.delete(globaleDaten).run();
     tx.delete(dateien).run();
   });
 

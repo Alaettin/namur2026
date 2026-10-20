@@ -17,6 +17,8 @@ interface Bestand {
   zuordnungen: number;
   dateien: number;
   runden: number;
+  /** Fehlt in Sicherungen vor dem 20.10.2026. */
+  globaleDaten?: number;
   appNutzer: number;
 }
 
@@ -31,6 +33,7 @@ const ZEILEN: [keyof Bestand, string][] = [
   ["zuordnungen", "Zuordnungen"],
   ["dateien", "Dateien"],
   ["runden", "Rundenzeiten"],
+  ["globaleDaten", "Globale Daten"],
   ["appNutzer", "Anmeldungen"],
 ];
 
@@ -173,9 +176,9 @@ export function Sicherung() {
                 {ZEILEN.map(([feld, text]) => (
                   <tr key={feld} className="border-t border-linie">
                     <td className="py-1">{text}</td>
-                    <td className="py-1 text-right tabular-nums">{pruefung.aktuell[feld]}</td>
+                    <td className="py-1 text-right tabular-nums">{pruefung.aktuell[feld] ?? 0}</td>
                     <td className="py-1 text-right font-semibold tabular-nums">
-                      {pruefung.sicherung.bestand[feld]}
+                      {pruefung.sicherung.bestand[feld] ?? 0}
                     </td>
                   </tr>
                 ))}
