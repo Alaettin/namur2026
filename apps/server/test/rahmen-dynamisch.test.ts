@@ -54,12 +54,23 @@ async function avatarAusWerten(s: Pruefstand, guid: string): Promise<Buffer> {
     url: `/connector/product/${guid}/values`,
     payload: {},
   });
-  const werte = antwort.json<{ propertyId: string; value: string; size?: number }[]>();
+  const werte =
+    antwort.json<
+      { propertyId: string; value: string; size?: number; mimeType?: string; filename?: string }[]
+    >();
   const avatar = werte.find((w) => w.propertyId === "Visitor_Avatar");
   expect(avatar, "kein Avatar in der Antwort").toBeDefined();
   const roh = Buffer.from(avatar?.value ?? "", "base64");
   // Die gemeldete Groesse muss zu den gesendeten Bytes passen, nicht zur Ablage.
   expect(avatar?.size, "size passt nicht zum Inhalt").toBe(roh.length);
+  // Gerahmt ist es ein PNG, ungerahmt das JPEG aus der Ablage; Typ und Endung muessen folgen.
+  const istPng = roh[0] === 0x89 && roh[1] === 0x50;
+  expect(avatar?.mimeType, "mimeType passt nicht zum Inhalt").toBe(
+    istPng ? "image/png" : "image/jpeg",
+  );
+  expect(avatar?.filename ?? "", "Endung passt nicht zum Inhalt").toMatch(
+    istPng ? /\.png$/ : /\.jpe?g$/,
+  );
   return roh;
 }
 

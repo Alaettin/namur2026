@@ -27,6 +27,15 @@ export function overlay(rang: Rang): PNG {
   return png;
 }
 
+/** RGBA eines Bildes, PNG (gerahmt) oder JPEG (ungerahmt), an den Kennbytes erkannt. */
+export function lies(bild: Buffer): { width: number; height: number; data: Uint8Array } {
+  if (bild[0] === 0x89 && bild[1] === 0x50) {
+    const png = PNG.sync.read(bild);
+    return { width: png.width, height: png.height, data: new Uint8Array(png.data) };
+  }
+  return decode(bild, { useTArray: true });
+}
+
 /** Punkte, an denen alle drei Overlays mindestens 245 von 255 Deckung haben. */
 function deckendePunkte(): number[] {
   const g = overlay(1);
@@ -41,8 +50,8 @@ function deckendePunkte(): number[] {
  * Mittlere Abweichung je Farbkanal vom Overlay des Rangs, an den deckenden Punkten.
  * Nur fuer Bilder in Overlaygroesse (512 px), so gross wie jeder Avatar.
  */
-export function abweichung(jpeg: Buffer, rang: Rang): number {
-  const bild = decode(jpeg, { useTArray: true });
+export function abweichung(datei: Buffer, rang: Rang): number {
+  const bild = lies(datei);
   const o = overlay(rang);
   if (bild.width !== o.width || bild.height !== o.height) throw new Error("falsche Groesse");
   const punkte = deckendePunkte();
@@ -61,11 +70,11 @@ export function abweichung(jpeg: Buffer, rang: Rang): number {
  * **Ein ungerahmtes Bild kommt irgendeinem Overlay am naechsten**, das sagt fuer sich nichts.
  * Deshalb die Schranke: nur wer nah genug dran ist, traegt wirklich einen Rahmen.
  */
-export function rangVonBild(jpeg: Buffer): Rang | null {
+export function rangVonBild(datei: Buffer): Rang | null {
   let bester: Rang = 1;
   let kleinste = Infinity;
   for (const rang of [1, 2, 3] as const) {
-    const d = abweichung(jpeg, rang);
+    const d = abweichung(datei, rang);
     if (d < kleinste) {
       kleinste = d;
       bester = rang;

@@ -407,21 +407,28 @@ export async function nachAussen(
       /*
        * **Der Siegerrahmen, aufgelegt im Moment des Abrufs.** Nur fuer die ersten drei der
        * Carrera-Bestenliste und nur auf dem Avatar, seit dem 20.10.2026 aus den Overlays in
-       * `assets/rahmen`. Ist die Datei kein lesbares JPEG oder fehlt das Overlay, gibt
+       * `assets/rahmen`. Gerahmt ist es ein PNG (aussen durchsichtig), also tragen Typ und
+       * Dateiendung das mit. Ist die Datei kein lesbares JPEG oder fehlt das Overlay, gibt
        * `zeichneRahmen` `null` und das Bild geht unveraendert hinaus.
        */
       let hinaus = inhalt;
+      let mimeType = datei.mimeType;
+      let name = filename;
       const rang = wert.rang ?? null;
       if (rang !== null) {
         const gerahmt = zeichneRahmen(inhalt, rang);
-        if (gerahmt !== null) hinaus = gerahmt;
+        if (gerahmt !== null) {
+          hinaus = gerahmt.inhalt;
+          mimeType = gerahmt.mimeType;
+          name = `${filename.replace(/\.[^.]*$/, "")}.png`;
+        }
       }
 
       ergebnis.push({
         propertyId: wert.propertyId,
         value: hinaus.toString("base64"),
-        mimeType: datei.mimeType,
-        filename,
+        mimeType,
+        filename: name,
         /*
          * **Die Groesse des Gesendeten, nicht die der Ablage.** Mit Rahmen sind es andere
          * Bytes; eine Gegenseite, die nach `size` puffert, bekaeme sonst eine Zahl, die

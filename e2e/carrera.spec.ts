@@ -324,22 +324,23 @@ test("das Bild des Erstplatzierten trägt einen Rahmen, das eines anderen nicht"
 }) => {
   const schnell = `POD-F-${String(Date.now()).slice(-6)}`;
   const langsam = `POD-G-${String(Date.now()).slice(-6)}`;
-  for (const [guid, dauer] of [
-    [schnell, 1234],
-    [langsam, 99999],
-  ] as const) {
+  for (const guid of [schnell, langsam]) {
     expect(
       (
         await request.post("/api/besucher", { data: { guid, vorname: "Rahmen", nachname: guid } })
       ).status(),
     ).toBe(201);
     merkeBesucher(guid);
-    expect(
-      (
-        await request.post("/carrera/runden", { data: meldung(`${guid}-l1`, guid, 1, dauer) })
-      ).status(),
-    ).toBe(200);
   }
+  /*
+   * Nur der Schnelle faehrt. Mit einer zweiten, langsamen Runde stuende der andere auf
+   * Platz 2 und truege zu Recht Silber; das fiel erst auf, als der Test den Typ pruefte.
+   */
+  expect(
+    (
+      await request.post("/carrera/runden", { data: meldung(`${schnell}-l1`, schnell, 1, 1234) })
+    ).status(),
+  ).toBe(200);
 
   async function avatar(guid: string) {
     const werte = await (
@@ -347,7 +348,12 @@ test("das Bild des Erstplatzierten trägt einen Rahmen, das eines anderen nicht"
     ).json();
     const w = werte.find((x: { propertyId: string }) => x.propertyId === "Visitor_Avatar");
     expect(w, "kein Avatar in der Antwort").toBeTruthy();
-    return { bytes: Buffer.from(w.value, "base64"), size: w.size as number };
+    return {
+      bytes: Buffer.from(w.value, "base64"),
+      size: w.size as number,
+      mimeType: w.mimeType as string,
+      filename: w.filename as string,
+    };
   }
 
   const ersterPlatz = await avatar(schnell);
@@ -358,6 +364,11 @@ test("das Bild des Erstplatzierten trägt einen Rahmen, das eines anderen nicht"
   expect(ohnePlatz.size).toBe(ohnePlatz.bytes.length);
 
   expect(ersterPlatz.bytes.equals(ohnePlatz.bytes), "beide Bilder gleich").toBe(false);
-  // Beides bleibt ein JPEG.
-  expect(ersterPlatz.bytes.subarray(0, 2).toString("hex")).toBe("ffd8");
+  // Gerahmt ein PNG (aussen durchsichtig), ungerahmt das JPEG; Typ und Endung folgen.
+  expect(ersterPlatz.bytes.subarray(0, 4).toString("hex")).toBe("89504e47");
+  expect(ersterPlatz.mimeType).toBe("image/png");
+  expect(ersterPlatz.filename).toMatch(/\.png$/);
+  expect(ohnePlatz.bytes.subarray(0, 2).toString("hex")).toBe("ffd8");
+  expect(ohnePlatz.mimeType).toBe("image/jpeg");
+  expect(ohnePlatz.filename).toMatch(/\.jpe?g$/);
 });
