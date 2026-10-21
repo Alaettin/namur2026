@@ -5,10 +5,10 @@ import { pruefeBasicGegen } from "../konnektorapi/basic.js";
 import { fahrerdaten } from "../services/besucher.js";
 import { carreraAnmeldungVerlangt } from "../services/einstellungen.js";
 import {
+  alleRundenVonBesucher,
   loescheRunde,
   nimmRundeAuf,
   rundeAlsText,
-  rundenVonBesucher,
   type Rundenmeldung,
 } from "../services/runden.js";
 
@@ -75,7 +75,8 @@ export function carreraRoutes(app: FastifyInstance, ctx: Kontext): void {
   /** Was zu einem Besucher gespeichert ist, zum Gegenpruefen von seiner Seite aus. */
   app.get<{ Params: { guid: string } }>("/carrera/runden/besucher/:guid", async (req) => {
     pruefeZugang(req);
-    const alle = rundenVonBesucher(ctx.db, req.params.guid);
+    // Ungefiltert: der Partner prueft, was angekommen ist, nicht was hier gerade zaehlt.
+    const alle = alleRundenVonBesucher(ctx.db, req.params.guid);
     return {
       guid: req.params.guid,
       anzahl: alle.length,

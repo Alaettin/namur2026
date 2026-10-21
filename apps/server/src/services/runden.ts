@@ -1,7 +1,8 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import type { Db } from "../db/client.js";
 import { besucher, runden } from "../db/schema.js";
 import { badRequest, kontingentErschoepft, notFound } from "../errors.js";
+import { gewerteteEvents } from "./einstellungen.js";
 import { avatarFuer } from "./standardavatar.js";
 
 /**
@@ -185,14 +186,92 @@ export function loescheRunde(db: Db, lapId: string): boolean {
   return true;
 }
 
-/** Die Runden eines Besuchers, nach Platz. */
+/**
+ * Die Bedingung "nur gewertete Events", oder `undefined`, wenn alle zaehlen.
+ *
+ * **Die eine Stelle, an der gefiltert wird.** Bestenliste, Kennzahlen und die Runden eines
+ * Besuchers holen sie hier; darueber laufen Verwaltung, Podestrahmen, Top 10 und
+ * `Visitor_LapNN`. Gespeichert wird weiter alles, die Auswahl entscheidet nur, was zaehlt.
+ *
+ * `coalesce`, weil Runden ohne `event_id` als Leerstring anhakbar sind; `in` allein traefe
+ * `NULL` nie.
+ */
+function nurGewertete(db: Db): SQL | undefined {
+  const events = gewerteteEvents(db);
+  if (events.length === 0) return undefined;
+  return inArray(sql`coalesce(${runden.eventId}, '')`, events);
+}
+
+/** Die gewerteten Runden eines Besuchers, nach Platz. */
 export function rundenVonBesucher(db: Db, guid: string) {
+  return db
+    .select()
+    .from(runden)
+    .where(and(eq(runden.besucherGuid, guid), nurGewertete(db)))
+    .orderBy(asc(runden.platz))
+    .all();
+}
+
+/**
+ * **Alle** Runden eines Besuchers, ohne Ruecksicht auf die Auswahl.
+ *
+ * Fuer die Gegenpruefung der Bahn: der Partner soll sehen, was bei uns angekommen ist,
+ * auch aus einem Event, das hier gerade nicht gewertet wird.
+ */
+export function alleRundenVonBesucher(db: Db, guid: string) {
   return db
     .select()
     .from(runden)
     .where(eq(runden.besucherGuid, guid))
     .orderBy(asc(runden.platz))
     .all();
+}
+
+export interface Event {
+  /** Leerstring fuer Runden ohne `event_id`. */
+  eventId: string;
+  eventName: string | null;
+  runden: number;
+  gewertet: boolean;
+}
+
+/**
+ * Alle Events, aus denen Runden vorliegen, fuer die Auswahl in den Einstellungen.
+ *
+ * Der Name ist der zuletzt gemeldete: die Bahn kann ihn zwischen zwei Runden aendern, und
+ * angezeigt werden soll der aktuelle. Ausgewaehlte Events ohne Runden erscheinen trotzdem,
+ * sonst liesse sich ein Haken nicht mehr entfernen.
+ */
+export function eventListe(db: Db): Event[] {
+  const gewertet = new Set(gewerteteEvents(db));
+  const zeilen = db
+    .select({
+      eventId: sql<string>`coalesce(${runden.eventId}, '')`,
+      runden: sql<number>`count(*)`,
+    })
+    .from(runden)
+    .groupBy(sql`coalesce(${runden.eventId}, '')`)
+    .all();
+
+  const liste: Event[] = zeilen.map((z) => ({
+    eventId: z.eventId,
+    eventName:
+      db
+        .select({ name: runden.eventName })
+        .from(runden)
+        .where(eq(sql`coalesce(${runden.eventId}, '')`, z.eventId))
+        .orderBy(desc(runden.angelegt))
+        .limit(1)
+        .get()?.name ?? null,
+    runden: z.runden,
+    gewertet: gewertet.has(z.eventId),
+  }));
+  for (const id of gewertet) {
+    if (!liste.some((e) => e.eventId === id)) {
+      liste.push({ eventId: id, eventName: null, runden: 0, gewertet: true });
+    }
+  }
+  return liste.sort((a, b) => a.eventId.localeCompare(b.eventId, "de"));
 }
 
 /**
@@ -268,6 +347,7 @@ export function bestenliste(db: Db, grenze = BESTENLISTE_LAENGE): Platz[] {
     })
     .from(runden)
     .innerJoin(besucher, eq(besucher.guid, runden.besucherGuid))
+    .where(nurGewertete(db))
     .groupBy(runden.besucherGuid)
     .orderBy(sql`min(${runden.durationMs}) asc`, asc(runden.besucherGuid))
     .limit(grenze)
@@ -302,6 +382,7 @@ export function rundenzahlen(db: Db): Rundenzahlen {
       bestMs: sql<number | null>`min(${runden.durationMs})`,
     })
     .from(runden)
+    .where(nurGewertete(db))
     .get();
 
   return {

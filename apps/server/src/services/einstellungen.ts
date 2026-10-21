@@ -67,3 +67,39 @@ export function anmeldungVerlangt(db: Db): boolean {
 export function carreraAnmeldungVerlangt(db: Db): boolean {
   return leseSchalter(db, SCHLUESSEL_CARRERA, false);
 }
+
+/** Welche `event_id`s der Carrera-Bahn gewertet werden, als JSON-Liste. */
+export const SCHLUESSEL_EVENTS = "carrera.gewerteteEvents";
+
+/**
+ * Die gewerteten Events. **Leer heisst: alle zaehlen**, so wie vor dieser Einstellung.
+ *
+ * Runden ohne `event_id` stehen hier als Leerstring. Ein verunglueckter Wert von Hand in
+ * der Datenbank faellt auf leer zurueck, also auf "alle", statt still alles auszublenden.
+ */
+export function gewerteteEvents(db: Db): string[] {
+  const reihe = db
+    .select({ wert: einstellungen.wert })
+    .from(einstellungen)
+    .where(eq(einstellungen.schluessel, SCHLUESSEL_EVENTS))
+    .get();
+  if (reihe === undefined) return [];
+  try {
+    const liste: unknown = JSON.parse(reihe.wert);
+    return Array.isArray(liste) && liste.every((e) => typeof e === "string") ? liste : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Setzt die gewerteten Events. Doppelte fallen weg. */
+export function setzeGewerteteEvents(db: Db, eventIds: string[]): void {
+  const wert = JSON.stringify([...new Set(eventIds)]);
+  db.insert(einstellungen)
+    .values({ schluessel: SCHLUESSEL_EVENTS, wert })
+    .onConflictDoUpdate({
+      target: einstellungen.schluessel,
+      set: { wert, geaendert: Date.now() },
+    })
+    .run();
+}

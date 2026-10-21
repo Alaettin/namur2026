@@ -18,11 +18,12 @@ import {
   SCHLUESSEL_CARRERA,
   anmeldungVerlangt,
   carreraAnmeldungVerlangt,
+  setzeGewerteteEvents,
   setzeSchalter,
 } from "../services/einstellungen.js";
 import { FELDER_BESUCHER, baueModell } from "../modell/modell.js";
 import { listeExponate } from "../services/exponate.js";
-import { bestenliste, rundenzahlen } from "../services/runden.js";
+import { bestenliste, eventListe, rundenzahlen } from "../services/runden.js";
 
 /**
  * Dashboard und der Bildschirm API.
@@ -179,7 +180,33 @@ export function dashboardRoutes(app: FastifyInstance, ctx: Kontext): void {
   app.get("/api/carrera/bestenliste", { preHandler: app.verlangeAdmin }, async () => ({
     ...rundenzahlen(ctx.db),
     plaetze: bestenliste(ctx.db),
+    // Damit die Seite sagt, was gerade zaehlt. Leer heisst: alle.
+    gewertet: eventListe(ctx.db).filter((e) => e.gewertet),
   }));
+
+  /** Welche Events der Bahn es gibt und welche gewertet werden, fuer die Einstellungen. */
+  app.get("/api/carrera/events", { preHandler: app.verlangeAdmin }, async () => ({
+    events: eventListe(ctx.db),
+  }));
+
+  /**
+   * Legt fest, welche Events gewertet werden. Leere Liste heisst: alle.
+   *
+   * Der ganze Sollzustand in einem Aufruf, wie bei den Kaestchen im Besucherdetail: ein
+   * Haken mehr oder weniger ist dann kein Sonderfall.
+   */
+  app.put<{ Body: { eventIds?: unknown } }>(
+    "/api/carrera/events",
+    { preHandler: app.verlangeAdmin },
+    async (req) => {
+      const ids = req.body?.eventIds;
+      if (!Array.isArray(ids) || !ids.every((e) => typeof e === "string")) {
+        throw badRequest("felder-fehlen", "Field eventIds must be an array of strings.");
+      }
+      setzeGewerteteEvents(ctx.db, ids as string[]);
+      return { events: eventListe(ctx.db) };
+    },
+  );
 
   /**
    * Derselbe Schalter fuer die Schnittstelle der Carrera-Bahn.

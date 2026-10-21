@@ -40,6 +40,8 @@ interface Stand {
   runden: number;
   bestMs: number | null;
   plaetze: Platz[];
+  /** Die angehakten Events; leer heisst, alle zaehlen. */
+  gewertet: { eventId: string }[];
 }
 
 /** Sekunden mit Komma, wie überall sonst: 4.827 liest mancher als viertausend. */
@@ -182,6 +184,21 @@ export function Carrera({ ich }: { ich: Ich }) {
       <Zustand laedt={abruf.laedt} fehler={abruf.fehler}>
         {daten !== null && (
           <>
+            <p className="text-sm text-text-zweit" aria-label="Gewertete Events">
+              Gewertet:{" "}
+              <b>
+                {daten.gewertet.length === 0
+                  ? "alle Events"
+                  : daten.gewertet
+                      .map((e) => (e.eventId === "" ? "(ohne Event)" : e.eventId))
+                      .join(", ")}
+              </b>{" "}
+              ·{" "}
+              <Link to="/einstellungen" className="text-primaer-dunkel hover:underline">
+                ändern
+              </Link>
+            </p>
+
             <section aria-label="Kennzahlen" className="grid gap-4 sm:grid-cols-3">
               <Kachel
                 titel="Fahrer"

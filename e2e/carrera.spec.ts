@@ -372,3 +372,60 @@ test("das Bild des Erstplatzierten trägt einen Rahmen, das eines anderen nicht"
   expect(ohnePlatz.mimeType).toBe("image/jpeg");
   expect(ohnePlatz.filename).toMatch(/\.jpe?g$/);
 });
+
+/**
+ * **Welche Events zählen**, eingestellt über die Kästchen in den Einstellungen.
+ *
+ * Ein Besucher fährt in einem eigenen Event, ein zweiter in einem anderen. Ist nur das
+ * erste angehakt, steht nur der erste in der Bestenliste. Die Auswahl gilt für den ganzen
+ * Dienst; der Test stellt deshalb hinterher die vorherige wieder her.
+ */
+test("ein angehaktes Event filtert die Bestenliste", async ({ page, request }) => {
+  const stempel = String(Date.now()).slice(-8);
+  const [eins, zwei] = [`EVA-${stempel}`, `EVB-${stempel}`];
+  const [eventEins, eventZwei] = [`E2E-Eins-${stempel}`, `E2E-Zwei-${stempel}`];
+
+  const vorher = (await (await request.get("/api/carrera/events")).json()).events
+    .filter((e: { gewertet: boolean }) => e.gewertet)
+    .map((e: { eventId: string }) => e.eventId);
+
+  for (const [guid, eventId] of [
+    [eins, eventEins],
+    [zwei, eventZwei],
+  ] as const) {
+    const angelegt = await request.post("/api/besucher", {
+      data: { guid, vorname: "Event", nachname: guid },
+    });
+    expect(angelegt.status()).toBe(201);
+    merkeBesucher(guid);
+    const antwort = await request.post("/carrera/runden", {
+      data: { ...meldung(`${guid}-lap`, guid, 1, 4000), event_id: eventId, event_name: eventId },
+    });
+    expect(antwort.status()).toBe(200);
+  }
+
+  try {
+    await page.goto("/einstellungen");
+    const liste = page.getByRole("list", { name: "Carrera-Events" });
+    const kaestchen = liste.getByRole("checkbox", { name: new RegExp(eventEins) });
+    await expect(kaestchen).not.toBeChecked();
+    await kaestchen.check();
+    await expect(kaestchen).toBeChecked();
+
+    // Nach dem Neuladen noch da: der Haken steht auf dem Server, nicht nur im Browser.
+    await page.reload();
+    await expect(
+      page
+        .getByRole("list", { name: "Carrera-Events" })
+        .getByRole("checkbox", { name: new RegExp(eventEins) }),
+    ).toBeChecked();
+
+    await page.goto("/carrera");
+    await expect(page.getByLabel("Gewertete Events")).toContainText(eventEins);
+    const tabelle = page.locator("tbody");
+    await expect(tabelle.getByRole("link", { name: `Event ${eins}`, exact: true })).toBeVisible();
+    await expect(tabelle.getByRole("link", { name: `Event ${zwei}`, exact: true })).toHaveCount(0);
+  } finally {
+    await request.put("/api/carrera/events", { data: { eventIds: vorher } });
+  }
+});

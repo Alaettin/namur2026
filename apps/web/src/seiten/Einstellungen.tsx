@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ApiFehler, api, leseSchalter, setzeSchalter, useAbruf } from "../lib/api.js";
 import { Flaeche, Knopf, Markierung, Ueberschrift, Zustand } from "../bausteine/basis.js";
 import { Avatarverwaltung } from "./Avatarverwaltung.js";
+import { CarreraEvents } from "./CarreraEvents.js";
 import { Sicherung } from "./Sicherung.js";
 import { Rueckfrage } from "../bausteine/dialog.js";
 import type { Ich } from "../lib/ich.js";
@@ -123,6 +124,8 @@ export function Einstellungen({ ich }: { ich: Ich }) {
           </dl>
         </Zustand>
       </Flaeche>
+
+      <CarreraEvents />
 
       <Avatarverwaltung />
 
