@@ -118,8 +118,7 @@ async function werte(s: Pruefstand, guid: string): Promise<Wert[]> {
     payload: {},
   });
   expect(antwort.statusCode).toBe(200);
-  // Nur was einen Wert traegt; Leeres kommt seit dem 30.10.2026 als `value: null`.
-  return antwort.json<Wert[]>().filter((w) => w.value !== null);
+  return antwort.json<Wert[]>();
 }
 
 function nachnamen(alle: Wert[]): Record<string, unknown> {
