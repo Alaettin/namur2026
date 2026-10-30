@@ -74,7 +74,9 @@ async function sichtbareElemente(s: Pruefstand, guid: string): Promise<number> {
     url: `/connector/product/${guid}/values`,
     payload: {},
   });
-  return antwort.statusCode === 200 ? antwort.json<unknown[]>().length : -1;
+  return antwort.statusCode === 200
+    ? antwort.json<{ value: unknown }[]>().filter((w) => w.value !== null).length
+    : -1;
 }
 
 describe("Exponat loeschen", () => {

@@ -208,10 +208,32 @@ export function konnektorApiRoutes(app: FastifyInstance, ctx: Kontext): void {
               anfrage.ohneSprache.includes(w.propertyId),
           );
 
-      return await nachAussen(ctx.db, ctx.ablage, gewuenscht, {
+      const geliefert = await nachAussen(ctx.db, ctx.ablage, gewuenscht, {
         alsDokumente: false,
         ohneSprache: new Set(anfrage.ohneSprache),
       });
+
+      /*
+       * **Leeres wird als `value: null` gemeldet, nicht weggelassen.** Axon ueberschreibt nur,
+       * was geliefert wird: am 30.10.2026 am Betrieb gesehen, nach dem Entfernen eines Hakens
+       * stand das Exponat weiter im Viewer, und nach dem Loeschen zweier Links zeigte er vier
+       * statt zwei. Weggelassenes bleibt in Axon mit dem alten Wert stehen.
+       *
+       * Die Spec erlaubt `null` (`ProductProperty.value` ist `nullable`). Aufgefuellt wird
+       * nur, was im Modell steht; eine unbekannte Id kommt nicht als Echo zurueck. Ein leerer
+       * Rumpf fragt nach allem, also nach dem ganzen Modell.
+       */
+      const modellIds = new Set(baueModell(ctx.db).map((f) => f.id));
+      const gefragtIds = anfrage.allesLiefern
+        ? [...modellIds]
+        : [...new Set([...anfrage.mitSprache, ...anfrage.ohneSprache])].filter((id) =>
+            modellIds.has(id),
+          );
+      const vorhanden = new Set(geliefert.map((w) => w.propertyId));
+      for (const id of gefragtIds) {
+        if (!vorhanden.has(id)) geliefert.push({ propertyId: id, value: null });
+      }
+      return geliefert;
     });
 
     scope.post(`${wurzel}/product/:itemId/documents`, { config: grenzen }, async (req) => {

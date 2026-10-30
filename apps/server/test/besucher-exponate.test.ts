@@ -73,7 +73,11 @@ async function werte(s: Pruefstand): Promise<string[]> {
     url: "/connector/product/BE-1/values",
     payload: {},
   });
-  return a.json<{ propertyId: string }[]>().map((w) => w.propertyId);
+  // Nur was einen Wert traegt; Leeres kommt seit dem 30.10.2026 als `value: null`.
+  return a
+    .json<{ propertyId: string; value: unknown }[]>()
+    .filter((w) => w.value !== null)
+    .map((w) => w.propertyId);
 }
 
 describe("Besucherdetail nach Exponaten", () => {

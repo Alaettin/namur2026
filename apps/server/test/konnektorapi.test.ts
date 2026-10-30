@@ -253,8 +253,9 @@ describe("Konnektor-API: Werte", () => {
         headers: KOPF,
         payload: {},
       })
-    ).json<{ propertyId: string }[]>();
-    const ids = werte.map((w) => w.propertyId);
+    ).json<{ propertyId: string; value: unknown }[]>();
+    // Leeres kommt seit dem 30.10.2026 als `value: null`; das gibt nichts.
+    const ids = werte.filter((w) => w.value !== null).map((w) => w.propertyId);
 
     // E02 bis E06 hat dieser Besucher nicht.
     for (const kennung of ["E02", "E03", "E04", "E05", "E06"]) {
@@ -275,12 +276,61 @@ describe("Konnektor-API: Werte", () => {
         headers: KOPF,
         payload: {},
       })
-    ).json<{ propertyId: string }[]>();
+    ).json<{ propertyId: string; value: unknown }[]>();
     // Seit dem 19.10.2026 steht auch die Top 10 der Carrera-Bahn bei jedem Besucher.
     expect(
-      werte.filter((w) => !/^(Visitor_|pos\d+$)/.test(w.propertyId)),
+      werte.filter((w) => w.value !== null && !/^(Visitor_|pos\d+$)/.test(w.propertyId)),
       "Exponatinhalt ohne Zuordnung",
     ).toEqual([]);
+  });
+
+  /**
+   * **Axon leert nur, was ausdruecklich leer gemeldet wird.** Am 30.10.2026 am Betrieb: nach
+   * dem Entfernen eines Hakens stand das Exponat weiter im Viewer, nach dem Loeschen zweier
+   * Links zeigte er vier statt zwei. Weggelassene Eigenschaften behaelt Axon mit altem Wert.
+   */
+  it("meldet gefragte, aber leere Eigenschaften als value null", async () => {
+    const { s, guid } = await mitSaat();
+    // Dieser Besucher hat E01, aber nicht E02 (siehe oben).
+    const gefragt = ["E01_Name", "E02_Name", "E02_Link01_Url", "Gibts_Nicht"];
+    const werte = (
+      await s.app.inject({
+        method: "POST",
+        url: `/connector/product/${guid}/values`,
+        headers: KOPF,
+        payload: {
+          propertiesWithLanguage: { propertyIds: gefragt.slice(0, 2), languages: ["de"] },
+          propertiesWithoutLanguage: { propertyIds: gefragt.slice(2) },
+        },
+      })
+    ).json<{ propertyId: string; value: unknown }[]>();
+    const nach = Object.fromEntries(werte.map((w) => [w.propertyId, w.value]));
+
+    expect(typeof nach["E01_Name"]).toBe("string");
+    expect(nach).toHaveProperty("E02_Name", null);
+    expect(nach).toHaveProperty("E02_Link01_Url", null);
+    // Was nicht im Modell steht, kommt nicht als Echo zurueck.
+    expect(nach).not.toHaveProperty("Gibts_Nicht");
+    expect(werte).toHaveLength(3);
+  });
+
+  it("meldet bei leerem Rumpf jede Eigenschaft des Modells genau einmal", async () => {
+    const { s, guid } = await mitSaat();
+    const modell = (
+      await s.app.inject({ url: "/connector/model", headers: KOPF })
+    ).json<{ id: string }[]>();
+    const werte = (
+      await s.app.inject({
+        method: "POST",
+        url: `/connector/product/${guid}/values`,
+        headers: KOPF,
+        payload: {},
+      })
+    ).json<{ propertyId: string }[]>();
+
+    const ids = werte.map((w) => w.propertyId);
+    expect(new Set(ids).size, "doppelt gemeldet").toBe(ids.length);
+    expect(new Set(ids)).toEqual(new Set(modell.map((f) => f.id)));
   });
 
   /**
