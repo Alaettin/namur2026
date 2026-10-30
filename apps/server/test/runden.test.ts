@@ -249,7 +249,7 @@ describe("Runden im Konnektor", () => {
 
     // Leere Plaetze kommen seit dem 30.10.2026 als `value: null`, nicht als Wert.
     const runden = werte.filter(
-      (w) => /^Visitor_Lap\d{2}$/.test(w.propertyId) && w.value !== null && w.value !== "",
+      (w) => /^Visitor_Lap\d{2}$/.test(w.propertyId) && w.value !== null,
     );
     expect(runden, "leere Plaetze stehen in der Antwort").toHaveLength(2);
     expect(JSON.stringify(runden)).toContain("Runde 1");

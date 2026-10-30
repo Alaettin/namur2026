@@ -75,7 +75,7 @@ async function sichtbareElemente(s: Pruefstand, guid: string): Promise<number> {
     payload: {},
   });
   return antwort.statusCode === 200
-    ? antwort.json<{ value: unknown }[]>().filter((w) => w.value !== null && w.value !== "").length
+    ? antwort.json<{ value: unknown }[]>().filter((w) => w.value !== null).length
     : -1;
 }
 
