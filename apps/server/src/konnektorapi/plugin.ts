@@ -3,8 +3,9 @@ import { eq } from "drizzle-orm";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { besucher } from "../db/schema.js";
 import type { Kontext } from "../kontext.js";
+import { PROPERTY_TYPE } from "../modell/felder.js";
 import { baueModell } from "../modell/modell.js";
-import { leseAnfrage, nachAussen, sammleWerte } from "../modell/werte.js";
+import { SPRACHE, leseAnfrage, nachAussen, sammleWerte } from "../modell/werte.js";
 import { anmeldungVerlangt } from "../services/einstellungen.js";
 import { zaehleAbruf, zaehleUnbekannt, type Abrufart } from "../services/abrufe.js";
 import { pruefeBasic } from "./basic.js";
@@ -196,6 +197,16 @@ export function konnektorApiRoutes(app: FastifyInstance, ctx: Kontext): void {
       pruefeUndZaehle(ctx, guid, "werte");
 
       const anfrage = leseAnfrage(req.body);
+      // Wie Axon fragt, ohne Ids und ohne Personendaten: beim naechsten Raetsel nicht raten.
+      req.log.info(
+        {
+          allesLiefern: anfrage.allesLiefern,
+          mitSprache: anfrage.mitSprache.length,
+          ohneSprache: anfrage.ohneSprache.length,
+          sprachen: anfrage.sprachen,
+        },
+        "values",
+      );
       const gefragt = anfrage.mitSprache.length + anfrage.ohneSprache.length;
       if (gefragt > HOECHSTZAHL_FELDER) throw zuVieleFelder(HOECHSTZAHL_FELDER);
 
@@ -214,24 +225,38 @@ export function konnektorApiRoutes(app: FastifyInstance, ctx: Kontext): void {
       });
 
       /*
-       * **Leeres wird als `value: null` gemeldet, nicht weggelassen.** Axon ueberschreibt nur,
-       * was geliefert wird: am 30.10.2026 am Betrieb gesehen, nach dem Entfernen eines Hakens
+       * **Leeres wird ausdruecklich gemeldet, nicht weggelassen.** Axon ueberschreibt nur, was
+       * geliefert wird: am 30.10.2026 am Betrieb gesehen, nach dem Entfernen eines Hakens
        * stand das Exponat weiter im Viewer, und nach dem Loeschen zweier Links zeigte er vier
        * statt zwei. Weggelassenes bleibt in Axon mit dem alten Wert stehen.
        *
-       * Die Spec erlaubt `null` (`ProductProperty.value` ist `nullable`). Aufgefuellt wird
-       * nur, was im Modell steht; eine unbekannte Id kommt nicht als Echo zurueck. Ein leerer
-       * Rumpf fragt nach allem, also nach dem ganzen Modell.
+       * **Ein leerer Text sieht aus wie ein echter**: `""` mit `valueLanguage: "de"`, ausser
+       * er war ohne Sprache gefragt, dieselbe Regel wie in `nachAussen`. `{ value: null }`
+       * ohne Sprache hatte Axon am selben Tag verworfen, die alten Links blieben stehen. Ein
+       * leeres Dokument bleibt `null`: es traegt nie eine Sprache, und `""` waere ein Ticket.
+       *
+       * Aufgefuellt wird nur, was im Modell steht; eine unbekannte Id kommt nicht als Echo
+       * zurueck. Ein leerer Rumpf fragt nach allem, also nach dem ganzen Modell.
        */
-      const modellIds = new Set(baueModell(ctx.db).map((f) => f.id));
+      const modell = new Map(baueModell(ctx.db).map((f) => [f.id, f.type]));
       const gefragtIds = anfrage.allesLiefern
-        ? [...modellIds]
+        ? [...modell.keys()]
         : [...new Set([...anfrage.mitSprache, ...anfrage.ohneSprache])].filter((id) =>
-            modellIds.has(id),
+            modell.has(id),
           );
+      const ohneSprache = new Set(anfrage.ohneSprache);
       const vorhanden = new Set(geliefert.map((w) => w.propertyId));
       for (const id of gefragtIds) {
-        if (!vorhanden.has(id)) geliefert.push({ propertyId: id, value: null });
+        if (vorhanden.has(id)) continue;
+        if (modell.get(id) === PROPERTY_TYPE.document) {
+          geliefert.push({ propertyId: id, value: null });
+        } else {
+          geliefert.push({
+            propertyId: id,
+            value: "",
+            ...(ohneSprache.has(id) ? {} : { valueLanguage: SPRACHE }),
+          });
+        }
       }
       return geliefert;
     });

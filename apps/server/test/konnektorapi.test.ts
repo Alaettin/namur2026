@@ -254,8 +254,8 @@ describe("Konnektor-API: Werte", () => {
         payload: {},
       })
     ).json<{ propertyId: string; value: unknown }[]>();
-    // Leeres kommt seit dem 30.10.2026 als `value: null`; das gibt nichts.
-    const ids = werte.filter((w) => w.value !== null).map((w) => w.propertyId);
+    // Leeres kommt seit dem 30.10.2026 als `""` oder `null`; das gibt nichts.
+    const ids = werte.filter((w) => w.value !== null && w.value !== "").map((w) => w.propertyId);
 
     // E02 bis E06 hat dieser Besucher nicht.
     for (const kennung of ["E02", "E03", "E04", "E05", "E06"]) {
@@ -279,7 +279,7 @@ describe("Konnektor-API: Werte", () => {
     ).json<{ propertyId: string; value: unknown }[]>();
     // Seit dem 19.10.2026 steht auch die Top 10 der Carrera-Bahn bei jedem Besucher.
     expect(
-      werte.filter((w) => w.value !== null && !/^(Visitor_|pos\d+$)/.test(w.propertyId)),
+      werte.filter((w) => w.value !== null && w.value !== "" && !/^(Visitor_|pos\d+$)/.test(w.propertyId)),
       "Exponatinhalt ohne Zuordnung",
     ).toEqual([]);
   });
@@ -287,31 +287,37 @@ describe("Konnektor-API: Werte", () => {
   /**
    * **Axon leert nur, was ausdruecklich leer gemeldet wird.** Am 30.10.2026 am Betrieb: nach
    * dem Entfernen eines Hakens stand das Exponat weiter im Viewer, nach dem Loeschen zweier
-   * Links zeigte er vier statt zwei. Weggelassene Eigenschaften behaelt Axon mit altem Wert.
+   * Links zeigte er vier statt zwei. Weggelassene Eigenschaften behaelt Axon mit altem Wert,
+   * und `{ value: null }` ohne Sprache verwarf es ebenso.
    */
-  it("meldet gefragte, aber leere Eigenschaften als value null", async () => {
+  it("meldet gefragte, aber leere Eigenschaften in der Form eines echten Wertes", async () => {
     const { s, guid } = await mitSaat();
     // Dieser Besucher hat E01, aber nicht E02 (siehe oben).
-    const gefragt = ["E01_Name", "E02_Name", "E02_Link01_Url", "Gibts_Nicht"];
     const werte = (
       await s.app.inject({
         method: "POST",
         url: `/connector/product/${guid}/values`,
         headers: KOPF,
         payload: {
-          propertiesWithLanguage: { propertyIds: gefragt.slice(0, 2), languages: ["de"] },
-          propertiesWithoutLanguage: { propertyIds: gefragt.slice(2) },
+          propertiesWithLanguage: {
+            propertyIds: ["E01_Name", "E02_Name", "E02_Doc01_File"],
+            languages: ["de"],
+          },
+          propertiesWithoutLanguage: { propertyIds: ["E02_Link01_Url", "Gibts_Nicht"] },
         },
       })
-    ).json<{ propertyId: string; value: unknown }[]>();
-    const nach = Object.fromEntries(werte.map((w) => [w.propertyId, w.value]));
+    ).json<{ propertyId: string; value: unknown; valueLanguage?: string }[]>();
+    const nach = Object.fromEntries(werte.map((w) => [w.propertyId, w]));
 
-    expect(typeof nach["E01_Name"]).toBe("string");
-    expect(nach).toHaveProperty("E02_Name", null);
-    expect(nach).toHaveProperty("E02_Link01_Url", null);
+    expect(typeof nach["E01_Name"]?.value).toBe("string");
+    // Ein leerer Text sieht aus wie ein echter: mit Sprache, wenn mit Sprache gefragt.
+    expect(nach["E02_Name"]).toEqual({ propertyId: "E02_Name", value: "", valueLanguage: "de" });
+    expect(nach["E02_Link01_Url"]).toEqual({ propertyId: "E02_Link01_Url", value: "" });
+    // Ein leeres Dokument traegt keine Sprache und kein Ticket.
+    expect(nach["E02_Doc01_File"]).toEqual({ propertyId: "E02_Doc01_File", value: null });
     // Was nicht im Modell steht, kommt nicht als Echo zurueck.
     expect(nach).not.toHaveProperty("Gibts_Nicht");
-    expect(werte).toHaveLength(3);
+    expect(werte).toHaveLength(4);
   });
 
   it("meldet bei leerem Rumpf jede Eigenschaft des Modells genau einmal", async () => {

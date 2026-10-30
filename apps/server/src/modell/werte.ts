@@ -45,7 +45,7 @@ import { bestenliste, podestrang, rundeAlsText, rundenVonBesucher } from "../ser
 
 export interface ProductProperty {
   propertyId: string;
-  /** `null` heisst: gefragt, aber leer. Siehe die Route `values` in `konnektorapi/plugin.ts`. */
+  /** `""` oder `null` heisst: gefragt, aber leer. Siehe die Route `values` in `konnektorapi/plugin.ts`. */
   value: string | null;
   /** Nur bei sprachabhaengigen Texten. Dokumente tragen sie nicht. */
   valueLanguage?: string;
@@ -139,7 +139,7 @@ function personenwert(
  *
  * **Vom Exponat kommt nur etwas, wenn der Besucher dort mindestens eine Zuordnung hat**,
  * und davon nur die zugeordneten Elemente. Alles andere fehlt hier; die Route `values` meldet
- * es nach aussen als `value: null`, weil Axon Weggelassenes nicht leert. Ein Betreuer soll
+ * es nach aussen als leer (`""`, Dokument `null`), weil Axon Weggelassenes nicht leert. Ein Betreuer soll
  * niemandem etwas geben, das er ihm nicht gegeben hat.
  */
 export function sammleWerte(db: Db, guid: string): RohWert[] {
