@@ -11,6 +11,7 @@ import {
   PROPERTY_TYPE,
   VISITOR_ALIAS,
   VISITOR_AVATAR,
+  VISITOR_RANK,
   VISITOR_TITLE,
   dokumentBeschreibung,
   dokumentDatei,
@@ -93,6 +94,7 @@ export function baueModell(db: Db): DataModelProperty[] {
   for (let p = 1; p <= MAX_RUNDEN_MODELL; p++) {
     felder.push(eintrag(visitorRunde(p), `Besucher Runde ${platzNr(p)}`, PROPERTY_TYPE.property));
   }
+  felder.push(eintrag(VISITOR_RANK, "Besucher Carrera-Platz", PROPERTY_TYPE.property));
 
   // --- Die Top 10 der Carrera-Bahn, fuer alle Besucher dieselbe ----------------------
   for (let p = 1; p <= MAX_TOP_MODELL; p++) {
@@ -174,8 +176,11 @@ export function baueModell(db: Db): DataModelProperty[] {
 export const FELDER_JE_EXPONAT =
   2 + MAX_DOKUMENTE * 3 + MAX_LINKS * 2 + MAX_KONTAKTE * AUSGEGEBENE_PERSONENFELDER;
 
-/** Zahl der Besucherdatenpunkte: Titel, Personenfelder, Alias, Foto und die Rundenplaetze. */
-export const FELDER_BESUCHER = 1 + AUSGEGEBENE_PERSONENFELDER + 1 + 1 + MAX_RUNDEN_MODELL;
+/**
+ * Zahl der Besucherdatenpunkte: Titel, Personenfelder, Alias, Foto, die Rundenplaetze und der
+ * eigene Carrera-Platz.
+ */
+export const FELDER_BESUCHER = 1 + AUSGEGEBENE_PERSONENFELDER + 1 + 1 + MAX_RUNDEN_MODELL + 1;
 
 /** Zahl der Datenpunkte der Top 10: je Platz einer, "Alias - Rundenzeit". */
 export const FELDER_TOP = MAX_TOP_MODELL;

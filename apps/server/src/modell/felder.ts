@@ -94,6 +94,16 @@ export const VISITOR_ALIAS = "Visitor_Alias";
  */
 export const VISITOR_TITLE = "Visitor_Title";
 
+/**
+ * Der eigene Platz eines Besuchers in der Carrera-Bestenliste, seit dem 30.10.2026.
+ *
+ * Ein Satz statt drei Eigenschaften, so vom Nutzer gewuenscht: "Platz 37 von 210, beste Runde
+ * 4,827 s". Gerechnet wie die Bestenliste, also live, je Person die beste Runde, nur gewertete
+ * Events. Wer nicht gefahren ist, bekommt nichts. **Nicht in `PERSONENFELDER`**, aus demselben
+ * Grund wie der Alias.
+ */
+export const VISITOR_RANK = "Visitor_Rank";
+
 export function visitorFeld(id: string): string {
   return `Visitor_${id}`;
 }

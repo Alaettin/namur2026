@@ -18,6 +18,7 @@ import {
   PERSONENFELDER,
   VISITOR_ALIAS,
   VISITOR_AVATAR,
+  VISITOR_RANK,
   VISITOR_TITLE,
   dokumentBeschreibung,
   dokumentDatei,
@@ -34,7 +35,13 @@ import {
   visitorRunde,
 } from "./felder.js";
 import { ansprechpartnerVonExponat } from "../services/ansprechpartner.js";
-import { bestenliste, podestrang, rundeAlsText, rundenVonBesucher } from "../services/runden.js";
+import {
+  bestenliste,
+  platzAlsText,
+  podestrang,
+  rundeAlsText,
+  rundenVonBesucher,
+} from "../services/runden.js";
 
 /**
  * Was ein Besucher an Werten hat, in der Form der Konnektor-Spezifikation.
@@ -196,6 +203,9 @@ export function sammleWerte(db: Db, guid: string): RohWert[] {
       dateiId: null,
     });
   }
+  // Der eigene Platz, ebenfalls vor dem fruehen `return`. Nicht gefahren: nichts.
+  const platz = platzAlsText(db, guid);
+  if (platz !== null) werte.push({ propertyId: VISITOR_RANK, text: platz, dateiId: null });
 
   /*
    * **Die Top 10, fuer jeden Besucher dieselbe.** Ebenfalls vor dem fruehen `return`: auch

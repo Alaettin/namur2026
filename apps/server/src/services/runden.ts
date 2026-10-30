@@ -406,3 +406,18 @@ export function podestrang(liste: Platz[], guid: string): 1 | 2 | 3 | null {
   if (platz < 0 || platz > 2) return null;
   return (platz + 1) as 1 | 2 | 3;
 }
+
+/**
+ * Der eigene Platz eines Besuchers als Satz, fuer `Visitor_Rank`, seit dem 30.10.2026.
+ *
+ * **Dieselbe Rechnung wie die Bestenliste**, nur ohne Grenze: je Person die beste Runde,
+ * Gleichstand nach GUID, nur gewertete Events. Eine eigene Zaehlung waere die Stelle, an der
+ * Platz im Viewer und Platz auf der Seite Carrera auseinanderlaufen. `null` heisst: nicht
+ * gefahren, also nichts liefern.
+ */
+export function platzAlsText(db: Db, guid: string): string | null {
+  const alle = bestenliste(db, Number.MAX_SAFE_INTEGER);
+  const ich = alle.find((p) => p.guid === guid);
+  if (ich === undefined) return null;
+  return `Platz ${String(ich.rang)} von ${String(alle.length)}, beste Runde ${ich.anzeige}`;
+}
